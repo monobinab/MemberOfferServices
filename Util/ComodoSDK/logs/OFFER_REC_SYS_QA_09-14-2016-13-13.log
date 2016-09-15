@@ -1,0 +1,80 @@
+ComodoClient Object Creation - Starts
+New File - /home/auto/vmathu0/qa/ComodoSDK/certs/OFFER_REC_SYS_QA_keyStore.jks was already exists hence the NEW file with perfix of NEW_ will be created
+Value = false
+importCertificateToKeyStore - Starts
+executeOSCommand - Starts
+keytool -import -noprompt -alias Comodo_High_Assurance -trustcacerts -file /home/auto/vmathu0/qa/ComodoSDK/certs/Comodo_High_Assurance.cer -keystore /home/auto/vmathu0/qa/ComodoSDK/certs/OFFER_REC_SYS_QA_comodo_trustStore.jks -keypass T0ZGRVJf -storepass T0ZGRVJf -storetype JKS
+keytool error: java.lang.Exception: Certificate not imported, alias <Comodo_High_Assurance> already exists
+Warrning:- KEYTOOL_COMMAND_FAILED with keytool error: java.lang.Exception: Certificate not imported, alias <Comodo_High_Assurance> already exists
+importCertificateToKeyStore Failed due to existing alias hence we will replace
+executeOSCommand - Starts
+keytool -delete -noprompt -alias Comodo_High_Assurance -keystore /home/auto/vmathu0/qa/ComodoSDK/certs/OFFER_REC_SYS_QA_comodo_trustStore.jks -keypass T0ZGRVJf -storepass T0ZGRVJf -storetype JKS
+executeOSCommand - Ends
+executeOSCommand - Starts
+keytool -import -noprompt -alias Comodo_High_Assurance -trustcacerts -file /home/auto/vmathu0/qa/ComodoSDK/certs/Comodo_High_Assurance.cer -keystore /home/auto/vmathu0/qa/ComodoSDK/certs/OFFER_REC_SYS_QA_comodo_trustStore.jks -keypass T0ZGRVJf -storepass T0ZGRVJf -storetype JKS
+executeOSCommand - Ends
+importCertificateToKeyStore - Ends
+importCertificateToKeyStore - Starts
+executeOSCommand - Starts
+keytool -import -noprompt -alias Comodo_High -trustcacerts -file /home/auto/vmathu0/qa/ComodoSDK/certs/Comodo_High.cer -keystore /home/auto/vmathu0/qa/ComodoSDK/certs/OFFER_REC_SYS_QA_comodo_trustStore.jks -keypass T0ZGRVJf -storepass T0ZGRVJf -storetype JKS
+keytool error: java.lang.Exception: Certificate not imported, alias <Comodo_High> already exists
+Warrning:- KEYTOOL_COMMAND_FAILED with keytool error: java.lang.Exception: Certificate not imported, alias <Comodo_High> already exists
+importCertificateToKeyStore Failed due to existing alias hence we will replace
+executeOSCommand - Starts
+keytool -delete -noprompt -alias Comodo_High -keystore /home/auto/vmathu0/qa/ComodoSDK/certs/OFFER_REC_SYS_QA_comodo_trustStore.jks -keypass T0ZGRVJf -storepass T0ZGRVJf -storetype JKS
+executeOSCommand - Ends
+executeOSCommand - Starts
+keytool -import -noprompt -alias Comodo_High -trustcacerts -file /home/auto/vmathu0/qa/ComodoSDK/certs/Comodo_High.cer -keystore /home/auto/vmathu0/qa/ComodoSDK/certs/OFFER_REC_SYS_QA_comodo_trustStore.jks -keypass T0ZGRVJf -storepass T0ZGRVJf -storetype JKS
+executeOSCommand - Ends
+importCertificateToKeyStore - Ends
+importCertificateToKeyStore - Starts
+executeOSCommand - Starts
+keytool -import -noprompt -alias addtrustexternalcaroot -trustcacerts -file /home/auto/vmathu0/qa/ComodoSDK/certs/addtrustexternalcaroot.crt -keystore /home/auto/vmathu0/qa/ComodoSDK/certs/OFFER_REC_SYS_QA_comodo_trustStore.jks -keypass T0ZGRVJf -storepass T0ZGRVJf -storetype JKS
+keytool error: java.lang.Exception: Certificate not imported, alias <addtrustexternalcaroot> already exists
+Warrning:- KEYTOOL_COMMAND_FAILED with keytool error: java.lang.Exception: Certificate not imported, alias <addtrustexternalcaroot> already exists
+importCertificateToKeyStore Failed due to existing alias hence we will replace
+executeOSCommand - Starts
+keytool -delete -noprompt -alias addtrustexternalcaroot -keystore /home/auto/vmathu0/qa/ComodoSDK/certs/OFFER_REC_SYS_QA_comodo_trustStore.jks -keypass T0ZGRVJf -storepass T0ZGRVJf -storetype JKS
+executeOSCommand - Ends
+executeOSCommand - Starts
+keytool -import -noprompt -alias addtrustexternalcaroot -trustcacerts -file /home/auto/vmathu0/qa/ComodoSDK/certs/addtrustexternalcaroot.crt -keystore /home/auto/vmathu0/qa/ComodoSDK/certs/OFFER_REC_SYS_QA_comodo_trustStore.jks -keypass T0ZGRVJf -storepass T0ZGRVJf -storetype JKS
+executeOSCommand - Ends
+importCertificateToKeyStore - Ends
+importCertificateToKeyStore - Starts
+executeOSCommand - Starts
+keytool -import -noprompt -alias comodorsaaddtrustca -trustcacerts -file /home/auto/vmathu0/qa/ComodoSDK/certs/comodorsaaddtrustca.crt -keystore /home/auto/vmathu0/qa/ComodoSDK/certs/OFFER_REC_SYS_QA_comodo_trustStore.jks -keypass T0ZGRVJf -storepass T0ZGRVJf -storetype JKS
+keytool error: java.lang.Exception: Certificate not imported, alias <comodorsaaddtrustca> already exists
+Warrning:- KEYTOOL_COMMAND_FAILED with keytool error: java.lang.Exception: Certificate not imported, alias <comodorsaaddtrustca> already exists
+importCertificateToKeyStore Failed due to existing alias hence we will replace
+executeOSCommand - Starts
+keytool -delete -noprompt -alias comodorsaaddtrustca -keystore /home/auto/vmathu0/qa/ComodoSDK/certs/OFFER_REC_SYS_QA_comodo_trustStore.jks -keypass T0ZGRVJf -storepass T0ZGRVJf -storetype JKS
+executeOSCommand - Ends
+executeOSCommand - Starts
+keytool -import -noprompt -alias comodorsaaddtrustca -trustcacerts -file /home/auto/vmathu0/qa/ComodoSDK/certs/comodorsaaddtrustca.crt -keystore /home/auto/vmathu0/qa/ComodoSDK/certs/OFFER_REC_SYS_QA_comodo_trustStore.jks -keypass T0ZGRVJf -storepass T0ZGRVJf -storetype JKS
+executeOSCommand - Ends
+importCertificateToKeyStore - Ends
+importCertificateToKeyStore - Starts
+executeOSCommand - Starts
+keytool -import -noprompt -alias comodorsaorganizationvalidationsecureserverca -trustcacerts -file /home/auto/vmathu0/qa/ComodoSDK/certs/comodorsaorganizationvalidationsecureserverca.crt -keystore /home/auto/vmathu0/qa/ComodoSDK/certs/OFFER_REC_SYS_QA_comodo_trustStore.jks -keypass T0ZGRVJf -storepass T0ZGRVJf -storetype JKS
+keytool error: java.lang.Exception: Certificate not imported, alias <comodorsaorganizationvalidationsecureserverca> already exists
+Warrning:- KEYTOOL_COMMAND_FAILED with keytool error: java.lang.Exception: Certificate not imported, alias <comodorsaorganizationvalidationsecureserverca> already exists
+importCertificateToKeyStore Failed due to existing alias hence we will replace
+executeOSCommand - Starts
+keytool -delete -noprompt -alias comodorsaorganizationvalidationsecureserverca -keystore /home/auto/vmathu0/qa/ComodoSDK/certs/OFFER_REC_SYS_QA_comodo_trustStore.jks -keypass T0ZGRVJf -storepass T0ZGRVJf -storetype JKS
+executeOSCommand - Ends
+executeOSCommand - Starts
+keytool -import -noprompt -alias comodorsaorganizationvalidationsecureserverca -trustcacerts -file /home/auto/vmathu0/qa/ComodoSDK/certs/comodorsaorganizationvalidationsecureserverca.crt -keystore /home/auto/vmathu0/qa/ComodoSDK/certs/OFFER_REC_SYS_QA_comodo_trustStore.jks -keypass T0ZGRVJf -storepass T0ZGRVJf -storetype JKS
+executeOSCommand - Ends
+importCertificateToKeyStore - Ends
+ComodoClient Object Creation - Ends
+downloadCertificateAndRegister - Starts
+getCSRStatus - Starts
+httpPost - Starts
+HTTP URL :https://cert-manager.com/ws/EPKIManagerSSL
+ContentType :text/xml
+HeaderType :SOAPAction
+HeaderValue :https://cert-manager.com/ws/EPKIManagerSSL/getCollectStatus
+Post Content :<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ssl="http://ssl.ws.epki.comodo.com/"><soapenv:Header/><soapenv:Body><ssl:getCollectStatus><authData><customerLoginUri>sears</customerLoginUri><login>OfferRecommSrvc</login><password>ORSTeam@1</password></authData><id>640583</id></ssl:getCollectStatus></soapenv:Body></soapenv:Envelope>
+Adding delay before making HTTP call - Starts
+Adding delay before making HTTP call - Ends
+Going wiht default CipherSocketFactory
