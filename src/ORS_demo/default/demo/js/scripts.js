@@ -1,361 +1,110 @@
 var Scripts = {
   Constructor: function() {
     this.init = Scripts.init;
+	this.createXmlform = Scripts.createXmlform;
   },
 
   init: function() {
-    var XmlData = '<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:off="http://rewards.sears.com/schemas/offer/" xmlns:sch="http://rewards.sears.com/schemas/">'
-+ '   <soap:Header/>'
-+ '   <soap:Body>'
-+ '      <off:CreateUpdateOffer>'
-+ '         <sch:MessageVersion>01</sch:MessageVersion>'
-+ '         <sch:RequestorID>OFRP</sch:RequestorID>'
-+ '         <sch:Source>TI</sch:Source>'
-+ '         <off:OfferNumber>TELLtestPurMBO134</off:OfferNumber>'
-+ '         <off:OfferPointsDollarName>TELL-16289</off:OfferPointsDollarName>'
-+ '         <off:OfferDescription>TELL-162890181</off:OfferDescription>'
-+ '         <off:OfferType>PURCHASE</off:OfferType>'
-+ '         <off:OfferSubType>EARN</off:OfferSubType>'
-+ '         <off:OfferBUProgram>'
-+ '            <off:BUProgram>'
-+ '               <off:BUProgramName>BU - Apparel</off:BUProgramName>'
-+ '               <off:BUProgramCost>0.00</off:BUProgramCost>'
-+ '            </off:BUProgram>'
-+ '         </off:OfferBUProgram>'
-+ '         <off:ReceiptDescription>TELL-16289</off:ReceiptDescription>'
-+ '         <off:OfferCategory>Stackable</off:OfferCategory>'
-+ '         <off:OfferStartDate>2014-07-04</off:OfferStartDate>'
-+ '         <off:OfferStartTime/>'
-+ '         <off:OfferEndDate>2014-07-31</off:OfferEndDate>'
-+ '         <off:OfferEndTime>23:59:00</off:OfferEndTime>'
-+ '         <off:ExpenseAllocation>No allocation ñ Charge all to WH</off:ExpenseAllocation>'
-+ '         <off:ModifiedBy>nand</off:ModifiedBy>'
-+ '         <off:ModifiedTS>2014-06-25 10:40:00</off:ModifiedTS>'
-+ '         <off:OfferAttributes>'
-+ '            <off:OfferAttribute>'
-+ '               <off:Name>MULTI_TRAN_IND</off:Name>'
-+ '               <off:Values>'
-+ '                  <off:Value>N</off:Value>'
-+ '               </off:Values>'
-+ '            </off:OfferAttribute>'
-+ '            <off:OfferAttribute>'
-+ '               <off:Name>OFFER_NAME_MAP</off:Name>'
-+ '               <off:Values>'
-+ '                  <off:Value>Shop Your Way offer</off:Value>'
-+ '               </off:Values>'
-+ '            </off:OfferAttribute>'
-+ '            <off:OfferAttribute>'
-+ '               <off:Name>OFFER_DAILY_IND</off:Name>'
-+ '               <off:Values>'
-+ '                  <off:Value>N</off:Value>'
-+ '               </off:Values>'
-+ '            </off:OfferAttribute>'
-+ '            <off:OfferAttribute>'
-+ '               <off:Name>POINTS_AWARD_ON</off:Name>'
-+ '               <off:Values>'
-+ '                  <off:Value>Transaction Date plus</off:Value>'
-+ '               </off:Values>'
-+ '            </off:OfferAttribute>'
-+ '            <off:OfferAttribute>'
-+ '               <off:Name>POINTS_AWARD_DATE_PLUS</off:Name>'
-+ '               <off:Values>'
-+ '                  <off:Value>2</off:Value>'
-+ '               </off:Values>'
-+ '            </off:OfferAttribute>'
-+ '            <off:OfferAttribute>'
-+ '               <off:Name>POINTS_EXPIRE_ON</off:Name>'
-+ '               <off:Values>'
-+ '                  <off:Value>Transaction Date plus</off:Value>'
-+ '               </off:Values>'
-+ '            </off:OfferAttribute>'
-+ '            <off:OfferAttribute>'
-+ '               <off:Name>POINTS_EXPIRE_PLUS</off:Name>'
-+ '               <off:Values>'
-+ '                  <off:Value>4</off:Value>'
-+ '               </off:Values>'
-+ '            </off:OfferAttribute>'
-+ '            <off:OfferAttribute>'
-+ '               <off:Name>POINTS_EXPIRE_PLUS_UNIT</off:Name>'
-+ '               <off:Values>'
-+ '                  <off:Value>Quarter(s)</off:Value>'
-+ '               </off:Values>'
-+ '            </off:OfferAttribute>'
-+ '            <off:OfferAttribute>'
-+ '               <off:Name>ONLINE_MATERIAL_IND</off:Name>'
-+ '               <off:Values>'
-+ '                  <off:Value>N</off:Value>'
-+ '               </off:Values>'
-+ '            </off:OfferAttribute>'
-+ '         </off:OfferAttributes>'
-+ '         <off:Rules>'
-+ '            <off:Rule Entity="Location">'
-+ '               <off:Conditions>'
-+ '                  <off:Condition>'
-+ '                     <off:Name>STORE_LOCATION</off:Name>'
-+ '                     <off:Operator>EQUALS</off:Operator>'
-+ '                     <off:Values>'
-+ '                        <off:Value>Order Location</off:Value>'
-+ '                     </off:Values>'
-+ '                  </off:Condition>'
-+ '                  <off:Condition>'
-+ '                     <off:Name>STORE_TYPES</off:Name>'
-+ '                     <off:Operator>EQUALS</off:Operator>'
-+ '                     <off:Values>'
-+ '                        <off:Value>All Store Types</off:Value>'
-+ '                     </off:Values>'
-+ '                  </off:Condition>'
-+ '                  <off:Condition>'
-+ '                     <off:Name>STORE_FORMAT</off:Name>'
-+ '                     <off:Operator>IN</off:Operator>'
-+ '                     <off:Values>'
-+ '                        <off:Value>RSU-A STORE (FULL LINE)</off:Value>'
-+ '                     </off:Values>'
-+ '                  </off:Condition>'
-+ '                  <off:Condition>'
-+ '                     <off:Name>LOCATION_OPTIONS</off:Name>'
-+ '                     <off:Operator>CONTAINS</off:Operator>'
-+ '                     <off:Values>'
-+ '                        <off:Value>state</off:Value>'
-+ '                        <off:Value>city</off:Value>'
-+ '                        <off:Value>zipcode</off:Value>'
-+ '                     </off:Values>'
-+ '                     <off:ConditionAttributes>'
-+ '                        <off:ConditionAttribute>'
-+ '                           <off:Name>state</off:Name>'
-+ '                           <off:Operator>IN</off:Operator>'
-+ '                           <off:Values>'
-+ '                              <off:Value>NY</off:Value>'
-+ '                              <off:Value>IL</off:Value>'
-+ '                           </off:Values>'
-+ '                        </off:ConditionAttribute>'
-+ '                        <off:ConditionAttribute>'
-+ '                           <off:Name>city</off:Name>'
-+ '                           <off:Operator>IN</off:Operator>'
-+ '                           <off:Values>'
-+ '                              <off:Value>NEW YORK</off:Value>'
-+ '                              <off:Value>HOFFMAN ESTATES</off:Value>'
-+ '                           </off:Values>'
-+ '                        </off:ConditionAttribute>'
-+ '                        <off:ConditionAttribute>'
-+ '                           <off:Name>zipcode</off:Name>'
-+ '                           <off:Operator>IN</off:Operator>'
-+ '                           <off:Values>'
-+ '                              <off:Value>60179</off:Value>'
-+ '                              <off:Value>80031</off:Value>'
-+ '                           </off:Values>'
-+ '                        </off:ConditionAttribute>'
-+ '                     </off:ConditionAttributes>'
-+ '                  </off:Condition>'
-+ '                  <off:Condition>'
-+ '                     <off:Name>STORE_NUMBERS</off:Name>'
-+ '                     <off:Operator>CONTAINS</off:Operator>'
-+ '                     <off:Values>'
-+ '                        <off:Value>NPOS</off:Value>'
-+ '                     </off:Values>'
-+ '                     <off:ConditionAttributes>'
-+ '                        <off:ConditionAttribute>'
-+ '                           <off:Name>NPOS</off:Name>'
-+ '                           <off:Operator>IN</off:Operator>'
-+ '                           <off:Values>'
-+ '                              <off:Value>01001</off:Value>'
-+ '                              <off:Value>01003</off:Value>'
-+ '                           </off:Values>'
-+ '                        </off:ConditionAttribute>'
-+ '                     </off:ConditionAttributes>'
-+ '                  </off:Condition>'
-+ '                  <off:Condition>'
-+ '                     <off:Name>STORE_NUMBERS</off:Name>'
-+ '                     <off:Operator>NOT CONTAINS</off:Operator>'
-+ '                     <off:Values>'
-+ '                        <off:Value>NPOS</off:Value>'
-+ '                     </off:Values>'
-+ '                     <off:ConditionAttributes>'
-+ '                        <off:ConditionAttribute>'
-+ '                           <off:Name>NPOS</off:Name>'
-+ '                           <off:Operator>IN</off:Operator>'
-+ '                           <off:Values>'
-+ '                              <off:Value>01004</off:Value>'
-+ '                           </off:Values>'
-+ '                        </off:ConditionAttribute>'
-+ '                     </off:ConditionAttributes>'
-+ '                  </off:Condition>'
-+ '               </off:Conditions>'
-+ '            </off:Rule>'
-+ '            <off:Rule Entity="Member">'
-+ '               <off:Conditions>'
-+ '                  <off:Condition>'
-+ '                     <off:Name>MEMBER_STATUS</off:Name>'
-+ '                     <off:Operator>IN</off:Operator>'
-+ '                     <off:Values>'
-+ '                        <off:Value>BASE</off:Value>'
-+ '                        <off:Value>BONUS</off:Value>'
-+ '                     </off:Values>'
-+ '                  </off:Condition>'
-+ '                  <off:Condition>'
-+ '                     <off:Name>MEMBER_NUMBER</off:Name>'
-+ '                     <off:Operator>IN</off:Operator>'
-+ '                     <off:Values>'
-+ '                        <off:Value>7081011086867045</off:Value>'
-+ '                     </off:Values>'
-+ '                  </off:Condition>'
-+ '               </off:Conditions>'
-+ '            </off:Rule>'
-+ '            <!--off:Rule Entity="Transaction">'
-+ '               <off:Conditions>'
-+ '                  <off:Condition>'
-+ '                     <off:Name>QUALIFY_COUPON</off:Name>'
-+ '                     <off:Operator>IN</off:Operator>'
-+ '                     <off:Values>'
-+ '                        <off:Value>NRS123</off:Value>'
-+ '                     </off:Values>'
-+ '                  </off:Condition>'
-+ '                  <off:Name>MUST_PRESENT_TENDER_SYWR</off:Name>'
-+ '                                                                <off:Operator>CONTAINS</off:Operator>'
-+ '                                                                <off:Values>'
-+ '                                                                                <off:Value>SYWR</off:Value>'
-+ '                                                                                <off:Value>Min</off:Value>'
-+ '                                                                                <off:Value>Max</off:Value>'
-+ '                                                                </off:Values>'
-+ '                                                                <off:ConditionAttributes>'
-+ '                                                                                <off:ConditionAttribute>'
-+ '                                                                                                <off:Name>SYWR</off:Name>'
-+ '                                                                                                <off:Operator>EQUALS</off:Operator>'
-+ '                                                                                                <off:Values>'
-+ '                                                                                                                <off:Value>Y</off:Value>'
-+ '                                                                                                </off:Values>'
-+ '                                                                                </off:ConditionAttribute>'
-+ '                                                                                <off:ConditionAttribute>'
-+ '                                                                                                <off:Name>Min</off:Name>'
-+ '                                                                                                <off:Operator>EQUALS</off:Operator>'
-+ '                                                                                                <off:Values>'
-+ '                                                                                                                <off:Value>10.00</off:Value>'
-+ '                                                                                                </off:Values>'
-+ '                                                                                </off:ConditionAttribute>'
-+ '                                                                                <off:ConditionAttribute>'
-+ '                                                                                                <off:Name>Max</off:Name>'
-+ '                                                                                                <off:Operator>EQUALS</off:Operator>'
-+ '                                                                                                <off:Values>'
-+ '                                                                                                                <off:Value>20.00</off:Value>'
-+ '                                                                                                </off:Values>'
-+ '                                                                                </off:ConditionAttribute>'
-+ '                                                                </off:ConditionAttributes>'
-+ '                                                </off:Condition>'
-+ '               </off:Conditions>'
-+ '            </off:Rule-->'
-+ '            <off:RuleActions>'
-+ '               <off:ActionID>ACTION-1</off:ActionID>'
-+ '            </off:RuleActions>'
-+ '         </off:Rules>'
-+ '         <off:Actions>'
-+ '            <off:Action ActionID="ACTION-1" ActionName="EARN">'
-+ '               <off:ActionProperties>'
-+ '                  <off:ActionProperty>'
-+ '                     <off:Property>'
-+ '                        <off:Name>OFFER_FOR</off:Name>'
-+ '                        <off:Values>'
-+ '                           <off:Value>Item</off:Value>'
-+ '                        </off:Values>'
-+ '                     </off:Property>'
-+ '                  </off:ActionProperty>'
-+ '                  <off:ActionProperty>'
-+ '                     <off:Property>'
-+ '                        <off:Name>OFFER_RANGE</off:Name>'
-+ '                        <off:Values>'
-+ '                           <off:Value>Flat</off:Value>'
-+ '                        </off:Values>'
-+ '                     </off:Property>'
-+ '                  </off:ActionProperty>'
-+ '                  <off:ActionProperty PropertyType="Tier">'
-+ '                     <off:Property>'
-+ '                        <off:Name>MIN</off:Name>'
-+ '                        <off:Values>'
-+ '                           <off:Value>1</off:Value>'
-+ '                        </off:Values>'
-+ '                     </off:Property>'
-+ '                     <off:Property>'
-+ '                        <off:Name>MAX</off:Name>'
-+ '                        <off:Values>'
-+ '                           <off:Value>6</off:Value>'
-+ '                        </off:Values>'
-+ '                     </off:Property>'
-+ '                     <off:Property>'
-+ '                        <off:Name>VALUE</off:Name>'
-+ '                        <off:Values>'
-+ '                           <off:Value>5000</off:Value>'
-+ '                        </off:Values>'
-+ '                     </off:Property>'
-+ '                     <off:Property>'
-+ '                        <off:Name>FOR_EVERY</off:Name>'
-+ '                        <off:Values>'
-+ '                           <off:Value>2</off:Value>'
-+ '                        </off:Values>'
-+ '                     </off:Property>'
-+ '                  </off:ActionProperty>'
-+ '                  <off:ActionProperty PropertyType="Cap">'
-+ '                     <!--off:Property>'
-+ '                        <off:Name>OFFER_TIMES_CAP</off:Name>'
-+ '                        <off:Values>'
-+ '                           <off:Value>2</off:Value>'
-+ '                        </off:Values>'
-+ '                     </off:Property-->'
-+ '                     <off:Property>'
-+ '                        <off:Name>MEMBER_TIMES_CAP</off:Name>'
-+ '                        <off:Values>'
-+ '                           <off:Value>1</off:Value>'
-+ '                        </off:Values>'
-+ '                     </off:Property>'
-+ '                     <!--off:Property>'
-+ '                        <off:Name>STORE_TIMES_CAP</off:Name>'
-+ '                        <off:Values>'
-+ '                          <off:Value>5</off:Value>'
-+ '                        </off:Values>'
-+ '                     </off:Property>'
-+ '                     <off:Property>'
-+ '                        <off:Name>OFFER_POINTS_CAP</off:Name>'
-+ '                        <off:Values>'
-+ '                           <off:Value>10000</off:Value>'
-+ '                        </off:Values>'
-+ '                     </off:Property-->'
-+ '                     <!--off:Property>'
-+ '                        <off:Name>STORE_POINTS_CAP</off:Name>'
-+ '                        <off:Values>'
-+ '                           <off:Value>15000</off:Value>'
-+ '                        </off:Values>'
-+ '                     </off:Property-->'
-+ '                     <!--off:Property>'
-+ '                        <off:Name>MEMBER_POINTS_CAP</off:Name>'
-+ '                        <off:Values>'
-+ '                           <off:Value>10000</off:Value>'
-+ '                        </off:Values>'
-+ '                     </off:Property-->'
-+ '                  </off:ActionProperty>'
-+ '               </off:ActionProperties>'
-+ '            </off:Action>'
-+ '         </off:Actions>'
-+ '         <off:RealTimeFlag>N</off:RealTimeFlag>'
-+ '      </off:CreateUpdateOffer>'
-+ '   </soap:Body>'
-+ '</soap:Envelope>';
-
-xmlDoc = $.parseXML( XmlData ),
-
+	  var that = this;
+	  var XmlData = $("#dataPost").html();
 	  $("#createOffer").on('click',function(event){
 		  event.preventDefault();
-		  $.ajax({
+		   $.ajax({
 			  url: "https://esbqa-med.intra.searshc.com/rest/tellurideAS/Offer",
-			  type: "POST",
-			  headers : {'client_id':'OFFER_REC_SYS_QA','access_token':'1614f5eef3d104010944221d19533c54c29f413bbe55608a2d237cc6f4f724ae'},
-			  contentType: "application/xml",
-        dataType: 'xml',
-			  data: xmlDoc,
+			  type: 'POST',
+			  headers : {'client_id':'OFFER_REC_SYS_QA',
+			  'access_token':'c9931b52986f1b9618269137662b1332dd454f64d1f8a20cab1d632ef7e021f',
+			  'content-type':'application/xml',
+			  'Access-Control-Allow-Origin':'*'},
+			  data: that.createXmlform(),
 			  success: function(data){
-				  alert(data+" data sent");
+				  alert(data+" data send");
 			  },
 			  error: function(error){
 
 			  }
 		})
+		/* var xmlhttp = new XMLHttpRequest();
+		xmlhttp.open('POST','https://esbqa-med.intra.searshc.com/rest/tellurideAS/Offer',true);
+		xmlhttp.set */
 	  })
 
   },
+
+  createXmlform : function(){
+	  var xml = '<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:off="http://rewards.sears.com/schemas/offer/" xmlns:sch="http://rewards.sears.com/schemas/">';
+	  xml += '<soap:Header></soap:Header><soap:Body><off:CreateUpdateOffer><sch:MessageVersion>01</sch:MessageVersion><sch:RequestorID>OFRP</sch:RequestorID><sch:Source>TI</sch:Source><off:OfferNumber>NUMB</off:OfferNumber>';
+
+     xml += '<off:OfferPointsDollarName>'+$("#OfferPointsDollarName").val()+'</off:OfferPointsDollarName>';
+     xml += '<off:OfferDescription>'+$("#OfferDescription").val()+'</off:OfferDescription>';
+     xml += '<off:OfferType>'+$("#OfferType").val()+'</off:OfferType>';
+     xml += '<off:OfferSubType>'+$("#OfferSubType").val()+'</off:OfferSubType>';
+		 xml += '<off:OfferStartDate>'+$("#OfferStartDate").val()+'</off:OfferStartDate>';
+     xml += '<off:OfferStartTime>00:00:00</off:OfferStartTime>';
+     xml += '<off:OfferEndDate>'+$("#OfferEndDate").val()+'</off:OfferEndDate>';
+     xml += '<off:OfferEndTime>23:59:00</off:OfferEndTime>';
+		 xml += '<off:OfferBUProgram><off:BUProgram><off:BUProgramName>BU-Apparel</off:BUProgramName><off:BUProgramCost>0.00</off:BUProgramCost></off:BUProgram></off:OfferBUProgram>';
+     xml += '<off:ReceiptDescription>TELL-16289</off:ReceiptDescription>';
+     xml += '<off:OfferCategory>Stackable</off:OfferCategory>';
+     xml += '<off:ExpenseAllocation>Noallocation–ChargealltoWH</off:ExpenseAllocation>';
+     xml += '<off:ModifiedBy>nand</off:ModifiedBy>';
+     xml += '<off:ModifiedTS>2014-06-2510:40:00</off:ModifiedTS>';
+     xml += '<off:OfferAttributes>';
+     xml +=    '<off:OfferAttribute><off:Name>MULTI_TRAN_IND</off:Name><off:Values><off:Value>N</off:Value></off:Values></off:OfferAttribute>';
+     xml += '</off:OfferAttributes>';
+     xml +=  '<off:Rules>';
+      xml +=      '<off:Rule Entity="Location">';
+      xml +=         '<off:Conditions>';
+      xml +=            '<off:Condition>';
+      xml +=             '<off:Name>STORE_LOCATION</off:Name>';
+      xml +=             '<off:Operator>EQUALS</off:Operator>';
+      xml +=             '<off:Values>';
+      xml +=                '<off:Value>OrderLocation</off:Value>';
+      xml +=          '</off:Values>';
+      xml +=         '</off:Condition>';
+      xml +=   '</off:Conditions>';
+          xml +=  '</off:Rule>';
+          xml +=  '<off:RuleActions>';
+          xml +=     '<off:ActionID>ACTION-1</off:ActionID>';
+          xml +=  '</off:RuleActions>';
+        xml += '</off:Rules>';
+        xml += '<off:Actions>';
+          xml +=  '<off:Action ActionID="ACTION-1" ActionName="EARN">';
+          xml +=     '<off:ActionProperties>';
+            xml +=      '<off:ActionProperty PropertyType="Tier">';
+              xml +=       '<off:Property>';
+              xml +=          '<off:Name>MIN</off:Name>';
+              xml +=          '<off:Values>';
+              xml +=             '<off:Value>1</off:Value>';
+                xml +=        '</off:Values>';
+                xml +=     '</off:Property>';
+                xml +=     '<off:Property>';
+                xml +=        '<off:Name>MAX</off:Name>';
+                xml +=        '<off:Values>';
+                xml +=           '<off:Value>6</off:Value>';
+                xml +=        '</off:Values>';
+                xml +=     '</off:Property>';
+                xml +=     '<off:Property>';
+                xml +=        '<off:Name>VALUE</off:Name>';
+                xml +=        '<off:Values>';
+                xml +=           '<off:Value>5000</off:Value>';
+                xml +=        '</off:Values>';
+                xml +=     '</off:Property>';
+                xml +=     '<off:Property>';
+                xml +=        '<off:Name>FOR_EVERY</off:Name>';
+                xml +=        '<off:Values>';
+                xml +=           '<off:Value>2</off:Value>';
+                xml +=        '</off:Values>';
+                xml +=     '</off:Property>';
+                xml +=  '</off:ActionProperty>';
+                xml += '</off:ActionProperties>';
+          xml +=  '</off:Action>';
+         xml +='</off:Actions>';
+         xml +='<off:RealTimeFlag>N</off:RealTimeFlag>';
+    xml +=  '</off:CreateUpdateOffer>';
+   xml +='</soap:Body>';
+xml +='</soap:Envelope>';
+
+		 return xml;
+  }
 };
