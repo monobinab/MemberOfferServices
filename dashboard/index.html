@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Sears - Create Offers </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+	<link href="css/bootstrap.min.css" rel="stylesheet">
+	<link href="css/style.css" rel="stylesheet">
+	<link href="font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css"/>
+    <link rel="shortcut icon" href="img/favicon.png">
+	<link rel="stylesheet" type="text/css" href="js/plugins/select2/select2_metro.css" />
+	
+</head>
+<body>
+  <div class="container-fluid">
+  <div id="dataPost" style="display:none;"></div>
+		<div class="col-md-12 top-back no-pad text-align-right">
+		  <div class="col-md-12">
+			<a href="index.html"> <img src="img/logo.png" height="30px" /></a>
+		  </div>
+		</div>
+		<div class="clear clearfix"> </div>
+		<div class="col-md-12 inner-top-back no-pad">
+		<!-- Top header -->
+		  <div class="col-md-12">
+				<ul class="nav nav-tabs cus-nav">
+				<li> <h3 class="automated-text"> ORS Dashboard </h3> </li>
+				<li class="">
+				  <ul class="user-profile">
+					<li class="profile-menu">
+						<a class="dropdown-toggle" data-toggle="dropdown" data-hover="dropdown" data-delay="1000" data-close-others="true" style="padding-right:0px;padding-left:0px;cursor:pointer">
+							 <i class="icon-user"> </i> <span> Yogesh </span> <i class="icon-angle-down"></i>
+						</a>
+						<ul class="dropdown-menu pull-right" role="menu">
+							<li> <i class="icon-caret-up profile-icon-up"> </i> </li>
+							<li><a href="#"> Logout </a></li>
+						</ul>
+					</li>
+				  </ul>
+				</li>
+			</ul>
+		  </div>
+		  <!-- Top header ends -->
+		</div>
+		<div class="clear clearfix"><br/> </div>
+		<!-- body container starts -->
+		<div class="container">
+		 <div class="row form-back">
+			<div>
+			  <!-- Nav tabs -->
+			  <ul class="nav nav-tabs" role="tablist">
+				<li role="presentation" class="active"><a href="#dashboard" aria-controls="dashboard" role="tab" data-toggle="tab">Dashboard</a></li>
+				<li role="presentation"><a href="#createOffers" aria-controls="createOffers" role="tab" data-toggle="tab">Create Offers</a></li>
+				<li role="presentation"><a href="#compaignDetails" aria-controls="compaignDetails" role="tab" data-toggle="tab">Campaign Details</a></li>
+			  </ul>
+			  <!-- Tab panes -->
+			  <div class="tab-content">
+				<div role="tabpanel" class="tab-pane active" id="dashboard">
+					<div class="row form-back">
+					  <div class="col-md-9" style="padding:0px">
+						<h4 class="h4-text"> Dashboard <hr class="hr" /></h4>
+						<div class="form-group">
+							<div class="col-md-12">
+								<label class="col-md-3 no-pad control-label"> Dimension : </label>
+								<div class="col-md-4 no-pad"> <select class="form-control" id="OfferType">
+															<option selected> Time </option>
+															<option>Member</option>
+															<option></option>
+														</select> </div>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-md-12">
+								<h4 class="h4-text1"> Metrics : </h4>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-md-12">
+								<label class="col-md-3 no-pad control-label"> Category : </label>
+								<div class="col-md-4 no-pad"> <select class="form-control" id="OfferType">
+															<option selected> Approval </option>
+															<option></option>
+															<option></option>
+														</select> </div>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-md-12">
+								<label class="col-md-3 no-pad control-label"> $ value of points issued : </label>
+								<div class="col-md-4 no-pad"> <input type="text" class="form-control" placeholder="10000" /> </div>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-md-12">
+								<label class="col-md-3 no-pad control-label"> Points Earned : </label>
+								<div class="col-md-4 no-pad">  <input type="text" class="form-control" placeholder="10000" /> </div>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-md-12">
+								<label class="col-md-3 no-pad control-label"> Points Burned : </label>
+								<div class="col-md-4 no-pad">  <input type="text" class="form-control" placeholder="10000" /> </div>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-md-12">
+								<h4 class="h4-text1">Member Metrics : </h4>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-md-12">
+								<label class="col-md-3 no-pad control-label"> Redemed : </label>
+								<div class="col-md-4 no-pad">  <input type="text" class="form-control" placeholder="10000" /> </div>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-md-12">
+								<label class="col-md-3 no-pad control-label"> Not Redemed : </label>
+								<div class="col-md-4 no-pad">  <input type="text" class="form-control" placeholder="10000" /> </div>
+							</div>
+						</div>
+					  </div>
+					 </div>
+				</div>
+				<div role="tabpanel" class="tab-pane" id="createOffers">
+					<div class="row form-back">
+					  <div class="col-md-6" style="padding:0px">
+					     <h4 class="h4-text"> Offers Details <hr class="hr" /></h4>
+						<div class="form-group">
+							<div class="col-md-12">
+								<label class="col-md-3 no-pad control-label"> Offer Type : </label>
+								<div class="col-md-4 no-pad"> <select class="form-control" id="OfferType">
+															<option selected> Liquidly Injection </option>
+															<option></option>
+															<option></option>
+														</select> </div>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-md-6">
+								<label class="col-md-6 control-label no-pad">Min :</label>
+								<div class="col-md-4" style="padding-right:5px"> <input class="form-control" id="OfferStartDate" type="date" name="offerstartdate" placeholder="$1"/> </div>						
+							</div>
+							<div class="col-md-6">
+								<label class="col-md-3 control-label no-pad" >Max : </label>
+								<div class="col-md-4 no-pad"> <input class="form-control" id="OfferEndDate" type="date" name="offerenddate" placeholder="$100"/> </div>						
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-md-12">
+								<label class="col-md-3 no-pad control-label"> Validity : </label>
+								<div class="col-md-4 no-pad"> <input class="form-control" id="OfferStartDate" type="date" name="offerstartdate" placeholder="$1"/> </div>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-md-12">
+								<label class="col-md-6 no-pad control-label"> Max per Member Issurance frequancy : </label>
+								<div class="col-md-6 no-pad"> <select class="form-control" id="OfferType">
+															<option selected> 2 per week </option>
+															<option></option>
+															<option></option>
+														</select> </div>
+							</div>
+						</div>
+					  </div>
+					 </div>
+				</div>
+				<div role="tabpanel" class="tab-pane" id="compaignDetails">
+					<div class="row form-back">
+					  <div class="col-md-6" style="padding:0px">
+					  <h4 class="h4-text"> Campaign Details <hr class="hr" /></h4>
+						<div class="form-group">
+							<div class="col-md-12">
+								<label class="col-md-3 no-pad control-label"> Money : </label>
+								<div class="col-md-6 no-pad"> <select class="form-control" id="OfferType">
+															<option selected> 1000 </option>
+															<option></option>
+															<option></option>
+														</select> </div>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-md-12">
+								<label class="col-md-3 no-pad control-label"> Category : </label>
+								<div class="col-md-6 no-pad"> <select class="form-control" id="OfferType">
+															<option selected> Approval </option>
+															<option></option>
+															<option></option>
+														</select> </div>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-md-12">
+								<label class="col-md-3 no-pad control-label"> Conversion Ratio : </label>
+								<div class="col-md-6 no-pad"> <select class="form-control" id="OfferType">
+															<option selected> 10 </option>
+															<option></option>
+															<option></option>
+														</select> </div>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-md-12">
+								<label class="col-md-3 no-pad control-label"> Period : </label>
+								<div class="col-md-6 no-pad"> <select class="form-control" id="OfferType">
+															<option selected> Weeks </option>
+															<option></option>
+															<option></option>
+														</select> </div>
+							</div>
+						</div>
+					  </div>
+					 </div>
+				</div>
+			  </div>
+			</div>
+		 </div>
+		 
+		</div>
+		<!-- body container ends -->
+		<footer>
+		  <div class="col-md-12 no-pad top-back top-margin">
+			<div class="col-md-12" style="height:28px">
+				<p class="footer-text"> Copyright &copy;2016-17, Designed & Developed by Sears Holdings </p>
+			</div>
+		  </div>
+		</footer>
+	</div>
+  <script src="js/plugins/jquery-1.10.2.min.js" type="text/javascript"></script>
+  <script src="js/plugins/jquery-migrate-1.2.1.min.js" type="text/javascript"></script>
+  <script type="text/javascript" src="js/plugins/jquery.easyui.min.js"></script>
+  <script src="js/plugins/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
+  <script src="js/plugins/jquery.cookie.min.js" type="text/javascript"></script>
+  <script type="text/javascript" src="js/plugins/select2/select2.min.js"></script>
+  <script src="js/custom/app.js"></script>
+  <script src="js/scripts.js"></script>
+
+  <script>
+	  $(document).ready(function() {
+		 GlobalVar = {};
+		 GlobalVar.Scripts = new Scripts.Constructor();
+		 GlobalVar.Scripts.init();
+	  });
+   </script>
+</body>
