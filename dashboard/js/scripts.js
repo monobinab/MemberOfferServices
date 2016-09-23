@@ -6,6 +6,7 @@ var Scripts = {
 
   init: function() {
 	  var that = this;
+		
 	  var XmlData = $("#dataPost").html();
 	  $("#createOffer").on('click',function(event){
 		  event.preventDefault();

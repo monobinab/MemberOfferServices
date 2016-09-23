@@ -1,0 +1,13 @@
+{
+	"data" : [{
+		"money": 1000,
+		"category": "Apparel",
+		"conversion_ratio": 10,
+		"period": "6 week"
+	}, {
+		"money": 1000,
+		"category": "Apparel",
+		"conversion_ratio": 10,
+		"period": "6 week"
+	}]
+}		

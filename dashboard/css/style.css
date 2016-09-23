@@ -443,6 +443,7 @@ margin:10px 15px
 .btn-cus:hover,.btn-cus:focus {
 	color:#fff;
 	box-shadow:2px 2px 4px 2px #aaa;
+	background:#aaa;
 }
 .rules-table {
 	border: 1px solid #ECECEC;
@@ -471,6 +472,7 @@ margin:10px 15px
 .form-back {
 	background-color:#f1f1f1;
 	padding:15px;
+	margin-bottom:50px;
 }
 .control-label {
 text-align:left
@@ -480,4 +482,35 @@ text-align:left
 }
 .control-label {
 	margin-top:6px;
+}
+.form-back-cus {
+	background:#fff;
+	overflow:hidden;
+	margin:0px -2px;
+}
+.h4-cus{
+	padding-left:0px;
+	color:#aaa;
+	font-size:18px;
+}
+.hr-cus { 
+	margin-top:5px;
+}
+
+.btn-greyBlue {
+	background:#7A8892;
+	color:#fff;
+	padding:4px;
+}
+.icon-size {
+	font-size:14px
+}
+.form-footer {
+	background:#aaa;
+}
+.nav-tabs li a {
+	font-weight:600;
+}
+.btn-table {
+	padding:0px 6px;
 }
