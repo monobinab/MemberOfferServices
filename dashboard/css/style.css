@@ -464,7 +464,7 @@ margin:10px 15px
 	padding:3px 9px;
 }
 .cus-modal-dialog {
-	width:75%;
+	width:55%;
 }
 .control-label-cus {
 	text-align:right
@@ -495,9 +495,10 @@ text-align:left
 }
 .hr-cus { 
 	margin-top:5px;
+	margin-bottom:2px;
 }
 
-.btn-greyBlue {
+.btn-greyBlue , .btn-greyBlue:hover {
 	background:#7A8892;
 	color:#fff;
 	padding:4px;

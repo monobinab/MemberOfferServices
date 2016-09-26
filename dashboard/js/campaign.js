@@ -80,5 +80,60 @@ var Campaign = {
 				}
 			]
 	    }); 
+		
+	/* next- previous code */
+		// next previous code
+		var content = $('#content');
+		content.css('list-style-type', 'none');
+		content.wrap('<div id="wrapper"></div>');
+
+		var wrapper = $('#wrapper');
+		wrapper.append('<div class="clear clearfix"> </div><div class="modal-footer"><button type="button" class="btn btn-cus" id="previous"><i class="icon-chevron-sign-left"></i></button> <button type="button" class="btn btn-cus" id="next" style="margin-bottom: 5px">  <i class="icon-chevron-sign-right"></i></button> <button type="button" id="addRule" class="btn btn-greyBlue" style="margin-bottom: 5px"> <i class="icon-thumbs-up"></i> Confirm </button></div>');
+
+		$('#previous').hide();
+		$('#addRule').hide();
+
+		var liElements = content.children();
+		liElements.hide();
+		liElements.first().show();
+
+		var liElementCount = liElements.length;
+
+		if (liElementCount > 0) {
+			var counter = 0;
+
+			function swapContent() {
+				if (counter == 0) {
+					$('#previous').hide();
+				} else {
+					$('#previous').show();
+					$('#addRule').hide();
+				}
+
+				if (counter == liElementCount - 1) {
+					$('#next').hide();
+					$('#addRule').show();
+				} else {
+					$('#next').show();
+				}
+
+				liElements.hide();
+				$(liElements.get(counter)).show();
+			}
+
+			if(liElements.last() == true){
+				$('#addRule').show();
+			}
+			
+			$('#next').click(function () {
+				counter++;
+				swapContent();
+			});
+
+			$('#previous').click(function () {
+				counter--;
+				swapContent();
+			});
+		}
 	}
 }
