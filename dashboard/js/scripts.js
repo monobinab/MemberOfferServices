@@ -29,7 +29,50 @@ var Scripts = {
 		xmlhttp.open('POST','https://esbqa-med.intra.searshc.com/rest/tellurideAS/Offer',true);
 		xmlhttp.set */
 	  })
-
+//$.jqplot('chart2',  [[[1, 2],[3,5.12],[5,13.1],[7,33.6],[9,85.9],[11,219.9]]]);
+$.jqplot.config.enablePlugins = true;
+        var s1 = [20, 80];
+        var ticks = ['Redeemed', 'Not redeemed'];
+         
+        plot1 = $.jqplot('chart2', [s1], {
+           title: "Member metrics",
+		   animate: !$.jqplot.use_excanvas,
+            seriesDefaults:{
+                renderer:$.jqplot.BarRenderer,
+                pointLabels: { show: true }
+            },
+            axes: {
+                xaxis: {
+				
+                    renderer: $.jqplot.CategoryAxisRenderer,
+                    ticks: ticks,
+					label: "Status"
+                },
+				yaxis: {
+					tickOptions:{
+            formatString:'%.2f%'
+            },
+				label: "Percentage",
+				labelRenderer: $.jqplot.CanvasAxisLabelRenderer
+				}
+				
+            },
+			highlighter: {
+					show: true,
+					sizeAdjust: 2.5
+				},
+				cursor: {
+					show: false
+				}
+			
+            
+        });
+     
+        $('#chart2').bind('jqplotDataClick', 
+            function (ev, seriesIndex, pointIndex, data) {
+                $('#chart1').html('series: '+seriesIndex+', point: '+pointIndex+', data: '+data);
+            }
+        );
   },
 
   createXmlform : function(){

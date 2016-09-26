@@ -50,6 +50,7 @@
 		  <div class="col-md-4" style="margin-top:4px">
 			<div class="col-md-9" style="padding:0px">
 				<h4 class="h4-cus"> Member Specific Metrics </h4>
+				 <div id="chart2" style="height:300px; width:400px"></div>
 			</div>
 		  </div>
 		  <div class="col-md-8" style="margin-top:4px">
@@ -97,6 +98,90 @@
 		  <div class="modal-body">
 			<ul id="content">
 				<li>
+		<div class="clear clearfix"><br/> </div>
+		<!-- body container starts -->
+		<div class="container">
+		 <div class="row form-back">
+			<div>
+			  <!-- Nav tabs -->
+			  <ul class="nav nav-tabs" role="tablist">
+				<li role="presentation"><a href="#dashboard" aria-controls="dashboard" role="tab" data-toggle="tab">Dashboard</a></li>
+				<li role="presentation"><a href="#createOffers" aria-controls="createOffers" role="tab" data-toggle="tab">Offer Details</a></li>
+				<li role="presentation" class="active"><a href="#compaignDetails" aria-controls="compaignDetails" role="tab" data-toggle="tab">Campaign Details</a></li>
+			  </ul>
+			  <!-- Tab panes -->
+			  <div class="tab-content">
+				<div class="tab-pane" id="dashboard">
+				  <div class="row form-back-cus">
+					  <h5 class="h4-text"> Coming Soon..</h5>
+		
+				  </div>
+					<!-- <div class="row form-back-cus">
+					  <div class="col-md-9" style="padding:0px">
+						<div class="form-group">
+							<div class="col-md-12">
+								<label class="col-md-3 no-pad control-label"> Dimension : </label>
+								<div class="col-md-4 no-pad"> <select class="form-control" id="OfferType">
+															<option selected> Time </option>
+															<option>Member</option>
+															<option></option>
+														</select> </div>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-md-12">
+								<h4 class="h4-text1"> Metrics : </h4>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-md-12">
+								<label class="col-md-3 no-pad control-label"> Category : </label>
+								<div class="col-md-4 no-pad"> <select class="form-control" id="OfferType">
+															<option selected> Approval </option>
+															<option></option>
+															<option></option>
+														</select> </div>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-md-12">
+								<label class="col-md-3 no-pad control-label"> $ value of points issued : </label>
+								<div class="col-md-4 no-pad"> <input type="text" class="form-control" placeholder="10000" /> </div>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-md-12">
+								<label class="col-md-3 no-pad control-label"> Points Earned : </label>
+								<div class="col-md-4 no-pad">  <input type="text" class="form-control" placeholder="10000" /> </div>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-md-12">
+								<label class="col-md-3 no-pad control-label"> Points Burned : </label>
+								<div class="col-md-4 no-pad">  <input type="text" class="form-control" placeholder="10000" /> </div>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-md-12">
+								<h4 class="h4-text1">Member Metrics : </h4>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-md-12">
+								<label class="col-md-3 no-pad control-label"> Redemed : </label>
+								<div class="col-md-4 no-pad">  <input type="text" class="form-control" placeholder="10000" /> </div>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-md-12">
+								<label class="col-md-3 no-pad control-label"> Not Redemed : </label>
+								<div class="col-md-4 no-pad">  <input type="text" class="form-control" placeholder="10000" /> </div>
+							</div>
+						</div>
+					  </div>
+					 </div> -->
+				</div>
+				<div class="tab-pane" id="createOffers">
 					<div class="row form-back-cus">
 						<div class="form-group">
 							<label class="col-md-3 control-label"> Offer Type : </label>
@@ -197,7 +282,15 @@
   <script src="js/plugins/data-tables/jquery.dataTables.min.js" type="text/javascript"></script>
   <script src="js/plugins/jquery.cookie.min.js" type="text/javascript"></script>
   <script type="text/javascript" src="js/plugins/select2/select2.min.js"></script>
-
+  <script type="text/javascript" src="js/jqplot/jquery.jqplot.js"></script>
+  <script type="text/javascript" src="js/jqplot/plugins/jqplot.json2.js"></script>
+  <script type="text/javascript" src="js/jqplot/plugins/jqplot.barRenderer.js"></script>
+  <script type="text/javascript" src="js/jqplot/plugins/jqplot.categoryAxisRenderer.js"></script>
+  <script type="text/javascript" src="js/jqplot/plugins/jqplot.canvasAxisLabelRenderer.js"></script>
+  <script type="text/javascript" src="js/jqplot/plugins/jqplot.canvasTextRenderer.js"></script>
+  <script type="text/javascript" src="js/jqplot/plugins/jqplot.highlighter.js"></script>
+<script type="text/javascript" src="js/jqplot/plugins/jqplot.cursor.js"></script>
+  <link rel="stylesheet" type="text/css" href="js/jqplot/jquery.jqplot.css" />
 	
   <script src="js/custom/app.js"></script>
   <script src="js/Globalvar.js"></script>
