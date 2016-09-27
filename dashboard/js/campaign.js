@@ -40,7 +40,7 @@ var Campaign = {
 				},
 				{ data : null,
 				  render : function(data){
-					return "<button class='btn btn-table' onclick='GlobalVar.Campaign.Edit("+data.campaign_details.campaign_id+")'> <i class='icon-edit icon-size'> </i> </button> <button class='btn btn-table'> <i class='icon-trash icon-size'> </i> </button>"
+					return "<button class='btn btn-table' onclick='GlobalVar.Campaign.Edit("+data.campaign_details.campaign_id+")'> <i class='icon-edit icon-size'> </i> </button>"
 				  }
 				}
 			];
