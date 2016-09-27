@@ -1,0 +1,22 @@
+[{
+        "category": "Apparel",
+        "conversion_ratio": 10,
+        "period": "6 week",
+        "name": "campaign updated again",
+        "id": 2,
+		"money": "$100"
+    },{
+        "category": "Apparel",
+        "conversion_ratio": 10,
+        "period": "6 week",
+        "name": "campaign updated again",
+        "id": 2,
+		"money": "$100"
+    },{
+        "category": "Apparel",
+        "conversion_ratio": 10,
+        "period": "6 week",
+        "name": "campaign updated again",
+        "id": 2,
+		"money": "$100"
+    }]
