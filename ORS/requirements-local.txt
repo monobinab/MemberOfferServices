@@ -1,0 +1,4 @@
+# only install locally since GAE has its own version
+MySQL-python==1.2.5
+djangorestframework==3.4.7
+gcloud==0.18.1

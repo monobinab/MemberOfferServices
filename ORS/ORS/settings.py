@@ -40,7 +40,6 @@ INSTALLED_APPS = (
     'rest_framework',
     'rest_framework.authtoken',
     'campaign',
-    'corsheaders',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -52,7 +51,6 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
 )
 
@@ -123,8 +121,8 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-# STATIC_ROOT = '/home/affine/ORS/static/'
+STATIC_ROOT = '/home/affine/ORS/static/'
 
-STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, "static"),
-)
+# STATICFILES_DIRS = (
+#     os.path.join(BASE_DIR, "static"),
+# )
