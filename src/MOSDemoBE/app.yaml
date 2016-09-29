@@ -1,4 +1,4 @@
-application: syw-offers
+application: syw_offers
 version: 1
 runtime: python27
 api_version: 1

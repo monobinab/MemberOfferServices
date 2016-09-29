@@ -30,9 +30,9 @@ class Campaign_Data(ndb.Model):
     created_at = ndb.DateTimeProperty(indexed=True)
     updated_at = ndb.DateTimeProperty(auto_now_add=True)
 	
-	@classmethod
+    @classmethod
     def get_all_campaigns(cls):
-        return cls.query()
+        return cls.query().fetch(10, offset=0)
 
 
 
@@ -45,7 +45,7 @@ class Save(webapp2.RequestHandler):
         campaign_name = campaign_dict['name']
         is_entity = ndb.Key('Campaign_Data', campaign_name).get()
         logging.info('is_entity: %s',is_entity)
-        logging.info('type is_entity: %s',type(is_entity))
+        logging.info('type is_entity: %s',type (is_entity))
 
         #Check for create new entity or update an existing entity
         if is_entity is None:
@@ -56,9 +56,12 @@ class Save(webapp2.RequestHandler):
 
 class GetALL(webapp2.RequestHandler):
 	def get(self):
-		entity_list = Campaign_Data.get_all_campaigns()
+		entity_list = Campaign_Data.query().fetch()
+		#logging.info(entity_list.content)
 		result = list()
+		logging.info('len of the list: %s',len(entity_list))
 		for each_entity in entity_list:
+			logging.info(each_entity.content)
 			campaign_dict = dict()
 			offer_dict = dict()
 
@@ -77,7 +80,7 @@ class GetALL(webapp2.RequestHandler):
 			each_dict['campaign_details'] = campaign_dict
 			each_dict['offer_details'] = offer_dict
 			result.append(each_dict)
-		return dict(data=result)
+		self.response.write({'data':result})
 			
 def savecampaign(jsondata,createdtime):
     #{"offer_details":{"offer_type":"Liquidly Injection","min_value":"1","max_value":"2","valid_till":"2016-09-22","member_issuance":"2 per week"},
@@ -111,8 +114,7 @@ def savecampaign(jsondata,createdtime):
 # [START app]
 app = webapp2.WSGIApplication([
     ('/savecampaign', Save),
-	('/getAllCampaign', GetALL)], debug=True),
-	
+	('/getAllCampaign', GetALL)], debug=True)
 # [END app]
 
 def main():
