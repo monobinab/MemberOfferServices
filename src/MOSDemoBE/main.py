@@ -15,6 +15,11 @@ import time
 from time import gmtime, strftime
 from datetime import datetime
 
+DEFAULT_CAMPAIGN_NAME = 'default_campaign'
+
+def campaign_key(campaign_name=DEFAULT_CAMPAIGN_NAME):
+	return ndb.Key('Campaign_Data', campaign_name)
+
 class Campaign_Data(ndb.Model):
     name = ndb.StringProperty(indexed=True)
     #owner = ndb.StringProperty(indexed=False)
@@ -54,14 +59,18 @@ class Save(webapp2.RequestHandler):
             savecampaign(jsondata,is_entity.created_at)
 
 
-class GetALL(webapp2.RequestHandler):
+class GetAll(webapp2.RequestHandler):
 	def get(self):
-		entity_list = Campaign_Data.query().fetch()
-		#logging.info(entity_list.content)
+		campaign_name = self.request.get('campaign_name', DEFAULT_CAMPAIGN_NAME)
+		query = Campaign_Data.query()
+		entity_list = query.fetch(10)
+		#logging.info(entity_list)
+		#logging.info(query)
 		result = list()
 		logging.info('len of the list: %s',len(entity_list))
-		for each_entity in entity_list:
-			logging.info(each_entity.content)
+		for each in entity_list:
+			key = ndb.Key('Campaign_Data', each.name)
+			each_entity = key.get()
 			campaign_dict = dict()
 			offer_dict = dict()
 
@@ -75,12 +84,13 @@ class GetALL(webapp2.RequestHandler):
 			offer_dict['min_value'] = each_entity.min_value
 			offer_dict['max_value'] = each_entity.max_value
 			offer_dict['valid_till'] = each_entity.valid_till
-			offer_dict['member_issuance'] = each_entity.member_issuance
+			offer_dict['member_issuance'] = each_entity.max_per_member_issuance_frequency
 			each_dict= dict()
 			each_dict['campaign_details'] = campaign_dict
 			each_dict['offer_details'] = offer_dict
 			result.append(each_dict)
-		self.response.write({'data':result})
+		self.response.headers['Content-Type'] = 'application/json'
+		self.response.write(json.dumps({'data':result}))
 			
 def savecampaign(jsondata,createdtime):
     #{"offer_details":{"offer_type":"Liquidly Injection","min_value":"1","max_value":"2","valid_till":"2016-09-22","member_issuance":"2 per week"},
@@ -114,7 +124,7 @@ def savecampaign(jsondata,createdtime):
 # [START app]
 app = webapp2.WSGIApplication([
     ('/savecampaign', Save),
-	('/getAllCampaign', GetALL)], debug=True)
+	('/getAllCampaign', GetAll)], debug=True)
 # [END app]
 
 def main():
