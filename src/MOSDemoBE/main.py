@@ -29,6 +29,11 @@ class Campaign_Data(ndb.Model):
     valid_till = ndb.StringProperty(indexed=False)
     created_at = ndb.DateTimeProperty(indexed=True)
     updated_at = ndb.DateTimeProperty(auto_now_add=True)
+	
+	@classmethod
+    def get_all_campaigns(cls):
+        return cls.query()
+
 
 
 class Save(webapp2.RequestHandler):
@@ -49,6 +54,31 @@ class Save(webapp2.RequestHandler):
             savecampaign(jsondata,is_entity.created_at)
 
 
+class GetALL(webapp2.RequestHandler):
+	def get(self):
+		entity_list = Campaign_Data.get_all_campaigns()
+		result = list()
+		for each_entity in entity_list:
+			campaign_dict = dict()
+			offer_dict = dict()
+
+			campaign_dict['name'] = each_entity.name 
+			campaign_dict['money'] = each_entity.money
+			campaign_dict['category'] = each_entity.category 
+			campaign_dict['conversion_ratio'] = each_entity.conversion_ratio
+			campaign_dict['period'] = each_entity.period
+
+			offer_dict['offer_type'] = each_entity.offer_type
+			offer_dict['min_value'] = each_entity.min_value
+			offer_dict['max_value'] = each_entity.max_value
+			offer_dict['valid_till'] = each_entity.valid_till
+			offer_dict['member_issuance'] = each_entity.member_issuance
+			each_dict= dict()
+			each_dict['campaign_details'] = campaign_dict
+			each_dict['offer_details'] = offer_dict
+			result.append(each_dict)
+		return dict(data=result)
+			
 def savecampaign(jsondata,createdtime):
     #{"offer_details":{"offer_type":"Liquidly Injection","min_value":"1","max_value":"2","valid_till":"2016-09-22","member_issuance":"2 per week"},
     #"campaign_details":{"name":"effwff","money":"500","category":"Approval","conversion_ratio":"5","period":"1 Weeks"}}
@@ -80,7 +110,9 @@ def savecampaign(jsondata,createdtime):
 
 # [START app]
 app = webapp2.WSGIApplication([
-    ('/savecampaign', Save)], debug=True)
+    ('/savecampaign', Save),
+	('/getAllCampaign', GetALL)], debug=True),
+	
 # [END app]
 
 def main():
