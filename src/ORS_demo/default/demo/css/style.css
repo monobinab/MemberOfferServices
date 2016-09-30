@@ -481,3 +481,6 @@ text-align:left
 .control-label {
 	margin-top:6px;
 }
+.error {
+border-color:red;
+}

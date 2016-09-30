@@ -2,31 +2,38 @@ var Scripts = {
   Constructor: function() {
     this.init = Scripts.init;
 	this.createXmlform = Scripts.createXmlform;
+	this.checkMandatory = Scripts.checkMandatory;
   },
 
   init: function() {
 	  var that = this;
-	  var XmlData = $("#dataPost").html();
 	  $("#createOffer").on('click',function(event){
 		  event.preventDefault();
+		  if(that.checkMandatory('offerForm')){
 		   $.ajax({
-			  url: "https://esbqa-med.intra.searshc.com/rest/tellurideAS/Offer",
+			  url: exposedApi.baseurl+"createOffer",
+			  contentType:'text/plain',
 			  type: 'POST',
-			  headers : {'client_id':'OFFER_REC_SYS_QA',
-			  'access_token':'c9931b52986f1b9618269137662b1332dd454f64d1f8a20cab1d632ef7e021f',
-			  'content-type':'application/xml',
-			  'Access-Control-Allow-Origin':'*'},
+			  dataType:'application/json',
 			  data: that.createXmlform(),
 			  success: function(data){
-				  alert(data+" data send");
+				var result = JSON.parse(data.responseText);
+					result = $.parseXML(result.data);
+					var statusText = $(result).find('StatusText').text();
+					var status = $(result).find('Status').text();
+						alert(statusText) 
 			  },
-			  error: function(error){
-
+			  error: function(data){
+					var result = JSON.parse(data.responseText);
+					result = $.parseXML(result.data);
+					var statusText = $(result).find('StatusText').text();
+					var status = $(result).find('Status').text();
+						alert(statusText)
+					
 			  }
+			  
 		})
-		/* var xmlhttp = new XMLHttpRequest();
-		xmlhttp.open('POST','https://esbqa-med.intra.searshc.com/rest/tellurideAS/Offer',true);
-		xmlhttp.set */
+		}
 	  })
 
   },
@@ -106,5 +113,29 @@ var Scripts = {
 xml +='</soap:Envelope>';
 
 		 return xml;
-  }
+  },
+  checkMandatory: function(selector){
+		var flag1 =false;
+			$('#'+selector+' .mandatory').each(function(){	
+				if($(this).val()=="" ||$(this).val()===undefined)
+				{
+					$(this).addClass("error");
+					$(".alert").show();
+					$(".alert").html("Highlighted fields are mandatory!");
+					flag1 = true;
+				}
+				else
+				{
+				$(this).removeClass("error");
+				}
+			});
+			if(flag1)
+			{
+				return false;
+			}
+			else
+			{
+				return true;
+			}
+	}
 };
