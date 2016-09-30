@@ -51,7 +51,7 @@ updatedXML += '<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelop
         updatedXML += '<sch:MessageVersion>01</sch:MessageVersion>';
          updatedXML += '<sch:RequestorID>OFRP</sch:RequestorID>';
         updatedXML += '<sch:Source>TI</sch:Source>';
-        updatedXML += '<off:OfferNumber>TELLtestPurMBO134</off:OfferNumber>';
+        updatedXML += '<off:OfferNumber>'+$("#OfferPointsDollarName").val()+'</off:OfferNumber>';
         updatedXML += '<off:OfferPointsDollarName>'+$("#OfferPointsDollarName").val()+'</off:OfferPointsDollarName>';
         updatedXML += '<off:OfferDescription>'+$("#OfferDescription").val()+'</off:OfferDescription>';
         updatedXML += '<off:OfferType>'+$("#OfferType").val()+'</off:OfferType>';
