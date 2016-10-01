@@ -11,7 +11,6 @@
 	<link href="font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css"/>
     <link rel="shortcut icon" href="img/favicon.png">
 	<link rel="stylesheet" type="text/css" href="js/plugins/select2/select2_metro.css" />
-	
 </head>
 <body>
   <div class="container-fluid">
@@ -25,12 +24,12 @@
 		<!-- Top header -->
 		  <div class="col-md-12">
 				<ul class="nav nav-tabs cus-nav">
-				<li> <h3 class="automated-text"> Offer Recommendation Service </h3> </li>
+				<li> <h3 class="heading-text"> Offer Recommendation Service </h3> </li>
 				<li class="">
 				  <ul class="user-profile">
 					<li class="profile-menu">
 						<a class="dropdown-toggle" data-toggle="dropdown" data-hover="dropdown" data-delay="1000" data-close-others="true" style="padding-right:0px;padding-left:0px;cursor:pointer">
-							 <i class="icon-user"> </i> <span> Yogesh </span> <i class="icon-angle-down"></i>
+							 <i class="icon-user"> </i> <span> User </span> <i class="icon-angle-down"></i>
 						</a>
 						<ul class="dropdown-menu pull-right" role="menu">
 							<li> <i class="icon-caret-up profile-icon-up"> </i> </li>
@@ -47,48 +46,50 @@
 		<!-- body container starts -->
 		<div class="container" id="offerForm">
 		 <div class="row form-back">
-		 <h4 class="h4-text"> Offers Information <hr class="hr" /></h4>
+		 <h4 class="page-heading"> Offers Information <hr class="hr" /></h4>
+		  <div class="col-md-12"> 
+			<div class="form-group">
+				<div class="alert alert-danger" style="padding:3px;margin:0px"></div>
+			</div>
+		  </div>
+		  <div classs="clear clearfix"> </div>
 		  <div class="col-md-8" style="padding:0px">
 			<div class="form-group">
 				<div class="col-md-6">
-					<label class="col-md-6 no-pad control-label"> Offer points dollar name : </label>
-					<div class="col-md-6 no-pad"> <input class="form-control mandatory" id="OfferPointsDollarName" type="text" placeholder="Enter offer name"/> </div>
+					<label class="col-md-5 no-pad control-label"> Offer points dollar name : </label>
+					<div class="col-md-7 no-pad"> <input class="form-control mandatory" id="OfferPointsDollarName" type="text" placeholder="Enter offer name"/> </div>
 				</div>
 				<div class="col-md-6">
 					<label class="col-md-5 control-label no-pad">Offer Description :</label>
-					<div class="col-md-6 no-pad"> <input class="form-control" id="OfferDescription" type="text" placeholder="Description"/> </div>
+					<div class="col-md-7 no-pad"> <input class="form-control" id="OfferDescription" type="text" placeholder="Description"/> </div>
 				</div>
 			</div>
 			<div class="form-group">
 				<div class="col-md-6">
-					<label class="col-md-4 control-label no-pad">Offer Type :</label>
-					<div class="col-md-8 no-pad"> <select class="form-control mandatory" id="OfferType">
+					<label class="col-md-5 control-label no-pad">Offer Type :</label>
+					<div class="col-md-7 no-pad"> <select class="form-control mandatory" id="OfferType">
 												<option selected> Xtreme Redeem </option>
-												<option></option>
-												<option></option>
 											</select>
 					</div>						
 				</div>
 				<div class="col-md-6">
 					<label class="col-md-5 control-label no-pad" >Offer Subtype : </label>
-					<div class="col-md-6 no-pad"> <select class="form-control mandatory" id="OfferSubType">
+					<div class="col-md-7 no-pad"> <select class="form-control mandatory" id="OfferSubType">
 												<option selected>Items</option>
-												<option></option>
-												<option></option>
 											</select>
 					</div>						
 				</div>
 			</div>
 			<div class="form-group">
-				<h4 class="h4-text"> Offer Period </h4>
+				<h4 class="page-heading"> Offer Period <hr class="hr-inner" /> </h4>
 				<br>
 				<div class="col-md-6">
-					<label class="col-md-4 control-label no-pad">Start date :</label>
-					<div class="col-md-8 no-pad"> <input class="form-control mandatory" id="OfferStartDate" type="date" name="offerstartdate"/> </div>						
+					<label class="col-md-5 control-label no-pad">Start date :</label>
+					<div class="col-md-7 no-pad"> <input class="form-control mandatory" id="OfferStartDate" type="date" name="offerstartdate" placeholder="DD/MM/YYYY"/> </div>						
 				</div>
 				<div class="col-md-6">
 					<label class="col-md-5 control-label no-pad" >End date : </label>
-					<div class="col-md-6 no-pad"> <input class="form-control mandatory " id="OfferEndDate" type="date" name="offerenddate"/> </div>						
+					<div class="col-md-7 no-pad"> <input class="form-control mandatory" id="OfferEndDate" type="date" name="offerenddate" placeholder="DD/MM/YYYY"/> </div>						
 				</div>
 			</div>
 			<div class="form-group">
@@ -96,35 +97,29 @@
 					<label class="col-md-5 control-label no-pad">Business Initiative :</label>
 					<div class="col-md-7 no-pad"> <select class="form-control mandatory">
 													<option selected>Life cycle</option>
-													<option></option>
-													<option></option>
 												</select> 
 					</div>						
 				</div>
 				<div class="col-md-6">
 					<label class="col-md-5 control-label no-pad" >Marketing channel : </label>
-					<div class="col-md-6 no-pad"> 
+					<div class="col-md-7 no-pad"> 
 						<select class="form-control mandatory">
 							<option selected>Email</option>
-							<option></option>
-							<option></option>
 						</select>
 					</div>						
 				</div>
 			</div>
 		  </div>
 		  <div class="col-md-4">
-			<label class="col-md-5 control-label no-pad">Offer condition : </label>
-			<div class="col-md-7"> <textarea class="form-control" rows="5" cols="25" name="condition" placeholder="Enter conditions here..."></textarea> </div>
+			<label class="col-md-4 control-label no-pad">Offer condition : </label>
+			<div class="col-md-8 no-pad"> <textarea class="form-control" rows="4" cols="25" id="condition" name="condition" placeholder="Enter conditions here..."></textarea> </div>
 		  </div>
 		   
 		 </div>
 		 <div class="row form-back">
-			<div class="col-md-12">
+			<div class="col-md-12 ">
 				<hr class="hr"></hr>
-			  <div class="form-group">
-			  <div class="col-md-offset-9"><button class="btn btn-default"  id="createOffer">Create Offer</button></div>
-			  </div>
+				<button class="btn btn-default pull-right btn-greyBlue"  id="createOffer">Create Offer</button>
 		  </div>
 		 </div>
 		</div>

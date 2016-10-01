@@ -316,7 +316,6 @@ footer {
 .profile-menu ul {
 	padding:0px;
 	margin-top:5px !important;
-	margin-right:12px !important;
 }
 .profile-menu ul li{
 	float:none;
@@ -430,7 +429,7 @@ footer {
 .no-mar-top {
   margin-top:0px
 }
-.automated-text {
+.heading-text {
 color:#fff;
 margin:10px 15px
 }
@@ -473,14 +472,35 @@ margin:10px 15px
 	padding:15px;
 }
 .control-label {
-text-align:left
+	text-align:left;
 }
 .h4-text {
 	padding-left:15px;
+}
+.page-heading {
+	margin:0px;
+	padding-left:15px;
+	color:#7689A0;
+	font-size:18px;
 }
 .control-label {
 	margin-top:6px;
 }
 .error {
-border-color:red;
+	border-color:red;
+}
+.hr {
+	border-color:#7689A0;
+	margin-top:5px;
+}
+.hr-inner {
+	border-color:#ccc;
+	margin-top:5px;
+}
+.btn-greyBlue {
+	background:#000F3C;
+	color:#fff;
+}
+.btn-greyBlue:hover,.btn-greyBlue:focus {
+	box-shadow:1px 2px 2px #000F3C
 }

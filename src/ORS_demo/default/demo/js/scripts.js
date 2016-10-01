@@ -7,6 +7,7 @@ var Scripts = {
 
   init: function() {
 	  var that = this;
+	  $(".alert").hide();
 	  $("#createOffer").on('click',function(event){
 			//var xml = $("#dummy").html();
 		  event.preventDefault();
@@ -17,12 +18,15 @@ var Scripts = {
 			  type: 'POST',
 			  data: that.createXmlform(),
 			  success: function(data){
+				$('input').val("");
+				$('#condition').val("");
 				alert("Offer Successfully created ") 
 				var result = JSON.parse(data.responseText);
 					result = $.parseXML(result.data);
 					var statusText = $(result).find('StatusText').text();
 					var status = $(result).find('Status').text();
-						alert("Offer Successfully created: " +dstatusText) 
+						alert("Offer Successfully created: " +dstatusText);
+					
 			  },
 			  error: function(data){
 					var result = JSON.parse(data.responseText);
@@ -40,9 +44,6 @@ var Scripts = {
   },
 
   createXmlform : function(){
-	 
-
-
 var updatedXML = "";
 updatedXML += '<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:off="http://rewards.sears.com/schemas/offer/" xmlns:sch="http://rewards.sears.com/schemas/">';
   updatedXML += '<soap:Header/>';
@@ -66,8 +67,8 @@ updatedXML += '<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelop
         updatedXML += '<off:OfferCategory>Stackable</off:OfferCategory>';
         updatedXML += '<off:OfferStartDate>'+$("#OfferStartDate").val()+'</off:OfferStartDate>';
         updatedXML += '<off:OfferStartTime/>';
-        updatedXML += '<off:OfferEndDate>2014-07-31</off:OfferEndDate>';
-        updatedXML += '<off:OfferEndTime>'+$("#OfferEndDate").val()+'</off:OfferEndTime>';
+        updatedXML += '<off:OfferEndDate>'+$("#OfferEndDate").val()+'</off:OfferEndDate>';
+        updatedXML += '<off:OfferEndTime/>';
         updatedXML += '<off:ExpenseAllocation>No allocation – Charge all to WH</off:ExpenseAllocation>';
         updatedXML += '<off:ModifiedBy>nand</off:ModifiedBy>';
         updatedXML += '<off:ModifiedTS>2014-06-25 10:40:00</off:ModifiedTS>';
@@ -250,36 +251,36 @@ updatedXML += '<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelop
                      updatedXML += '</off:Values>';
                   updatedXML += '</off:Condition>';
                  updatedXML += '<off:Name>MUST_PRESENT_TENDER_SYWR</off:Name>';
-                                                               updatedXML += '<off:Operator>CONTAINS</off:Operator>';
-                                                               updatedXML += '<off:Values>';
-                                                                               updatedXML += '<off:Value>SYWR</off:Value>';
-                                                                               updatedXML += '<off:Value>Min</off:Value>';
-                                                                               updatedXML += '<off:Value>Max</off:Value>';
-                                                                updatedXML += '</off:Values>';
-                                                               updatedXML += '<off:ConditionAttributes>';
-                                                                               updatedXML += '<off:ConditionAttribute>';
-                                                                                               updatedXML += '<off:Name>SYWR</off:Name>';
-                                                                                               updatedXML += '<off:Operator>EQUALS</off:Operator>';
-                                                                                               updatedXML += '<off:Values>';
-                                                                                                               updatedXML += '<off:Value>Y</off:Value>';
-                                                                                                updatedXML += '</off:Values>';
-                                                                                updatedXML += '</off:ConditionAttribute>';
-                                                                               updatedXML += '<off:ConditionAttribute>';
-                                                                                               updatedXML += '<off:Name>Min</off:Name>';
-                                                                                               updatedXML += '<off:Operator>EQUALS</off:Operator>';
-                                                                                               updatedXML += '<off:Values>';
-                                                                                                               updatedXML += '<off:Value>10.00</off:Value>';
-                                                                                                updatedXML += '</off:Values>';
-                                                                                updatedXML += '</off:ConditionAttribute>';
-                                                                               updatedXML += '<off:ConditionAttribute>';
-                                                                                               updatedXML += '<off:Name>Max</off:Name>';
-                                                                                               updatedXML += '<off:Operator>EQUALS</off:Operator>';
-                                                                                               updatedXML += '<off:Values>';
-                                                                                                               updatedXML += '<off:Value>20.00</off:Value>';
-                                                                                                updatedXML += '</off:Values>';
-                                                                                updatedXML += '</off:ConditionAttribute>';
-                                                                updatedXML += '</off:ConditionAttributes>';
-                                                updatedXML += '</off:Condition>';
+			     updatedXML += '<off:Operator>CONTAINS</off:Operator>';
+			     updatedXML += '<off:Values>';
+				   updatedXML += '<off:Value>SYWR</off:Value>';
+				   updatedXML += '<off:Value>Min</off:Value>';
+				   updatedXML += '<off:Value>Max</off:Value>';
+				updatedXML += '</off:Values>';
+			   updatedXML += '<off:ConditionAttributes>';
+			   updatedXML += '<off:ConditionAttribute>';
+							   updatedXML += '<off:Name>SYWR</off:Name>';
+							   updatedXML += '<off:Operator>EQUALS</off:Operator>';
+							   updatedXML += '<off:Values>';
+									updatedXML += '<off:Value>Y</off:Value>';
+								updatedXML += '</off:Values>';
+				updatedXML += '</off:ConditionAttribute>';
+			   updatedXML += '<off:ConditionAttribute>';
+							   updatedXML += '<off:Name>Min</off:Name>';
+							   updatedXML += '<off:Operator>EQUALS</off:Operator>';
+							   updatedXML += '<off:Values>';
+											   updatedXML += '<off:Value>10.00</off:Value>';
+								updatedXML += '</off:Values>';
+				updatedXML += '</off:ConditionAttribute>';
+			   updatedXML += '<off:ConditionAttribute>';
+							   updatedXML += '<off:Name>Max</off:Name>';
+							   updatedXML += '<off:Operator>EQUALS</off:Operator>';
+							   updatedXML += '<off:Values>';
+											   updatedXML += '<off:Value>20.00</off:Value>';
+								updatedXML += '</off:Values>';
+				updatedXML += '</off:ConditionAttribute>';
+				updatedXML += '</off:ConditionAttributes>';
+				updatedXML += '</off:Condition>';
                updatedXML += '</off:Conditions>';
             updatedXML += '</off:Rule-->';
            updatedXML += '<off:RuleActions>';
