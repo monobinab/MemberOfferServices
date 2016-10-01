@@ -17,24 +17,25 @@ var Scripts = {
 			  contentType:'text/plain',
 			  type: 'POST',
 			  data: that.createXmlform(),
-			  success: function(data){
+			  success: function(responseData){
 				$('input').val("");
 				$('#condition').val("");
-				alert("Offer Successfully created ") 
-				var result = JSON.parse(data.responseText);
-					result = $.parseXML(result.data);
+				if(responseData['data'] == null){
+					alert("Authentication error.");
+					return;
+				}
+				  var result = $.parseXML(responseData['data']);
 					var statusText = $(result).find('StatusText').text();
-					var status = $(result).find('Status').text();
-						alert("Offer Successfully created: " +dstatusText);
-					
-			  },
-			  error: function(data){
-					var result = JSON.parse(data.responseText);
-					result = $.parseXML(result.data);
-					var statusText = $(result).find('StatusText').text();
-					var status = $(result).find('Status').text();
+					if($(result).find('Status').text() == 00){
+						alert("Offer created "+statusText);
+					}
+					else{
 						alert("Error: "+statusText)
-					
+					}
+						
+			  },
+			  error: function(responseData){
+				alert("Error");
 			  }
 			  
 		})
