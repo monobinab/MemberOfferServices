@@ -27,7 +27,7 @@ var Scripts = {
 				  var result = $.parseXML(responseData['data']);
 					var statusText = $(result).find('StatusText').text();
 					if($(result).find('Status').text() == 00){
-						alert("Offer created "+statusText);
+						alert("Offer create "+statusText);
 					}
 					else{
 						alert("Error: "+statusText)
@@ -387,8 +387,6 @@ updatedXML += '</soap:Envelope>';
 				if($(this).val()=="" ||$(this).val()===undefined)
 				{
 					$(this).addClass("error");
-					$(".alert").show();
-					$(".alert").html("Highlighted fields are mandatory!");
 					flag1 = true;
 				}
 				else
