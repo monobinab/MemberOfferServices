@@ -30,11 +30,10 @@ def offer_email(campaign_id):
                 member_offer_data_key = member_offer_data.put()
                 logging.info('member_offer_key:: %s', member_offer_data_key)
                 if member_entity.email not in member_emails:
-                    member_emails = member_emails + member_entity.email + ' '
+                        member_emails = member_emails + member_entity.email + ' '
 
-        logging.info('Offer emails have been sent to: : %s',member_emails)
-        obj = {'status': 'Success',
-        'message': 'Offer emails have been sent to: ' + member_emails}
+        logging.info('Offer emails have been sent to: : %s', member_emails)
+        obj = {'status': 'Success', 'message': 'Offer emails have been sent to: ' + member_emails}
         return obj
 
 
