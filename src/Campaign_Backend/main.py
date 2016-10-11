@@ -12,7 +12,7 @@ from google.appengine.api import memcache
 
 
 DEFAULT_CAMPAIGN_NAME = 'default_campaign'
-ACCESS_TOKEN = '0083bb40be9f0368526bfe4e25ca5ce634af10880b789bba96b44f78cfa3421f'
+#ACCESS_TOKEN = '0083bb40be9f0368526bfe4e25ca5ce634af10880b789bba96b44f78cfa3421f'
 
 
 def get_campaign_key(campaign_name=DEFAULT_CAMPAIGN_NAME):
@@ -45,7 +45,6 @@ class SaveCampaignHandler(BaseHandler):
         is_entity = ndb.Key('CampaignData', campaign_name).get()
         logging.info('is_entity: %s', is_entity)
         logging.info('type is_entity: %s', type(is_entity))
-        self.response.headers['Access-Control-Allow-Origin'] = '*'
         # Check for create new entity or update an existing entity
         if is_entity is None:
             save_campaign(json_data, datetime.now())
@@ -71,6 +70,7 @@ class GetAllCampaignsHandler(BaseHandler):
             campaign_dict['category'] = each_entity.category
             campaign_dict['conversion_ratio'] = each_entity.conversion_ratio
             campaign_dict['period'] = each_entity.period
+            campaign_dict['created_at'] = str(each_entity.created_at)
 
             offer_dict['offer_id'] = each_entity.key.id()
             offer_dict['offer_type'] = each_entity.offer_type

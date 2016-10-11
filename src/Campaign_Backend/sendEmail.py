@@ -8,6 +8,7 @@ import logging
 import json, xml.etree.ElementTree as ET
 from google.appengine.ext import ndb
 from models import CampaignData, OfferData, MemberData, MemberOfferData, ndb
+import os
 
 
 def offer_email(campaign_id):
@@ -66,6 +67,9 @@ def send_template_message(member_dict, offer_dict):
     message.set_from(from_email)
     personalization = mail.Personalization()
     personalization.add_to(to_email)
+    # https://syw-offers-services-qa-dot-syw-offers.appspot.com/
+    activation_url = "https://" + os.environ['CURRENT_VERSION_ID'].split('.')[0] + "-dot-syw-offers.appspot.com/" \
+                     "activateOffer?offer_id=" + offer_dict['offer_id'].encode("utf-8") + "&&member_id=" + member_dict['memberid'].encode("utf-8")
 
     substitution = mail.Substitution(key="%name%", value=member_dict['name'].encode("utf-8"))
     personalization.add_substitution(substitution)
@@ -79,10 +83,12 @@ def send_template_message(member_dict, offer_dict):
     personalization.add_substitution(substitution)
     substitution = mail.Substitution(key="%dollarthresholdvalue%", value='25')
     personalization.add_substitution(substitution)
+    substitution = mail.Substitution(key="%activationurl%", value=activation_url.encode("utf-8"))
+    personalization.add_substitution(substitution)
     message.add_personalization(personalization)
     message.set_template_id(config_dict['TEMPLATE_ID'])
-
-    logging.info('message.get(): %s',message.get())
+    logging.info("Activation URL::" + activation_url)
+    logging.info('message.get(): %s', message.get())
 
     response = sg.client.mail.send.post(request_body=message.get())
 
