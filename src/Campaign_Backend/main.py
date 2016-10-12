@@ -12,8 +12,6 @@ from google.appengine.api import memcache
 
 
 DEFAULT_CAMPAIGN_NAME = 'default_campaign'
-#ACCESS_TOKEN = '0083bb40be9f0368526bfe4e25ca5ce634af10880b789bba96b44f78cfa3421f'
-
 
 def get_campaign_key(campaign_name=DEFAULT_CAMPAIGN_NAME):
     return ndb.Key('CampaignData', campaign_name)
@@ -115,24 +113,25 @@ def save_campaign(json_data, created_time):
     start_date = datetime.now().strftime("%Y-%m-%d")
     end_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=6)
     end_date = end_date.strftime("%Y-%m-%d")
-    offer = OfferData(surprise_points=10, threshold=10, OfferNumber=campaign_name+"_OFFER",
-                      OfferPointsDollarName="test 101", OfferDescription="test 101",
-                      OfferType="Xtreme Redeem", OfferSubType="Items", OfferStartDate=start_date,
+    offer_name = campaign_name+"_OFR"
+    offer = OfferData(surprise_points=10, threshold=10, OfferNumber=offer_name,
+                      OfferPointsDollarName=offer_name, OfferDescription=offer_name,
+                      OfferType="Xtreme Redeem", OfferSubType="Item", OfferStartDate=start_date,
                       OfferStartTime="00:00:00", OfferEndDate=end_date, OfferEndTime="23:59:00",
                       OfferBUProgram_BUProgram_BUProgramName="BU - Apparel",
                       OfferBUProgram_BUProgram_BUProgramCost=0.00, ReceiptDescription="TELL-16289",
                       OfferCategory="Stackable", OfferAttributes_OfferAttribute_Name="MULTI_TRAN_IND",
-                      OfferAttributes_OfferAttribute_Values_Value="N", Rules_Rule_Entity="Location",
-                      Rules_Conditions_Condition_Name="STORE_LOCATION",
-                      Rules_Conditions_Condition_Operator="EQUALS",
-                      Rules_Conditions_Condition_Values_Value="OrderLocation",
+                      OfferAttributes_OfferAttribute_Values_Value="N", Rules_Rule_Entity="Product",
+                      Rules_Conditions_Condition_Name="PRODUCT_LEVEL",
+                      Rules_Conditions_Condition_Operator="IN",
+                      Rules_Conditions_Condition_Values_Value="SEARSLEGACY~801~608~14~1~1~1~93059",
                       RuleActions_ActionID="ACTION-1", Actions_ActionID="ACTION-1",
-                      Actions_ActionName="EARN",
+                      Actions_ActionName="XR",
                       Actions_ActionProperty_PropertyType="Tier",
                       Actions_ActionProperty_Property_Name="MIN",
-                      Actions_ActionProperty_Property_Values_Value="1",
+                      Actions_ActionProperty_Property_Values_Value="0.01",
                       created_at=created_time)
-    offer.key = ndb.Key('OfferData', campaign_name+"_OFFER")
+    offer.key = ndb.Key('OfferData', offer_name)
     offer.campaign = campaign.key
     offer_key = offer.put()
 
@@ -155,16 +154,33 @@ class GetAllMembersHandler(BaseHandler):
 class ActivateOfferHandler(BaseHandler):
     def get(self):
         offer_id = self.request.get('offer_id')
+        logging.info("Request offer_id: " + offer_id)
+        if offer_id is None or not offer_id:
+            response_html = "<html><head><title>Sears Offer Activation</title></head><body><h3> " \
+                             + "Please provide offer_id and member_id with the request</h3></body></html>"
+            self.response.write(response_html)
+            return
+
         member_id = self.request.get('member_id')
+        logging.info("Request member_id: " + member_id)
+
+        if member_id is None or not member_id:
+            response_html = "<html><head><title>Sears Offer Activation</title></head><body><h3> " \
+                             + "Please provide offer_id and member_id with the request</h3></body></html>"
+            self.response.write(response_html)
+            return
+
         offer_key = ndb.Key('OfferData', offer_id)
         member_key = ndb.Key('MemberData', member_id)
         # self.response.headers['Content-Type'] = 'application/json'
         self.response.headers['Access-Control-Allow-Origin'] = '*'
+        logging.info("fetched offer_key and member key ")
         response_dict = dict()
         offer = offer_key.get()
         if offer is not None:
+            logging.info("offer is not None")
             post_data = get_xml(offer).rstrip('\n')
-            logging.info(post_data)
+            logging.info("post_data: %s", post_data)
 
             result = ActivateOfferHandler.create_offer(post_data)
 
@@ -208,10 +224,10 @@ class ActivateOfferHandler(BaseHandler):
             # Generating new Access Token
             generated_access_token = ActivateOfferHandler.generateAccessToken()
             # Writing to memcache
-            memcache.add(key="ACCESS_TOKEN", value=generated_access_token, time=10800)
+            memcache.add(key="ACCESS_TOKEN", value=generated_access_token, time=0)
             access_token = generated_access_token
 
-        logging.info('Exisiting access_token from memcache: %s', access_token)
+        logging.info('Existing access_token from memcache: %s', access_token)
         logging.info('****url: %s', url)
 
         webservice = httplib.HTTPS(url)
@@ -262,7 +278,7 @@ class ActivateOfferHandler(BaseHandler):
 
     @classmethod
     def generateAccessToken(cls):
-        access_token_url = 'test-access-token-dot-syw-offers.appspot.com'
+        access_token_url = 'syw-offers-accesstoken-qa-dot-syw-offers.appspot.com'
         webservice = httplib.HTTPS(access_token_url)
         webservice.putrequest("GET", "/generateAccessToken")
         status_code, status_message, header = webservice.getreply()
@@ -292,7 +308,6 @@ class EmailOfferMembersHandler(BaseHandler):
 
         obj = sendEmail.offer_email(campaign_id)
         self.response.out.write(json.dumps(obj))
-
 
 
 # [START app]
