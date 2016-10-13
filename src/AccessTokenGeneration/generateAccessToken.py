@@ -65,14 +65,23 @@ class GenerateAccessTokenHandler(webapp2.RequestHandler):
         #https://trstoaapp1.vm.itg.corp.us.shldcorp.com:8553/oauthAS/service/oAuth/token.json
 
         try:
-            #form_data = urllib.urlencode(payload)
-            headers = {'Content-Type': 'application/json'}
-            result = urlfetch.fetch(
-                url='https://oauthas-qa.searshc.com:443/oauthAS/service/oAuth/token.json',
-                payload=payload,
-                method=urlfetch.POST,
-                headers=headers)
-            logging.info('****result.content: %s', result.content)
+            retry_count = 5
+            count = 1
+            while(count <= retry_count):
+                headers = {'Content-Type': 'application/json'}
+                result = urlfetch.fetch(
+                    url='https://oauthas-qa.searshc.com:443/oauthAS/service/oAuth/token.json',
+                    payload=payload,
+                    method=urlfetch.POST,
+                    headers=headers)
+                logging.info('****Try #: %s', count)
+                logging.info('****result.status_code: %s', result.status_code)
+                logging.info('****result.content: %s', result.content)
+                if(result.status_code != 200):
+                    count = count + 1
+                    continue
+                else:
+                    break
 
             self.response.write(result.content)
         except urlfetch.Error:
