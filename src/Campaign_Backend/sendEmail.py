@@ -1,41 +1,8 @@
 from sendgrid import sendgrid
 from sendgrid.helpers import mail
 import Utilities
-import webapp2
-import sys
-import httplib
 import logging
-import json, xml.etree.ElementTree as ET
-from google.appengine.ext import ndb
-from models import CampaignData, OfferData, MemberData, MemberOfferData, ndb
 import os
-
-
-def offer_email(campaign_id):
-    campaign_key = ndb.Key('CampaignData', campaign_id)
-    member_emails = ''
-    fetch_offers = OfferData.query(OfferData.campaign == campaign_key)
-    is_entity = fetch_offers.get()
-
-    if is_entity is None:
-        logging.info('Could not fetch required offers for the campaign: %s', campaign_id)
-        obj = {'status': 'Failure', 'message': 'Could not fetch required offers for the campaign'}
-        return obj
-    else:
-        logging.info('Fetched offers for the campaign: %s', campaign_id)
-        members = MemberData.query()
-        for offer_entity in fetch_offers.iter():
-            for member_entity in members.iter():
-                send_mail(member_entity, offer_entity)
-                member_offer_data = MemberOfferData(offer=offer_entity.key, member=member_entity.key, status=False)
-                member_offer_data_key = member_offer_data.put()
-                logging.info('member_offer_key:: %s', member_offer_data_key)
-                if member_entity.email not in member_emails:
-                        member_emails = member_emails + member_entity.email + ' '
-
-        logging.info('Offer emails have been sent to: : %s', member_emails)
-        obj = {'status': 'Success', 'message': 'Offer emails have been sent to: ' + member_emails}
-        return obj
 
 
 def send_mail(member_entity, offer_entity):

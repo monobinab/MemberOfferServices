@@ -3,37 +3,37 @@
 import sys
 reload(sys)
 sys.setdefaultencoding("utf-8")
-from models import OfferData, MemberData
 import logging
 
 
 def get_xml(offer_obj):
     try:
         offer_data_dict = dict()
+        offer_data_dict['campaign_name'] = offer_obj.OfferNumber.split('_')[0]
         offer_data_dict['OfferNumber'] = offer_obj.OfferNumber
         offer_data_dict['OfferPointsDollarName'] = offer_obj.OfferPointsDollarName
         offer_data_dict['OfferDescription'] = offer_obj.OfferDescription
-        offer_data_dict['OfferType'] =offer_obj.OfferType
-        offer_data_dict['OfferSubType'] =offer_obj.OfferSubType
-        offer_data_dict['BUProgram_BUProgramName'] =offer_obj.OfferBUProgram_BUProgram_BUProgramName
-        offer_data_dict['ReceiptDescription'] =offer_obj.ReceiptDescription
-        offer_data_dict['OfferCategory'] =offer_obj.OfferCategory
-        offer_data_dict['OfferStartDate'] =offer_obj.OfferStartDate
-        offer_data_dict['OfferStartTime'] =offer_obj.OfferStartTime
-        offer_data_dict['OfferEndDate'] =offer_obj.OfferEndDate
-        offer_data_dict['OfferEndTime'] =offer_obj.OfferEndTime
-        offer_data_dict['OfferAttributes_OfferAttribute_Name'] =offer_obj.OfferAttributes_OfferAttribute_Name
-        offer_data_dict['OfferAttribute_Values_Value'] =offer_obj.OfferAttributes_OfferAttribute_Values_Value
-        offer_data_dict['Rules_Rule_Entity'] =offer_obj.Rules_Rule_Entity
-        offer_data_dict['Rules_Conditions_Condition_Name'] =offer_obj.Rules_Conditions_Condition_Name
-        offer_data_dict['Rules_Conditions_Condition_Operator'] =offer_obj.Rules_Conditions_Condition_Operator
-        offer_data_dict['Rules_Conditions_Condition_Values_Value'] =offer_obj.Rules_Conditions_Condition_Values_Value
-        offer_data_dict['RuleActions_ActionID'] =offer_obj.RuleActions_ActionID
-        offer_data_dict['Actions_ActionName'] =offer_obj.Actions_ActionName
-        offer_data_dict['Actions_ActionID'] =offer_obj.Actions_ActionID
-        offer_data_dict['Actions_ActionProperty_PropertyType'] =offer_obj.Actions_ActionProperty_PropertyType
-        offer_data_dict['Actions_ActionProperty_Property_Name'] =offer_obj.Actions_ActionProperty_Property_Name
-        offer_data_dict['Actions_ActionProperty_Property_Values_Value'] =offer_obj.Actions_ActionProperty_Property_Values_Value
+        offer_data_dict['OfferType'] = offer_obj.OfferType
+        offer_data_dict['OfferSubType'] = offer_obj.OfferSubType
+        offer_data_dict['BUProgram_BUProgramName'] = offer_obj.OfferBUProgram_BUProgram_BUProgramName
+        offer_data_dict['ReceiptDescription'] = offer_obj.ReceiptDescription
+        offer_data_dict['OfferCategory'] = offer_obj.OfferCategory
+        offer_data_dict['OfferStartDate'] = offer_obj.OfferStartDate
+        offer_data_dict['OfferStartTime'] = offer_obj.OfferStartTime
+        offer_data_dict['OfferEndDate'] = offer_obj.OfferEndDate
+        offer_data_dict['OfferEndTime'] = offer_obj.OfferEndTime
+        offer_data_dict['OfferAttributes_OfferAttribute_Name'] = offer_obj.OfferAttributes_OfferAttribute_Name
+        offer_data_dict['OfferAttribute_Values_Value'] = offer_obj.OfferAttributes_OfferAttribute_Values_Value
+        offer_data_dict['Rules_Rule_Entity'] = offer_obj.Rules_Rule_Entity
+        offer_data_dict['Rules_Conditions_Condition_Name'] = offer_obj.Rules_Conditions_Condition_Name
+        offer_data_dict['Rules_Conditions_Condition_Operator'] = offer_obj.Rules_Conditions_Condition_Operator
+        offer_data_dict['Rules_Conditions_Condition_Values_Value'] = offer_obj.Rules_Conditions_Condition_Values_Value
+        offer_data_dict['RuleActions_ActionID'] = offer_obj.RuleActions_ActionID
+        offer_data_dict['Actions_ActionName'] = offer_obj.Actions_ActionName
+        offer_data_dict['Actions_ActionID'] = offer_obj.Actions_ActionID
+        offer_data_dict['Actions_ActionProperty_PropertyType'] = offer_obj.Actions_ActionProperty_PropertyType
+        offer_data_dict['Actions_ActionProperty_Property_Name'] = offer_obj.Actions_ActionProperty_Property_Name
+        offer_data_dict['Actions_ActionProperty_Property_Values_Value'] = offer_obj.Actions_ActionProperty_Property_Values_Value
 
         xml_string = """<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
                            <soap:Body>
@@ -122,7 +122,7 @@ def get_xml(offer_obj):
                                              <ns2:Name>MEMBER_GROUPS</ns2:Name>
                                              <ns2:Operator>IN</ns2:Operator>
                                              <ns2:Values>
-                                                <ns2:Value>TC3_XR</ns2:Value>
+                                                <ns2:Value>"""+offer_data_dict['campaign_name']+"""</ns2:Value>
                                              </ns2:Values>
                                           </ns2:Condition>
                                        </ns2:Conditions>

@@ -1,2 +1,3 @@
 .idea/
-
+Util/ComodoSDK/configs/security-client-config.properties~
+*.pyc
