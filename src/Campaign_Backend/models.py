@@ -66,3 +66,8 @@ class MemberOfferData(ndb.Model):
     status = ndb.BooleanProperty(default=False)
     created_at = ndb.DateTimeProperty(auto_now_add=True, indexed=True)
     updated_at = ndb.DateTimeProperty(auto_now=True, auto_now_add=False)
+
+class SendgridData(ndb.Model):
+    SENDGRID_API_KEY = ndb.StringProperty(indexed=True)
+    SENDGRID_SENDER = ndb.StringProperty(indexed=True)
+    TEMPLATE_ID = ndb.StringProperty(indexed=False)

@@ -1,19 +1,12 @@
-import yaml
-import os
-import sys
+from models import ndb
 
 
 # Function to read configurations
 def get_configuration():
-    dataMap = {}
-    try:
-        with open(os.path.join(os.path.dirname(__file__), 'config.yaml'), 'r') as stream:
-            try:
-                dataMap = yaml.safe_load(stream)
-
-            except yaml.YAMLError as exc:
-                print 'YAML error'
-    except IOError:
-        print 'IO error'
-
-    return dataMap
+    data_map = dict()
+    data_key = ndb.Key('SendgridData', '1')
+    data_entity = data_key.get()
+    data_map['SENDGRID_API_KEY'] = data_entity.SENDGRID_API_KEY
+    data_map['SENDGRID_SENDER'] = data_entity.SENDGRID_SENDER
+    data_map['TEMPLATE_ID'] = data_entity.TEMPLATE_ID
+    return data_map
