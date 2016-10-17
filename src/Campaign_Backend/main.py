@@ -9,9 +9,12 @@ import httplib
 import sendEmail
 import xml.etree.ElementTree as ET
 from google.appengine.api import memcache
+from google.appengine.api import app_identity
+from google.appengine.api import modules
 
 
 DEFAULT_CAMPAIGN_NAME = 'default_campaign'
+
 
 def get_campaign_key(campaign_name=DEFAULT_CAMPAIGN_NAME):
     return ndb.Key('CampaignData', campaign_name)
@@ -28,12 +31,16 @@ class BaseHandler(webapp2.RequestHandler):
             self.response.set_status(500)
 
 
-class IndexPageHandler(BaseHandler):
+class IndexPageHandler(webapp2.RequestHandler):
     def get(self):
-        self.response.write("CAMPAIGN-BACKEND-SERVICE")
+        version_name = modules.get_current_version_name()
+        app_name = app_identity.get_application_id()
+        # server_url = app_identity.get_default_version_hostname()
+        # self.response.write("Service running on:: " + server_url)
+        self.response.write("Service running on:: " + version_name + "-dot-"+app_name)
 
 
-class SaveCampaignHandler(BaseHandler):
+class SaveCampaignHandler(webapp2.RequestHandler):
     def get(self):
         offer_data = self.request.get('offer_data')
         logging.info('****offerdata: %s', offer_data)
@@ -51,7 +58,7 @@ class SaveCampaignHandler(BaseHandler):
         self.response.headers['Access-Control-Allow-Origin'] = '*'
 
 
-class GetAllCampaignsHandler(BaseHandler):
+class GetAllCampaignsHandler(webapp2.RequestHandler):
     def get(self):
         query = CampaignData.query()
         entity_list = query.fetch(100)
@@ -68,6 +75,7 @@ class GetAllCampaignsHandler(BaseHandler):
             campaign_dict['category'] = each_entity.category
             campaign_dict['conversion_ratio'] = each_entity.conversion_ratio
             campaign_dict['period'] = each_entity.period
+            campaign_dict['start_date'] = str(each_entity.start_date)
             campaign_dict['created_at'] = str(each_entity.created_at)
 
             offer_dict['offer_id'] = each_entity.key.id()
@@ -94,6 +102,7 @@ def save_campaign(json_data, created_time):
     campaign_category = campaign_dict['category']
     campaign_convratio = int(campaign_dict['conversion_ratio'])
     campaign_period = campaign_dict['period']
+    start_date = campaign_dict['start_date']
 
     offer_type = offer_dict['offer_type']
     offer_min_val = int(offer_dict['min_value'])
@@ -104,7 +113,7 @@ def save_campaign(json_data, created_time):
     campaign = CampaignData(name=campaign_name, money=campaign_money, category=campaign_category,
                             conversion_ratio=campaign_convratio, period=campaign_period,
                             offer_type=offer_type, max_per_member_issuance_frequency=offer_mbr_issuance, max_value=offer_max_val,
-                            min_value=offer_min_val, valid_till=offer_valid_till)
+                            min_value=offer_min_val, valid_till=offer_valid_till, start_date=start_date)
 
     campaign.key = get_campaign_key(campaign_name)
     campaign_key = campaign.put()
@@ -139,7 +148,7 @@ def save_campaign(json_data, created_time):
     logging.info('offer created with key:: %s', offer_key)
 
 
-class GetAllMembersHandler(BaseHandler):
+class GetAllMembersHandler(webapp2.RequestHandler):
     def get(self):
         query = MemberData.query()
         member_list = query.fetch(10)
@@ -151,7 +160,7 @@ class GetAllMembersHandler(BaseHandler):
         self.response.write(json.dumps({'data': result}))
 
 
-class ActivateOfferHandler(BaseHandler):
+class ActivateOfferHandler(webapp2.RequestHandler):
     def get(self):
         offer_id = self.request.get('offer_id')
         logging.info("Request offer_id: " + offer_id)
