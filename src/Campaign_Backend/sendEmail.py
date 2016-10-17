@@ -51,12 +51,21 @@ def send_mail(member_entity, offer_entity):
     offer_dict['offer_id'] = offer_entity.OfferNumber
 
     response = send_template_message(member_dict, offer_dict)
-    return response
+    # logging.info("Sendgrid response for member %s Response_Status_Code:: %s, Response_Headers:: %s,  "
+    #              "Response_Body:: %s" % (member_entity.email, response.status_code, response.headers, response.body))
+
+    if response.status_code == 202:
+        logging.info("***Response_Status_code:: %d" % response.status_code)
+        logging.info("Mail has been sent successfully to %s" % member_entity.email)
+    else:
+        logging.info("Sendgrid response for member %s Response_Status_Code:: %s, Response_Headers:: %s,  Response_Body"
+                     ":: %s" % (member_entity.email, response.status_code, response.headers, response.body))
+        logging.error("Mail to %s has failed from sendgrid" % member_entity.email)
 
 
 def send_template_message(member_dict, offer_dict):
     config_dict = Utilities.get_configuration()
-    logging.info("config_dict[SENDGRID_API_KEY]::" + config_dict['SENDGRID_API_KEY'])
+    # logging.info("config_dict[SENDGRID_API_KEY]::" + config_dict['SENDGRID_API_KEY'])
 
     sg = sendgrid.SendGridAPIClient(apikey=config_dict['SENDGRID_API_KEY'])
     to_email = mail.Email(member_dict['email'].encode("utf-8"))

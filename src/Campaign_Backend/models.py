@@ -12,6 +12,7 @@ class CampaignData(ndb.Model):
     max_value = ndb.IntegerProperty(indexed=False)
     min_value = ndb.IntegerProperty(indexed=False)
     valid_till = ndb.StringProperty(indexed=False)
+    start_date = ndb.StringProperty(indexed=False)
     created_at = ndb.DateTimeProperty(auto_now_add=True, indexed=True)
     updated_at = ndb.DateTimeProperty(auto_now=True, auto_now_add=False)
 
@@ -66,6 +67,7 @@ class MemberOfferData(ndb.Model):
     status = ndb.BooleanProperty(default=False)
     created_at = ndb.DateTimeProperty(auto_now_add=True, indexed=True)
     updated_at = ndb.DateTimeProperty(auto_now=True, auto_now_add=False)
+
 
 class SendgridData(ndb.Model):
     SENDGRID_API_KEY = ndb.StringProperty(indexed=True)
