@@ -4,6 +4,7 @@ from datetime import datetime
 import webapp2
 from models import CampaignData, MemberData, MemberOfferData, ndb
 from datastore import CampaignDataService
+from telluride_service import TellurideService
 
 
 class BaseHandler(webapp2.RequestHandler):
@@ -75,7 +76,7 @@ class GetAllCampaignsHandler(webapp2.RequestHandler):
         self.response.write(json.dumps({'data': result}))
 
 
-class GetAllMembersHandler(BaseHandler):
+class GetAllMembersHandler(webapp2.RequestHandler):
     def get(self):
         query = MemberData.query()
         member_list = query.fetch(10)
@@ -113,15 +114,21 @@ class ActivateOfferHandler(webapp2.RequestHandler):
         logging.info("fetched offer_key and member key ")
         response_dict = dict()
         offer = offer_key.get()
-        if offer is not None:
+        member = member_key.get()
+        if offer is not None and member is not None:
             logging.info("offer is not None")
-            # TODO: update member offer object
-            member_offer_obj = MemberOfferData.query(MemberOfferData.member == member_key,
-                                                     MemberOfferData.offer == offer_key).get()
-            if member_offer_obj is not None:
-                member_offer_obj.status = True
-                member_offer_obj.put()
-                response_dict['message'] = "Offer has been activated successfully"
+
+            status_code = TellurideService.register_member(offer, member_key.get())
+            if status_code == 0:
+                member_offer_obj = MemberOfferData.query(MemberOfferData.member == member_key,
+                                                         MemberOfferData.offer == offer_key).get()
+                if member_offer_obj is not None:
+                    member_offer_obj.status = True
+                    member_offer_obj.put()
+                    response_dict['message'] = "Offer has been activated successfully"
+                else:
+                    logging.error("Telluride call failed.")
+                    response_dict['message'] = "Sorry, Offer could not be activated"
             else:
                 logging.error("Member Offer Object not found for offer key :: %s and member key:: %s",
                               member_key, member_key)
@@ -130,7 +137,7 @@ class ActivateOfferHandler(webapp2.RequestHandler):
                 # response_dict['data'] = str(result)
                 response_dict['message'] = "Sorry, Offer could not be activated."
         else:
-            logging.error("could not fetch offer details for key:: %s", offer_key)
+            logging.error("could not fetch offer or member details for key:: %s", offer_key)
             response_dict['message'] = "Sorry could not fetch offer details."
         response_html = "<html><head><title>Sears Offer Activation</title></head><body><h3> " \
                         + response_dict['message'] + "</h3></body></html>"

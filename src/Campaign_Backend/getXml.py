@@ -1,12 +1,13 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import sys
+import logging
+from datetime import datetime
 reload(sys)
 sys.setdefaultencoding("utf-8")
-import logging
 
 
-def get_xml(offer_obj):
+def get_create_offer_xml(offer_obj):
     try:
         offer_data_dict = dict()
         offer_data_dict['campaign_name'] = offer_obj.OfferNumber.split('_')[0]
@@ -205,4 +206,59 @@ def get_xml(offer_obj):
         e = sys.exc_info()[0]
         logging.info("Oops!  That was no valid number.  Try again... : %s", e)
 
+    return xml_string
+
+
+def get_update_offer_xml(offer_entity):
+    xml_string = """<S:Envelope xmlns:S="http://www.w3.org/2003/05/soap-envelope">
+                   <S:Body>
+                      <ns2:UpdateOfferStatus xmlns="http://rewards.sears.com/schemas/" xmlns:ns2="http://rewards.sears.com/schemas/offer/">
+                         <MessageVersion>01</MessageVersion>
+                         <RequestorID>OFRP</RequestorID>
+                         <Source>TI</Source>
+                         <ns2:ModifiedTS>"""+datetime.now().strftime("%Y-%m-%d %H:%M:%S")+"""</ns2:ModifiedTS>
+                         <ns2:ModifiedBy>xoff</ns2:ModifiedBy>
+                         <ns2:OffersInfo>
+                            <ns2:OfferInfo>
+                               <ns2:OfferNumber>QA104_OFR"</ns2:OfferNumber>
+                               <ns2:OfferStatus>ACTIVATED</ns2:OfferStatus>
+                            </ns2:OfferInfo>
+                         </ns2:OffersInfo>
+                         <ns2:AdditionalAttributes>
+                            <ns2:AdditionalAttribute>
+                               <ns2:Name>RealTimeFlag</ns2:Name>
+                               <ns2:Values>
+                                  <ns2:Value>Y</ns2:Value>
+                               </ns2:Values>
+                            </ns2:AdditionalAttribute>
+                         </ns2:AdditionalAttributes>
+                      </ns2:UpdateOfferStatus>
+                   </S:Body>
+                </S:Envelope>"""
+    return xml_string
+
+
+def get_register_offer_xml(offer_entity, member_entity):
+    xml_string = """<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:web="http://www.epsilon.com/webservices/">
+                   <soap:Header/>
+                   <soap:Body>
+                      <web:OfferRegistration>
+                         <web:MessageVersion>01</web:MessageVersion>
+                         <web:ActionTag>A</web:ActionTag>
+
+                         <web:MemberNumber>7081027671644847</web:MemberNumber><web:RequestorID>TECG</web:RequestorID>
+                         <web:AssociateID>000000000000</web:AssociateID>
+                         <web:RegisterNumber>001</web:RegisterNumber>
+                         <web:StoreNumber>00800</web:StoreNumber>
+                         <web:RegistrationStartDTTM>2016-09-30T00:00:01</web:RegistrationStartDTTM>
+                         <web:RegistrationEndDTTM>2016-10-30T04:23:00</web:RegistrationEndDTTM>
+                         <web:MemberOfferReset>N</web:MemberOfferReset>
+                         <web:OfferMemberGroupList>
+                            <web:OfferMemberGroup>
+                               <web:OfferCode>"""+offer_entity.OfferNumber+"""</web:OfferCode><web:GroupName>"""+offer_entity.OfferNumber.split('_')[0]+"""</web:GroupName>
+                            </web:OfferMemberGroup>
+                         </web:OfferMemberGroupList>
+                      </web:OfferRegistration>
+                   </soap:Body>
+                </soap:Envelope>"""
     return xml_string

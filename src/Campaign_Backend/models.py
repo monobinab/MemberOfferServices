@@ -12,6 +12,7 @@ class CampaignData(ndb.Model):
     max_value = ndb.IntegerProperty(indexed=False)
     min_value = ndb.IntegerProperty(indexed=False)
     valid_till = ndb.StringProperty(indexed=False)
+    start_date = ndb.StringProperty(indexed=False)
     created_at = ndb.DateTimeProperty(auto_now_add=True, indexed=True)
     updated_at = ndb.DateTimeProperty(auto_now=True, auto_now_add=False)
 
@@ -66,12 +67,6 @@ class MemberOfferData(ndb.Model):
     status = ndb.BooleanProperty(default=False)
     created_at = ndb.DateTimeProperty(auto_now_add=True, indexed=True)
     updated_at = ndb.DateTimeProperty(auto_now=True, auto_now_add=False)
-
-    @classmethod
-    def create(cls, offer_entity, member_entity):
-        member_offer_data = MemberOfferData(offer=offer_entity.key, member=member_entity.key, status=False)
-        member_offer_data_key = member_offer_data.put()
-        return member_offer_data_key
 
 
 class SendgridData(ndb.Model):

@@ -1,7 +1,7 @@
 from models import CampaignData, OfferData, MemberOfferData, MemberData, ndb
 import logging
 from datetime import datetime, timedelta
-from telluride_service import CreateOffer
+from telluride_service import TellurideService
 from random import randrange
 from sendEmail import send_mail
 
@@ -31,12 +31,14 @@ class CampaignDataService(CampaignData):
         offer_valid_till = offer_dict['valid_till']
         offer_mbr_issuance = offer_dict['member_issuance']
 
-        offer_max_val = offer_max_val if (offer_max_val <= 10) else 10
+        # Check min and max value are in the range 1 to 10
+        offer_min_val = offer_min_val if (offer_min_val in range(1, 11)) else 1
+        offer_max_val = offer_max_val if (offer_max_val in range(1, 11)) else 10
 
         campaign = CampaignData(name=campaign_name, money=campaign_budget, category=campaign_category,
-                                conversion_ratio=campaign_convratio, period=campaign_period,
-                                offer_type=offer_type, max_per_member_issuance_frequency=offer_mbr_issuance,
-                                max_value=offer_max_val, min_value=offer_min_val, valid_till=offer_valid_till)
+                                conversion_ratio=campaign_convratio, period=campaign_period, offer_type=offer_type,
+                                max_per_member_issuance_frequency=offer_mbr_issuance, max_value=offer_max_val,
+                                min_value=offer_min_val, valid_till=offer_valid_till, start_date=start_date)
 
         campaign.key = CampaignDataService.get_campaign_key(campaign_name)
         campaign_key = campaign.put()
@@ -80,11 +82,11 @@ class CampaignDataService(CampaignData):
             logging.info("Random index selected:: %d'" % random_index)
             offer_entity_selected = offer_list[random_index]
 
-            CreateOffer.create_offer(offer_entity_selected, each_member_entity)
+            TellurideService.create_offer(offer_entity_selected, each_member_entity)
 
             send_mail(member_entity=each_member_entity, offer_entity=offer_entity_selected)
 
-            member_offer_data_key = MemberOfferData.create(offer_entity_selected, each_member_entity)
+            member_offer_data_key = MemberOfferDataService.create(offer_entity_selected, each_member_entity)
 
             logging.info('member_offer_key:: %s', member_offer_data_key)
             logging.info('Offer %s email has been sent to: : %s', offer_entity_selected, each_member_entity.email)
@@ -93,3 +95,11 @@ class CampaignDataService(CampaignData):
 
         obj = {'status': 'Success', 'message': 'Offer emails have been sent to: ' + member_emails}
         return obj
+
+
+class MemberOfferDataService(MemberOfferData):
+    @classmethod
+    def create(cls, offer_entity, member_entity):
+        member_offer_data = MemberOfferData(offer=offer_entity.key, member=member_entity.key, status=False)
+        member_offer_data_key = member_offer_data.put()
+        return member_offer_data_key
