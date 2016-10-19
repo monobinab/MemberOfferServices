@@ -2,7 +2,7 @@ import json
 import logging
 from datetime import datetime
 import webapp2
-from models import CampaignData, MemberData, MemberOfferData, ndb
+from models import CampaignData, MemberData, MemberOfferData, FrontEndData, ndb
 from datastore import CampaignDataService
 from telluride_service import TellurideService
 
@@ -117,8 +117,8 @@ class ActivateOfferHandler(webapp2.RequestHandler):
         member = member_key.get()
         if offer is not None and member is not None:
             logging.info("offer is not None")
-
-            status_code = TellurideService.register_member(offer, member_key.get())
+            status_code = 0
+            # status_code = TellurideService.register_member(offer, member_key.get())
             if status_code == 0:
                 member_offer_obj = MemberOfferData.query(MemberOfferData.member == member_key,
                                                          MemberOfferData.offer == offer_key).get()
@@ -152,6 +152,19 @@ class EmailOfferMembersHandler(BaseHandler):
         pass
 
 
+class UIListItemsHandler(webapp2.RequestHandler):
+    def get(self):
+        key = ndb.Key('FrontEndData', '1')
+        result = key.get()
+        result_dict = dict()
+        result_dict['categories'] = list(result.Categories)
+        result_dict['offer_type'] = list(result.Offer_Type)
+        result_dict['conversion_ratio'] = list(result.Conversion_Ratio)
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.headers['Access-Control-Allow-Origin'] = '*'
+        self.response.write(json.dumps({'data': result_dict}))
+
+
 # [START app]
 app = webapp2.WSGIApplication([
     ('/', IndexPageHandler),
@@ -159,7 +172,8 @@ app = webapp2.WSGIApplication([
     ('/campaigns', GetAllCampaignsHandler),
     ('/members', GetAllMembersHandler),
     ('/activateOffer', ActivateOfferHandler),
-    ('/emailMembers', EmailOfferMembersHandler)
+    ('/emailMembers', EmailOfferMembersHandler),
+    ('/getListItems', UIListItemsHandler)
 ], debug=True)
 
 # [END app]

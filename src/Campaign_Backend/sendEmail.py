@@ -35,7 +35,7 @@ def send_mail(member_entity, offer_entity):
 
 
 def send_template_message(member_dict, offer_dict):
-    config_dict = Utilities.get_configuration()
+    config_dict = Utilities.get_sendgrid_configuration()
 
     sg = sendgrid.SendGridAPIClient(apikey=config_dict['SENDGRID_API_KEY'])
     to_email = mail.Email(member_dict['email'].encode("utf-8"))

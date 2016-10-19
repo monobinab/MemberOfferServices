@@ -4,17 +4,7 @@ from google.appengine.api import memcache
 import json
 from getXml import get_create_offer_xml, get_update_offer_xml, get_register_offer_xml
 import xml.etree.ElementTree as ET
-
-CLIENT_ID = "OFFER_REC_SYS_QA"
-CREATE_OFFER_URL = "esbqa-1080.searshc.com"
-CREATE_OFFER_REQUEST = "/rest/tellurideAS/Offer"
-
-ACTIVATE_OFFER_URL = 'trtstel2app01.vm.itg.corp.us.shldcorp.com'
-ACTIVATE_OFFER_REQUEST = "/tellurideAS/Offer"
-ACTIVATE_OFFER_PORT = 8580
-
-REGISTER_OFFER_URL = 'trtstel2app01.vm.itg.corp.us.shldcorp.com'
-REGISTER_OFFER_REQUEST = "/tellurideAS/Bank"
+from Utilities import get_url_configuration
 
 
 class TellurideService:
@@ -26,18 +16,21 @@ class TellurideService:
         response_dict = dict()
         post_data = get_create_offer_xml(offer).rstrip('\n')
         logging.info("post_data: %s", post_data)
-
-        result = TellurideService.make_request(url=CREATE_OFFER_URL, port=None, put_request=CREATE_OFFER_REQUEST,
-                                               request_type="POST", data=post_data)
+        config_data = get_url_configuration()
+        result = TellurideService.make_request(url=config_data['CREATE_OFFER_URL'], port=None,
+                                               put_request=config_data['CREATE_OFFER_REQUEST'],
+                                               request_type="POST", data=post_data, config_data=config_data)
         doc = ET.fromstring(result)
         status_code = doc.find('.//{http://rewards.sears.com/schemas/}Status').text
         if int(status_code) == 0:
-            update_offer_xml = get_update_offer_xml(offer_entity=offer).rstrip('\n')
-            update_offer_result = TellurideService.make_request(url=ACTIVATE_OFFER_URL, port=ACTIVATE_OFFER_PORT,
-                                                                put_request=ACTIVATE_OFFER_REQUEST,
-                                                                request_type="POST", data=update_offer_xml)
-            doc = ET.fromstring(update_offer_result)
-            status_code = doc.find('.//{http://rewards.sears.com/schemas/}Status').text
+            # update_offer_xml = get_update_offer_xml(offer_entity=offer).rstrip('\n')
+            # update_offer_result = TellurideService.make_request(url=config_data['ACTIVATE_OFFER_URL'],
+            #                                                     port=config_data['ACTIVATE_OFFER_PORT'],
+            #                                                     put_request=config_data['ACTIVATE_OFFER_REQUEST'],
+            #                                                     request_type="POST", data=update_offer_xml,
+            #                                                     config_data=config_data)
+            # doc = ET.fromstring(update_offer_result)
+            # status_code = doc.find('.//{http://rewards.sears.com/schemas/}Status').text
             if int(status_code) == 0:
                 logging.info("Activated offer")
                 response_dict['data'] = str(result)
@@ -58,15 +51,17 @@ class TellurideService:
     def register_member(cls, offer, member_entity):
         post_data = get_register_offer_xml(offer, member_entity).rstrip('\n')
         logging.info("post_data: %s", post_data)
-
-        result = TellurideService.make_request(url=REGISTER_OFFER_URL, port=ACTIVATE_OFFER_PORT, put_request=REGISTER_OFFER_REQUEST,
-                                               request_type="POST", data=post_data)
+        config_data = get_url_configuration()
+        result = TellurideService.make_request(url=config_data['REGISTER_OFFER_URL'],
+                                               port=config_data['ACTIVATE_OFFER_PORT'],
+                                               put_request=config_data['REGISTER_OFFER_REQUEST'],
+                                               request_type="POST", data=post_data, config_data=config_data)
         doc = ET.fromstring(result)
         status_code = doc.find('.//{http://rewards.sears.com/schemas/}Status').text
         return status_code
 
     @classmethod
-    def make_request(cls, url, port, put_request, request_type, data):
+    def make_request(cls, url, port, put_request, request_type, data, config_data):
         logging.info('**** data: %s', data)
 
         if port is not None:
@@ -91,7 +86,7 @@ class TellurideService:
             if access_token is None:
                 logging.info('Got None access_token from memcache. Generating new token')
                 # Generating new Access Token
-                generated_access_token = GenerateAccessToken.generate()
+                generated_access_token = GenerateAccessToken.generate(config_data=config_data)
                 # Writing to memcache
                 memcache.add(key="ACCESS_TOKEN", value=generated_access_token, time=0)
                 access_token = generated_access_token
@@ -101,7 +96,7 @@ class TellurideService:
 
             webservice = httplib.HTTPS(url)
             webservice.putrequest(request_type, put_request)
-            webservice.putheader("client_id", "OFFER_REC_SYS_QA")
+            webservice.putheader("client_id", config_data['TELLURIDE_CLIENT_ID'])
             webservice.putheader("access_token", access_token)
             webservice.putheader("Content-type", "application/xml")
             webservice.endheaders()
@@ -119,7 +114,7 @@ class TellurideService:
                 logging.info('Request failed with status_code = 500')
                 logging.info('Generating new Access Token and retrying')
                 # Generating new Access Token
-                generated_access_token = GenerateAccessToken.generate()
+                generated_access_token = GenerateAccessToken.generate(config_data=config_data)
                 # Deleting exisitng access token and Writing new token to memcache
                 memcache.delete(key="ACCESS_TOKEN")
                 logging.info('Deleted exisiting memcache ACCESS_TOKEN value')
@@ -130,7 +125,7 @@ class TellurideService:
 
                 webservice2 = httplib.HTTPS(url)
                 webservice2.putrequest(request_type, put_request)
-                webservice2.putheader("client_id", "OFFER_REC_SYS_QA")
+                webservice2.putheader("client_id", config_data['TELLURIDE_CLIENT_ID'])
                 webservice2.putheader("access_token", generated_access_token)
                 webservice2.putheader("Content-type", "application/xml")
                 webservice2.endheaders()
@@ -152,10 +147,9 @@ class GenerateAccessToken:
         pass
 
     @classmethod
-    def generate(cls):
-        access_token_url = 'syw-offers-accesstoken-qa-dot-syw-offers.appspot.com'
-        webservice = httplib.HTTPS(access_token_url)
-        webservice.putrequest("GET", "/generateAccessToken")
+    def generate(cls, config_data):
+        webservice = httplib.HTTPS(config_data['GENERATE_TOKEN_HOST'])
+        webservice.putrequest("GET", config_data['GENERATE_TOKEN_URL'])
         status_code, status_message, header = webservice.getreply()
         access_token_result = webservice.getfile().read()
 
