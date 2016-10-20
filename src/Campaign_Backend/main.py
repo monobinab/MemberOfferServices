@@ -18,9 +18,13 @@ class BaseHandler(webapp2.RequestHandler):
             self.response.set_status(500)
 
 
-class IndexPageHandler(BaseHandler):
+class IndexPageHandler(webapp2.RequestHandler):
     def get(self):
-        self.response.write("CAMPAIGN-BACKEND-SERVICE")
+        version_name = modules.get_current_version_name()
+        app_name = app_identity.get_application_id()
+        # server_url = app_identity.get_default_version_hostname()
+        # self.response.write("Service running on:: " + server_url)
+        self.response.write("Service running on:: " + version_name + "-dot-"+app_name)
 
 
 class SaveCampaignHandler(webapp2.RequestHandler):
@@ -59,6 +63,7 @@ class GetAllCampaignsHandler(webapp2.RequestHandler):
             campaign_dict['category'] = each_entity.category
             campaign_dict['conversion_ratio'] = each_entity.conversion_ratio
             campaign_dict['period'] = each_entity.period
+            campaign_dict['start_date'] = str(each_entity.start_date)
             campaign_dict['created_at'] = str(each_entity.created_at)
 
             offer_dict['offer_id'] = each_entity.key.id()
