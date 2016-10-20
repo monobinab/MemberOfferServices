@@ -75,6 +75,8 @@ class CampaignDataService(CampaignData):
             offer_key = offer.put()
             offer_list.append(offer)
             logging.info('offer created with key:: %s', offer_key)
+            TellurideService.create_offer(offer)
+
         logging.info("Total offers created:: %d'" % len(offer_list))
         member_emails = ''
         for each_member_entity in MemberData.query().fetch():
@@ -82,10 +84,7 @@ class CampaignDataService(CampaignData):
             logging.info("Random index selected:: %d'" % random_index)
             offer_entity_selected = offer_list[random_index]
 
-            TellurideService.create_offer(offer_entity_selected, each_member_entity)
-
             send_mail(member_entity=each_member_entity, offer_entity=offer_entity_selected)
-
             member_offer_data_key = MemberOfferDataService.create(offer_entity_selected, each_member_entity)
 
             logging.info('member_offer_key:: %s', member_offer_data_key)

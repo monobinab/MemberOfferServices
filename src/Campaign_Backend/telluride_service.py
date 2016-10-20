@@ -12,29 +12,32 @@ class TellurideService:
         pass
 
     @classmethod
-    def create_offer(cls, offer, member_entity):
+    def create_offer(cls, offer):
         response_dict = dict()
         post_data = get_create_offer_xml(offer).rstrip('\n')
-        logging.info("post_data: %s", post_data)
+        # logging.info("post_data: %s", post_data)
         config_data = get_url_configuration()
+        logging.info("Config Data:: %s" % config_data)
+
         result = TellurideService.make_request(url=config_data['CREATE_OFFER_URL'], port=None,
                                                put_request=config_data['CREATE_OFFER_REQUEST'],
                                                request_type="POST", data=post_data, config_data=config_data)
         doc = ET.fromstring(result)
         status_code = doc.find('.//{http://rewards.sears.com/schemas/}Status').text
         if int(status_code) == 0:
-            # update_offer_xml = get_update_offer_xml(offer_entity=offer).rstrip('\n')
-            # update_offer_result = TellurideService.make_request(url=config_data['ACTIVATE_OFFER_URL'],
-            #                                                     port=config_data['ACTIVATE_OFFER_PORT'],
-            #                                                     put_request=config_data['ACTIVATE_OFFER_REQUEST'],
-            #                                                     request_type="POST", data=update_offer_xml,
-            #                                                     config_data=config_data)
-            # doc = ET.fromstring(update_offer_result)
-            # status_code = doc.find('.//{http://rewards.sears.com/schemas/}Status').text
-            if int(status_code) == 0:
-                logging.info("Activated offer")
-                response_dict['data'] = str(result)
-                response_dict['message'] = "Offer has been created and activated successfully"
+            update_offer_xml = get_update_offer_xml(offer_entity=offer).rstrip('\n')
+            update_offer_result = TellurideService.make_request(url=config_data['ACTIVATE_OFFER_URL'],
+                                                                port=config_data['ACTIVATE_OFFER_PORT'],
+                                                                put_request=config_data['ACTIVATE_OFFER_REQUEST'],
+                                                                request_type="POST", data=update_offer_xml,
+                                                                config_data=config_data)
+            if update_offer_result is not None:
+                doc = ET.fromstring(update_offer_result)
+                status_code = doc.find('.//{http://rewards.sears.com/schemas/}Status').text
+                if int(status_code) == 0:
+                    logging.info("Activated offer")
+                    response_dict['data'] = str(result)
+                    response_dict['message'] = "Offer has been created and activated successfully"
             else:
                 response_dict['data'] = str(result)
                 response_dict['message'] = "Offer has been created successfully, but could not activate."
@@ -52,92 +55,77 @@ class TellurideService:
         post_data = get_register_offer_xml(offer, member_entity).rstrip('\n')
         logging.info("post_data: %s", post_data)
         config_data = get_url_configuration()
+        logging.info("Config Data:: %s" % config_data)
         result = TellurideService.make_request(url=config_data['REGISTER_OFFER_URL'],
                                                port=config_data['ACTIVATE_OFFER_PORT'],
                                                put_request=config_data['REGISTER_OFFER_REQUEST'],
                                                request_type="POST", data=post_data, config_data=config_data)
         doc = ET.fromstring(result)
-        status_code = doc.find('.//{http://rewards.sears.com/schemas/}Status').text
-        return status_code
+        status_code = doc.find('.//{http://www.epsilon.com/webservices/}Status').text
+        return int(status_code)
 
     @classmethod
     def make_request(cls, url, port, put_request, request_type, data, config_data):
-        logging.info('**** data: %s', data)
-
         if port is not None:
-            webservice = httplib.HTTP(url, port=port)
-            logging.info('****url: %s', url)
+            logging.info('**** data: %s', data)
 
-            webservice.putrequest(request_type, put_request)
-            webservice.putheader("Content-type", "application/xml")
-            webservice.endheaders()
-            webservice.send(data)
+        # Fetch access token from memcache
+        access_token = memcache.get(key="ACCESS_TOKEN")
+        if access_token is None:
+            logging.info('Got None access_token from memcache. Generating new token')
+            # Generating new Access Token
+            generated_access_token = GenerateAccessToken.generate(config_data=config_data)
+            # Writing to memcache
+            memcache.add(key="ACCESS_TOKEN", value=generated_access_token, time=0)
+            access_token = generated_access_token
 
-            # get the response
-            status_code, status_message, header = webservice.getreply()
-            result = webservice.getfile().read()
-            logging.info('Response status_code: %s', status_code)
-            logging.info('Response status_message: %s', status_message)
-            logging.info('Response header: %s', header)
-            logging.info('Response result: %s', result)
-        else:
-            # Fetch access token from memcache
-            access_token = memcache.get(key="ACCESS_TOKEN")
-            if access_token is None:
-                logging.info('Got None access_token from memcache. Generating new token')
-                # Generating new Access Token
-                generated_access_token = GenerateAccessToken.generate(config_data=config_data)
-                # Writing to memcache
-                memcache.add(key="ACCESS_TOKEN", value=generated_access_token, time=0)
-                access_token = generated_access_token
+        logging.info('Existing access_token from memcache: %s', access_token)
+        logging.info('****url: %s', url+"/"+put_request)
 
-            logging.info('Existing access_token from memcache: %s', access_token)
-            logging.info('****url: %s', url)
+        webservice = httplib.HTTPS(url)
+        webservice.putrequest(request_type, put_request)
+        webservice.putheader("client_id", config_data['TELLURIDE_CLIENT_ID'])
+        webservice.putheader("access_token", access_token)
+        webservice.putheader("Content-type", "application/xml")
+        webservice.endheaders()
+        webservice.send(data)
 
-            webservice = httplib.HTTPS(url)
-            webservice.putrequest(request_type, put_request)
-            webservice.putheader("client_id", config_data['TELLURIDE_CLIENT_ID'])
-            webservice.putheader("access_token", access_token)
-            webservice.putheader("Content-type", "application/xml")
-            webservice.endheaders()
-            webservice.send(data)
+        # get the response
+        status_code, status_message, header = webservice.getreply()
+        result = webservice.getfile().read()
+        logging.info('Response status_code: %s', status_code)
+        logging.info('Response status_message: %s', status_message)
+        logging.info('Response header: %s', header)
+        logging.info('Response result: %s', result)
 
-            # get the response
-            status_code, status_message, header = webservice.getreply()
-            result = webservice.getfile().read()
-            logging.info('Response status_code: %s', status_code)
-            logging.info('Response status_message: %s', status_message)
-            logging.info('Response header: %s', header)
-            logging.info('Response result: %s', result)
+        if status_code == 500:
+            logging.info('Request failed with status_code = 500')
+            logging.info('Generating new Access Token and retrying')
+            # Generating new Access Token
+            generated_access_token = GenerateAccessToken.generate(config_data=config_data)
+            # Deleting exisitng access token and Writing new token to memcache
+            memcache.delete(key="ACCESS_TOKEN")
+            logging.info('Deleted existing memcache ACCESS_TOKEN value')
+            memcache.add(key="ACCESS_TOKEN", value=generated_access_token, time=0)
+            logging.info('Written new ACCESS_TOKEN value to memcache')
 
-            if status_code == 500:
-                logging.info('Request failed with status_code = 500')
-                logging.info('Generating new Access Token and retrying')
-                # Generating new Access Token
-                generated_access_token = GenerateAccessToken.generate(config_data=config_data)
-                # Deleting exisitng access token and Writing new token to memcache
-                memcache.delete(key="ACCESS_TOKEN")
-                logging.info('Deleted exisiting memcache ACCESS_TOKEN value')
-                memcache.add(key="ACCESS_TOKEN", value=generated_access_token, time=0)
-                logging.info('Written new ACCESS_TOKEN value to memcache')
+            # retry with new access token
 
-                # retry with new access token
+            webservice2 = httplib.HTTPS(url)
+            webservice2.putrequest(request_type, put_request)
+            webservice2.putheader("client_id", config_data['TELLURIDE_CLIENT_ID'])
+            webservice2.putheader("access_token", generated_access_token)
+            webservice2.putheader("Content-type", "application/xml")
+            webservice2.endheaders()
+            webservice2.send(data)
 
-                webservice2 = httplib.HTTPS(url)
-                webservice2.putrequest(request_type, put_request)
-                webservice2.putheader("client_id", config_data['TELLURIDE_CLIENT_ID'])
-                webservice2.putheader("access_token", generated_access_token)
-                webservice2.putheader("Content-type", "application/xml")
-                webservice2.endheaders()
-                webservice2.send(data)
-
-                # get the response after retry
-                status_code2, status_message2, header2 = webservice2.getreply()
-                result2 = webservice2.getfile().read()
-                logging.info('Response status_code: %s', status_code2)
-                logging.info('Response status_message: %s', status_message2)
-                logging.info('Response header: %s', header2)
-                logging.info('Response result: %s', result2)
+            # get the response after retry
+            status_code2, status_message2, header2 = webservice2.getreply()
+            result2 = webservice2.getfile().read()
+            logging.info('Response status_code: %s', status_code2)
+            logging.info('Response status_message: %s', status_message2)
+            logging.info('Response header: %s', header2)
+            logging.info('Response result: %s', result2)
 
         return result
 

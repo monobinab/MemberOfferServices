@@ -220,7 +220,7 @@ def get_update_offer_xml(offer_entity):
                          <ns2:ModifiedBy>xoff</ns2:ModifiedBy>
                          <ns2:OffersInfo>
                             <ns2:OfferInfo>
-                               <ns2:OfferNumber>QA104_OFR"</ns2:OfferNumber>
+                               <ns2:OfferNumber>"""+offer_entity.OfferNumber+"""</ns2:OfferNumber>
                                <ns2:OfferStatus>ACTIVATED</ns2:OfferStatus>
                             </ns2:OfferInfo>
                          </ns2:OffersInfo>

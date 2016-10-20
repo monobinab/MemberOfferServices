@@ -109,7 +109,6 @@ class ActivateOfferHandler(webapp2.RequestHandler):
 
         offer_key = ndb.Key('OfferData', offer_id)
         member_key = ndb.Key('MemberData', member_id)
-        # self.response.headers['Content-Type'] = 'application/json'
         self.response.headers['Access-Control-Allow-Origin'] = '*'
         logging.info("fetched offer_key and member key ")
         response_dict = dict()
@@ -117,8 +116,9 @@ class ActivateOfferHandler(webapp2.RequestHandler):
         member = member_key.get()
         if offer is not None and member is not None:
             logging.info("offer is not None")
-            status_code = 0
-            # status_code = TellurideService.register_member(offer, member_key.get())
+
+            status_code = TellurideService.register_member(offer, member)
+            logging.info("Status code:: %d" % status_code)
             if status_code == 0:
                 member_offer_obj = MemberOfferData.query(MemberOfferData.member == member_key,
                                                          MemberOfferData.offer == offer_key).get()
@@ -129,9 +129,11 @@ class ActivateOfferHandler(webapp2.RequestHandler):
                 else:
                     logging.error("Telluride call failed.")
                     response_dict['message'] = "Sorry, Offer could not be activated"
+            elif status_code == 1 or status_code == 99:
+                response_dict['message'] = "Member already registered for this offer"
             else:
                 logging.error("Member Offer Object not found for offer key :: %s and member key:: %s",
-                              member_key, member_key)
+                              offer_key, member_key)
 
                 logging.info("Activated offer %s for member %s", str(offer_key), str(member_key))
                 # response_dict['data'] = str(result)
