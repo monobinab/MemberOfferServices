@@ -19,18 +19,18 @@ class TellurideService:
         config_data = get_url_configuration()
         logging.info("Config Data:: %s" % config_data)
 
-        result = TellurideService.make_request(url=config_data['CREATE_OFFER_URL'], port=None,
+        result = TellurideService.make_request(url=config_data['CREATE_OFFER_URL'],
                                                put_request=config_data['CREATE_OFFER_REQUEST'],
-                                               request_type="POST", data=post_data, config_data=config_data)
+                                               request_type="POST", data=post_data, config_data=config_data,
+                                               is_token_required=True)
         doc = ET.fromstring(result)
         status_code = doc.find('.//{http://rewards.sears.com/schemas/}Status').text
         if int(status_code) == 0:
             update_offer_xml = get_update_offer_xml(offer_entity=offer).rstrip('\n')
             update_offer_result = TellurideService.make_request(url=config_data['ACTIVATE_OFFER_URL'],
-                                                                port=config_data['ACTIVATE_OFFER_PORT'],
                                                                 put_request=config_data['ACTIVATE_OFFER_REQUEST'],
                                                                 request_type="POST", data=update_offer_xml,
-                                                                config_data=config_data)
+                                                                config_data=config_data, is_token_required=True)
             if update_offer_result is not None:
                 doc = ET.fromstring(update_offer_result)
                 status_code = doc.find('.//{http://rewards.sears.com/schemas/}Status').text
@@ -57,35 +57,34 @@ class TellurideService:
         config_data = get_url_configuration()
         logging.info("Config Data:: %s" % config_data)
         result = TellurideService.make_request(url=config_data['REGISTER_OFFER_URL'],
-                                               port=config_data['ACTIVATE_OFFER_PORT'],
                                                put_request=config_data['REGISTER_OFFER_REQUEST'],
-                                               request_type="POST", data=post_data, config_data=config_data)
+                                               request_type="POST", data=post_data, config_data=config_data,
+                                               is_token_required=False)
         doc = ET.fromstring(result)
         status_code = doc.find('.//{http://www.epsilon.com/webservices/}Status').text
         return int(status_code)
 
     @classmethod
-    def make_request(cls, url, port, put_request, request_type, data, config_data):
-        if port is not None:
-            logging.info('**** data: %s', data)
+    def make_request(cls, url, put_request, request_type, data, config_data, is_token_required):
+        if is_token_required:
+            # Fetch access token from memcache
+            access_token = memcache.get(key="ACCESS_TOKEN")
+            if access_token is None:
+                logging.info('Got None access_token from memcache. Generating new token')
+                # Generating new Access Token
+                generated_access_token = GenerateAccessToken.generate(config_data=config_data)
+                # Writing to memcache
+                memcache.add(key="ACCESS_TOKEN", value=generated_access_token, time=0)
+                access_token = generated_access_token
 
-        # Fetch access token from memcache
-        access_token = memcache.get(key="ACCESS_TOKEN")
-        if access_token is None:
-            logging.info('Got None access_token from memcache. Generating new token')
-            # Generating new Access Token
-            generated_access_token = GenerateAccessToken.generate(config_data=config_data)
-            # Writing to memcache
-            memcache.add(key="ACCESS_TOKEN", value=generated_access_token, time=0)
-            access_token = generated_access_token
-
-        logging.info('Existing access_token from memcache: %s', access_token)
-        logging.info('****url: %s', url+"/"+put_request)
+            logging.info('Existing access_token from memcache: %s', access_token)
+            logging.info('****url: %s', url+"/"+put_request)
 
         webservice = httplib.HTTPS(url)
         webservice.putrequest(request_type, put_request)
         webservice.putheader("client_id", config_data['TELLURIDE_CLIENT_ID'])
-        webservice.putheader("access_token", access_token)
+        if is_token_required:
+            webservice.putheader("access_token", access_token)
         webservice.putheader("Content-type", "application/xml")
         webservice.endheaders()
         webservice.send(data)
@@ -98,7 +97,7 @@ class TellurideService:
         logging.info('Response header: %s', header)
         logging.info('Response result: %s', result)
 
-        if status_code == 500:
+        if is_token_required and status_code == 500:
             logging.info('Request failed with status_code = 500')
             logging.info('Generating new Access Token and retrying')
             # Generating new Access Token

@@ -1,9 +1,6 @@
 from models import CampaignData, OfferData, MemberOfferData, MemberData, ndb
 import logging
 from datetime import datetime, timedelta
-from telluride_service import TellurideService
-from random import randrange
-from sendEmail import send_mail
 
 
 class CampaignDataService(CampaignData):
@@ -75,25 +72,7 @@ class CampaignDataService(CampaignData):
             offer_key = offer.put()
             offer_list.append(offer)
             logging.info('offer created with key:: %s', offer_key)
-            TellurideService.create_offer(offer)
-
-        logging.info("Total offers created:: %d'" % len(offer_list))
-        member_emails = ''
-        for each_member_entity in MemberData.query().fetch():
-            random_index = randrange(0, len(offer_list))
-            logging.info("Random index selected:: %d'" % random_index)
-            offer_entity_selected = offer_list[random_index]
-
-            send_mail(member_entity=each_member_entity, offer_entity=offer_entity_selected)
-            member_offer_data_key = MemberOfferDataService.create(offer_entity_selected, each_member_entity)
-
-            logging.info('member_offer_key:: %s', member_offer_data_key)
-            logging.info('Offer %s email has been sent to: : %s', offer_entity_selected, each_member_entity.email)
-            if each_member_entity.email not in member_emails:
-                member_emails = member_emails + each_member_entity.email + ' '
-
-        obj = {'status': 'Success', 'message': 'Offer emails have been sent to: ' + member_emails}
-        return obj
+        return offer_list
 
 
 class MemberOfferDataService(MemberOfferData):

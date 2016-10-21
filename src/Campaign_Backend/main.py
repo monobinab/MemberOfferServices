@@ -3,8 +3,10 @@ import logging
 from datetime import datetime
 import webapp2
 from models import CampaignData, MemberData, MemberOfferData, FrontEndData, ndb
-from datastore import CampaignDataService
+from datastore import CampaignDataService, MemberOfferDataService
 from telluride_service import TellurideService
+from random import randrange
+from sendEmail import send_mail
 
 
 class BaseHandler(webapp2.RequestHandler):
@@ -33,11 +35,31 @@ class SaveCampaignHandler(webapp2.RequestHandler):
         is_entity = ndb.Key('CampaignData', campaign_name).get()
         logging.info('is_entity: %s', is_entity)
         logging.info('type is_entity: %s', type(is_entity))
+
         # Check for create new entity or update an existing entity
         if is_entity is None:
-            CampaignDataService.save_campaign(json_data, datetime.now())
+            offer_list = CampaignDataService.save_campaign(json_data, datetime.now())
         else:
-            CampaignDataService.save_campaign(json_data, is_entity.created_at)
+            offer_list = CampaignDataService.save_campaign(json_data, is_entity.created_at)
+
+        # Creating offers in using telluride service
+        for each_offer in offer_list:
+            TellurideService.create_offer(each_offer)
+
+        logging.info("Total offers created:: %d'" % len(offer_list))
+        member_emails = ''
+        for each_member_entity in MemberData.query().fetch():
+            random_index = randrange(0, len(offer_list))
+            logging.info("Random index selected:: %d'" % random_index)
+            offer_entity_selected = offer_list[random_index]
+
+            send_mail(member_entity=each_member_entity, offer_entity=offer_entity_selected)
+            member_offer_data_key = MemberOfferDataService.create(offer_entity_selected, each_member_entity)
+
+            logging.info('member_offer_key:: %s', member_offer_data_key)
+            logging.info('Offer %s email has been sent to: : %s', offer_entity_selected, each_member_entity.email)
+            if each_member_entity.email not in member_emails:
+                member_emails = member_emails + each_member_entity.email + ' '
 
         self.response.headers['Access-Control-Allow-Origin'] = '*'
 
@@ -148,10 +170,19 @@ class ActivateOfferHandler(webapp2.RequestHandler):
 
 class EmailOfferMembersHandler(BaseHandler):
     def get(self):
-        # campaign_id = self.request.get('campaign_id')
-        # obj = sendEmail.offer_email(campaign_id)
-        # self.response.out.write(json.dumps(obj))
-        pass
+        member_entity = ndb.Key('MemberData', self.request.get('member_id')).get()
+        offer_entity = ndb.Key('OfferData', self.request.get('offer_id')).get()
+        if member_entity is None or offer_entity is None:
+            response_dict = {'status': 'Failure', 'message': "Details not found for the request"}
+        else:
+            send_mail(member_entity=member_entity, offer_entity=offer_entity)
+            member_offer_data_key = MemberOfferDataService.create(offer_entity=offer_entity, member_entity=member_entity)
+            logging.info('member_offer_key:: %s', member_offer_data_key)
+            logging.info('Offer %s email has been sent to: : %s', offer_entity, member_entity.email)
+            response_dict = {'status': 'Success', 'message': "Offer email has been sent successfully!!!"}
+        self.response.headers['Access-Control-Allow-Origin'] = '*'
+        self.response.headers['Content-type'] = 'application/json'
+        self.response.write(json.dumps(response_dict))
 
 
 class UIListItemsHandler(webapp2.RequestHandler):
