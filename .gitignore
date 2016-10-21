@@ -1,3 +1,9 @@
 .idea/
-Util/ComodoSDK/configs/security-client-config.properties~
+.DS_Store
 *.pyc
+.project
+.pydevproject
+.classpath
+.settings
+.prefs
+.class
