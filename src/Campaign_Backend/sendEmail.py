@@ -19,10 +19,6 @@ def send_mail(member_entity, offer_entity):
 
     response = send_template_message(member_dict, offer_dict)
 
-    response = send_template_message(member_dict, offer_dict)
-    # logging.info("Sendgrid response for member %s Response_Status_Code:: %s, Response_Headers:: %s,  "
-    #              "Response_Body:: %s" % (member_entity.email, response.status_code, response.headers, response.body))
-
     if response.status_code == 202:
         logging.info("***Response_Status_code:: %d" % response.status_code)
         logging.info("Mail has been sent successfully to %s" % member_entity.email)
