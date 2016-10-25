@@ -22,11 +22,11 @@ class BaseHandler(webapp2.RequestHandler):
 
 class IndexPageHandler(webapp2.RequestHandler):
     def get(self):
-        version_name = modules.get_current_version_name()
-        app_name = app_identity.get_application_id()
+        # version_name = modules.get_current_version_name()
+        # app_name = app_identity.get_application_id()
         # server_url = app_identity.get_default_version_hostname()
         # self.response.write("Service running on:: " + server_url)
-        self.response.write("Service running on:: " + version_name + "-dot-"+app_name)
+        self.response.write("campaign-backend-service")
 
 
 class SaveCampaignHandler(webapp2.RequestHandler):
@@ -163,8 +163,7 @@ class ActivateOfferHandler(webapp2.RequestHandler):
                               offer_key, member_key)
 
                 logging.info("Activated offer %s for member %s", str(offer_key), str(member_key))
-                # response_dict['data'] = str(result)
-                response_dict['message'] = "Sorry, Offer could not be activated."
+                response_dict['message'] = "Sorry, Offer could not be activated. Member Offer Object not found."
         else:
             logging.error("could not fetch offer or member details for key:: %s", offer_key)
             response_dict['message'] = "Sorry could not fetch offer details."

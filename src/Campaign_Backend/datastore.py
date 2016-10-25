@@ -42,7 +42,7 @@ class CampaignDataService(CampaignData):
         logging.info('campaign_key:: %s', campaign_key)
 
         # Calculating end date based on period value which is in weeks.
-        end_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=7 * int(campaign_period) - 1)
+        end_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=7 * int(offer_valid_till) - 1)
         end_date = end_date.strftime("%Y-%m-%d")
         logging.info("Start_date:: %s and end_date %s", start_date, end_date)
         offer_list = list()

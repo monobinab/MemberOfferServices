@@ -62,7 +62,7 @@ def get_create_offer_xml(offer_obj):
                                  <ns2:OfferEndTime>"""+offer_data_dict['OfferEndTime']+"""</ns2:OfferEndTime>
                                  <ns2:ExpenseAllocation>Allocate by Specified %</ns2:ExpenseAllocation>
                                  <ns2:ModifiedBy>xoffdev1</ns2:ModifiedBy>
-                                 <ns2:ModifiedTS>2015-09-09 00:00:00</ns2:ModifiedTS>
+                                 <ns2:ModifiedTS>"""+datetime.now().strftime("%Y-%m-%d %H:%M:%S")+"""</ns2:ModifiedTS>
                                  <ns2:OfferAttributes>
                                     <ns2:OfferAttribute>
                                        <ns2:Name>"""+offer_data_dict['OfferAttributes_OfferAttribute_Name']+"""</ns2:Name>
@@ -183,7 +183,7 @@ def get_create_offer_xml(offer_obj):
                                              <ns2:Property>
                                                 <ns2:Name>VALUE</ns2:Name>
                                                 <ns2:Values>
-                                                   <ns2:Value>4</ns2:Value>
+                                                   <ns2:Value>"""+offer_obj.surprise_points+"""</ns2:Value>
                                                 </ns2:Values>
                                              </ns2:Property>
                                           </ns2:ActionProperty>
@@ -239,6 +239,7 @@ def get_update_offer_xml(offer_entity):
 
 
 def get_register_offer_xml(offer_entity, member_entity):
+    end_date = offer_entity.OfferEndDate+"T"+offer_entity.OfferEndTime
     xml_string = """<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:web="http://www.epsilon.com/webservices/">
                    <soap:Header/>
                    <soap:Body>
@@ -250,8 +251,8 @@ def get_register_offer_xml(offer_entity, member_entity):
                          <web:AssociateID>000000000000</web:AssociateID>
                          <web:RegisterNumber>001</web:RegisterNumber>
                          <web:StoreNumber>00800</web:StoreNumber>
-                         <web:RegistrationStartDTTM>2016-09-30T00:00:01</web:RegistrationStartDTTM>
-                         <web:RegistrationEndDTTM>2016-10-30T04:23:00</web:RegistrationEndDTTM>
+                         <web:RegistrationStartDTTM>"""+datetime.now().strftime("%Y-%m-%dT%H:%M:%S")+"""</web:RegistrationStartDTTM>
+                         <web:RegistrationEndDTTM>"""+end_date+"""</web:RegistrationEndDTTM>
                          <web:MemberOfferReset>N</web:MemberOfferReset>
                          <web:OfferMemberGroupList>
                             <web:OfferMemberGroup>
