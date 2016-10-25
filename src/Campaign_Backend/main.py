@@ -1,5 +1,6 @@
 import json
 import logging
+import httplib
 from datetime import datetime
 import webapp2
 from models import CampaignData, MemberData, MemberOfferData, FrontEndData, ndb
@@ -113,56 +114,61 @@ class GetAllMembersHandler(webapp2.RequestHandler):
 
 class ActivateOfferHandler(webapp2.RequestHandler):
     def get(self):
-        offer_id = self.request.get('offer_id')
-        logging.info("Request offer_id: " + offer_id)
-        if offer_id is None or not offer_id:
-            response_html = "<html><head><title>Sears Offer Activation</title></head><body><h3> " \
-                             + "Please provide offer_id and member_id with the request</h3></body></html>"
-            self.response.write(response_html)
-            return
+        try:
+            offer_id = self.request.get('offer_id')
+            logging.info("Request offer_id: " + offer_id)
+            if offer_id is None or not offer_id:
+                response_html = "<html><head><title>Sears Offer Activation</title></head><body><h3> " \
+                                 + "Please provide offer_id and member_id with the request</h3></body></html>"
+                self.response.write(response_html)
+                return
 
-        member_id = self.request.get('member_id')
-        logging.info("Request member_id: " + member_id)
+            member_id = self.request.get('member_id')
+            logging.info("Request member_id: " + member_id)
 
-        if member_id is None or not member_id:
-            response_html = "<html><head><title>Sears Offer Activation</title></head><body><h3> " \
-                             + "Please provide offer_id and member_id with the request</h3></body></html>"
-            self.response.write(response_html)
-            return
+            if member_id is None or not member_id:
+                response_html = "<html><head><title>Sears Offer Activation</title></head><body><h3> " \
+                                 + "Please provide offer_id and member_id with the request</h3></body></html>"
+                self.response.write(response_html)
+                return
 
-        offer_key = ndb.Key('OfferData', offer_id)
-        member_key = ndb.Key('MemberData', member_id)
-        self.response.headers['Access-Control-Allow-Origin'] = '*'
-        logging.info("fetched offer_key and member key ")
-        response_dict = dict()
-        offer = offer_key.get()
-        member = member_key.get()
-        if offer is not None and member is not None:
-            logging.info("offer is not None")
-
-            status_code = TellurideService.register_member(offer, member)
-            logging.info("Status code:: %d" % status_code)
-            if status_code == 0:
-                member_offer_obj = MemberOfferData.query(MemberOfferData.member == member_key,
-                                                         MemberOfferData.offer == offer_key).get()
+            offer_key = ndb.Key('OfferData', offer_id)
+            member_key = ndb.Key('MemberData', member_id)
+            self.response.headers['Access-Control-Allow-Origin'] = '*'
+            logging.info("fetched offer_key and member key ")
+            response_dict = dict()
+            offer = offer_key.get()
+            member = member_key.get()
+            if offer is not None and member is not None:
+                logging.info("offer is not None")
+                member_offer_obj = MemberOfferData.query(MemberOfferData.member == member_key, MemberOfferData.offer == offer_key).get()
                 if member_offer_obj is not None:
-                    member_offer_obj.status = True
-                    member_offer_obj.put()
-                    response_dict['message'] = "Offer has been activated successfully"
+                    status_code = TellurideService.register_member(offer, member)
+                    logging.info("Status code:: %d" % status_code)
+                    if status_code == 0:
+                            member_offer_obj.status = True
+                            member_offer_obj.put()
+                            response_dict['message'] = "Offer has been activated successfully"
+                    elif status_code == 1 or status_code == 99:
+                        member_offer_obj.status = True
+                        member_offer_obj.put()
+                        response_dict['message'] = "Member already registered for this offer"
+                    else:
+                        logging.error("Telluride call failed.")
+                        response_dict['message'] = "Sorry, Offer could not be activated"
                 else:
-                    logging.error("Telluride call failed.")
-                    response_dict['message'] = "Sorry, Offer could not be activated"
-            elif status_code == 1 or status_code == 99:
-                response_dict['message'] = "Member already registered for this offer"
-            else:
-                logging.error("Member Offer Object not found for offer key :: %s and member key:: %s",
-                              offer_key, member_key)
+                    logging.error("Member Offer Object not found for offer key :: %s and member key:: %s",
+                                  offer_key, member_key)
 
-                logging.info("Activated offer %s for member %s", str(offer_key), str(member_key))
-                response_dict['message'] = "Sorry, Offer could not be activated. Member Offer Object not found."
-        else:
-            logging.error("could not fetch offer or member details for key:: %s", offer_key)
-            response_dict['message'] = "Sorry could not fetch offer details."
+                    logging.info("Activated offer %s for member %s", str(offer_key), str(member_key))
+                    response_dict['message'] = "Sorry, Offer could not be activated. Member Offer Object not found."
+
+            else:
+                logging.error("could not fetch offer or member details for key:: %s", offer_key)
+                response_dict['message'] = "Sorry could not fetch member offer details."
+        except httplib.HTTPException as exc:
+            logging.error(exc)
+            response_dict['message'] = "Sorry could not fetch offer details because of the request time out."
         response_html = "<html><head><title>Sears Offer Activation</title></head><body><h3> " \
                         + response_dict['message'] + "</h3></body></html>"
         self.response.write(response_html)
@@ -198,6 +204,15 @@ class UIListItemsHandler(webapp2.RequestHandler):
         self.response.write(json.dumps({'data': result_dict}))
 
 
+class MetricsHandler(webapp2.RequestHandler):
+    def get(self):
+        campaign_id = self.request.get("campaign_id")
+        result_dict = MemberOfferDataService.get_offer_metrics(campaign_id=campaign_id)
+        self.response.headers['Access-Control-Allow-Origin'] = '*'
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.write(json.dumps({'data': result_dict}))
+
+
 # [START app]
 app = webapp2.WSGIApplication([
     ('/', IndexPageHandler),
@@ -206,7 +221,8 @@ app = webapp2.WSGIApplication([
     ('/members', GetAllMembersHandler),
     ('/activateOffer', ActivateOfferHandler),
     ('/emailMembers', EmailOfferMembersHandler),
-    ('/getListItems', UIListItemsHandler)
+    ('/getListItems', UIListItemsHandler),
+    ('/getMetrics', MetricsHandler)
 ], debug=True)
 
 # [END app]

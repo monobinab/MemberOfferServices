@@ -81,6 +81,7 @@ class TellurideService:
             logging.info('****url: %s', url+"/"+put_request)
 
         webservice = httplib.HTTPS(url)
+        webservice.timeout = 15
         webservice.putrequest(request_type, put_request)
         webservice.putheader("client_id", config_data['TELLURIDE_CLIENT_ID'])
         if is_token_required:
@@ -111,6 +112,7 @@ class TellurideService:
             # retry with new access token
 
             webservice2 = httplib.HTTPS(url)
+            webservice2.timeout = 15
             webservice2.putrequest(request_type, put_request)
             webservice2.putheader("client_id", config_data['TELLURIDE_CLIENT_ID'])
             webservice2.putheader("access_token", generated_access_token)

@@ -81,3 +81,50 @@ class MemberOfferDataService(MemberOfferData):
         member_offer_data = MemberOfferData(offer=offer_entity.key, member=member_entity.key, status=False)
         member_offer_data_key = member_offer_data.put()
         return member_offer_data_key
+
+    @classmethod
+    def get_offer_metrics(cls, campaign_id):
+        response_dict = dict()
+        if campaign_id is not None:
+            campaign_key = ndb.Key('CampaignData', campaign_id)
+            if campaign_key.get() is not None:
+                offer_list = OfferData.query(OfferData.campaign == campaign_key).fetch()
+                if len(offer_list) != 0:
+                    logging.info("Total offers found for the campaign %d" % len(offer_list))
+                    redeem_count = 0
+                    non_redeem_count = 0
+                    for each_offer in offer_list:
+                        result = MemberOfferData.query(MemberOfferData.offer == each_offer.key).fetch()
+                        logging.info("Total member-offers found for the offer %s are %d" % (each_offer.key, len(result)))
+
+                        for each_entity in result:
+                            if each_entity.status:
+                                redeem_count += 1
+                            else:
+                                non_redeem_count += 1
+                    offer_dict = dict()
+                    offer_dict['Redeem_Count'] = redeem_count
+                    offer_dict['Not_Redeem_Count'] = non_redeem_count
+                    offer_dict['Offers_Created'] = len(offer_list)
+                    offer_dict['Offers_Activated'] = len(offer_list)
+
+                    email_dict = dict()
+                    email_dict['Emails_Sent'] = redeem_count+non_redeem_count
+                    email_dict['Emails_Opened'] = redeem_count
+                    email_dict['Emails_Unopened'] = non_redeem_count
+                    email_dict['Emails_Click_Rate'] = redeem_count
+
+                    response_dict['offer_metrics'] = offer_dict
+                    response_dict['email_metrics'] = email_dict
+                    response_dict['message'] = 'Metrics details fetched successfully.'
+                    response_dict['status'] = 'Success'
+                else:
+                    response_dict['message'] = 'No offers are associated with this campaign.'
+                    response_dict['status'] = 'Failure'
+            else:
+                response_dict['message'] = 'Campaign details not found.'
+                response_dict['status'] = 'Failure'
+        else:
+            response_dict['message'] = 'Please provide campaign id.'
+            response_dict['status'] = 'Failure'
+        return response_dict
