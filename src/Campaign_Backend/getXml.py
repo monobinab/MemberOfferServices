@@ -8,9 +8,12 @@ sys.setdefaultencoding("utf-8")
 
 
 def get_create_offer_xml(offer_obj):
+    xml_string = ""
     try:
         offer_data_dict = dict()
+        logging.info("Surprise points::"+str(offer_obj.surprise_points))
         offer_data_dict['campaign_name'] = offer_obj.OfferNumber.split('_')[0]
+        offer_data_dict['surprise_points'] = str(offer_obj.surprise_points)
         offer_data_dict['OfferNumber'] = offer_obj.OfferNumber
         offer_data_dict['OfferPointsDollarName'] = offer_obj.OfferPointsDollarName
         offer_data_dict['OfferDescription'] = offer_obj.OfferDescription
@@ -183,7 +186,7 @@ def get_create_offer_xml(offer_obj):
                                              <ns2:Property>
                                                 <ns2:Name>VALUE</ns2:Name>
                                                 <ns2:Values>
-                                                   <ns2:Value>"""+offer_obj.surprise_points+"""</ns2:Value>
+                                                   <ns2:Value>"""+offer_data_dict['surprise_points']+"""</ns2:Value>
                                                 </ns2:Values>
                                              </ns2:Property>
                                           </ns2:ActionProperty>

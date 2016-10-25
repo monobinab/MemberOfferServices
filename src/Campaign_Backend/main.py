@@ -22,10 +22,6 @@ class BaseHandler(webapp2.RequestHandler):
 
 class IndexPageHandler(webapp2.RequestHandler):
     def get(self):
-        # version_name = modules.get_current_version_name()
-        # app_name = app_identity.get_application_id()
-        # server_url = app_identity.get_default_version_hostname()
-        # self.response.write("Service running on:: " + server_url)
         self.response.write("campaign-backend-service")
 
 
