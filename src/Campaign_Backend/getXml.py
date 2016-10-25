@@ -1,39 +1,43 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import sys
+import logging
+from datetime import datetime
 reload(sys)
 sys.setdefaultencoding("utf-8")
-from models import OfferData, MemberData
-import logging
 
 
-def get_xml(offer_obj):
+def get_create_offer_xml(offer_obj):
+    xml_string = ""
     try:
         offer_data_dict = dict()
+        logging.info("Surprise points::"+str(offer_obj.surprise_points))
+        offer_data_dict['campaign_name'] = offer_obj.OfferNumber.split('_')[0]
+        offer_data_dict['surprise_points'] = str(offer_obj.surprise_points)
         offer_data_dict['OfferNumber'] = offer_obj.OfferNumber
         offer_data_dict['OfferPointsDollarName'] = offer_obj.OfferPointsDollarName
         offer_data_dict['OfferDescription'] = offer_obj.OfferDescription
-        offer_data_dict['OfferType'] =offer_obj.OfferType
-        offer_data_dict['OfferSubType'] =offer_obj.OfferSubType
-        offer_data_dict['BUProgram_BUProgramName'] =offer_obj.OfferBUProgram_BUProgram_BUProgramName
-        offer_data_dict['ReceiptDescription'] =offer_obj.ReceiptDescription
-        offer_data_dict['OfferCategory'] =offer_obj.OfferCategory
-        offer_data_dict['OfferStartDate'] =offer_obj.OfferStartDate
-        offer_data_dict['OfferStartTime'] =offer_obj.OfferStartTime
-        offer_data_dict['OfferEndDate'] =offer_obj.OfferEndDate
-        offer_data_dict['OfferEndTime'] =offer_obj.OfferEndTime
-        offer_data_dict['OfferAttributes_OfferAttribute_Name'] =offer_obj.OfferAttributes_OfferAttribute_Name
-        offer_data_dict['OfferAttribute_Values_Value'] =offer_obj.OfferAttributes_OfferAttribute_Values_Value
-        offer_data_dict['Rules_Rule_Entity'] =offer_obj.Rules_Rule_Entity
-        offer_data_dict['Rules_Conditions_Condition_Name'] =offer_obj.Rules_Conditions_Condition_Name
-        offer_data_dict['Rules_Conditions_Condition_Operator'] =offer_obj.Rules_Conditions_Condition_Operator
-        offer_data_dict['Rules_Conditions_Condition_Values_Value'] =offer_obj.Rules_Conditions_Condition_Values_Value
-        offer_data_dict['RuleActions_ActionID'] =offer_obj.RuleActions_ActionID
-        offer_data_dict['Actions_ActionName'] =offer_obj.Actions_ActionName
-        offer_data_dict['Actions_ActionID'] =offer_obj.Actions_ActionID
-        offer_data_dict['Actions_ActionProperty_PropertyType'] =offer_obj.Actions_ActionProperty_PropertyType
-        offer_data_dict['Actions_ActionProperty_Property_Name'] =offer_obj.Actions_ActionProperty_Property_Name
-        offer_data_dict['Actions_ActionProperty_Property_Values_Value'] =offer_obj.Actions_ActionProperty_Property_Values_Value
+        offer_data_dict['OfferType'] = offer_obj.OfferType
+        offer_data_dict['OfferSubType'] = offer_obj.OfferSubType
+        offer_data_dict['BUProgram_BUProgramName'] = offer_obj.OfferBUProgram_BUProgram_BUProgramName
+        offer_data_dict['ReceiptDescription'] = offer_obj.ReceiptDescription
+        offer_data_dict['OfferCategory'] = offer_obj.OfferCategory
+        offer_data_dict['OfferStartDate'] = offer_obj.OfferStartDate
+        offer_data_dict['OfferStartTime'] = offer_obj.OfferStartTime
+        offer_data_dict['OfferEndDate'] = offer_obj.OfferEndDate
+        offer_data_dict['OfferEndTime'] = offer_obj.OfferEndTime
+        offer_data_dict['OfferAttributes_OfferAttribute_Name'] = offer_obj.OfferAttributes_OfferAttribute_Name
+        offer_data_dict['OfferAttribute_Values_Value'] = offer_obj.OfferAttributes_OfferAttribute_Values_Value
+        offer_data_dict['Rules_Rule_Entity'] = offer_obj.Rules_Rule_Entity
+        offer_data_dict['Rules_Conditions_Condition_Name'] = offer_obj.Rules_Conditions_Condition_Name
+        offer_data_dict['Rules_Conditions_Condition_Operator'] = offer_obj.Rules_Conditions_Condition_Operator
+        offer_data_dict['Rules_Conditions_Condition_Values_Value'] = offer_obj.Rules_Conditions_Condition_Values_Value
+        offer_data_dict['RuleActions_ActionID'] = offer_obj.RuleActions_ActionID
+        offer_data_dict['Actions_ActionName'] = offer_obj.Actions_ActionName
+        offer_data_dict['Actions_ActionID'] = offer_obj.Actions_ActionID
+        offer_data_dict['Actions_ActionProperty_PropertyType'] = offer_obj.Actions_ActionProperty_PropertyType
+        offer_data_dict['Actions_ActionProperty_Property_Name'] = offer_obj.Actions_ActionProperty_Property_Name
+        offer_data_dict['Actions_ActionProperty_Property_Values_Value'] = offer_obj.Actions_ActionProperty_Property_Values_Value
 
         xml_string = """<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
                            <soap:Body>
@@ -61,7 +65,7 @@ def get_xml(offer_obj):
                                  <ns2:OfferEndTime>"""+offer_data_dict['OfferEndTime']+"""</ns2:OfferEndTime>
                                  <ns2:ExpenseAllocation>Allocate by Specified %</ns2:ExpenseAllocation>
                                  <ns2:ModifiedBy>xoffdev1</ns2:ModifiedBy>
-                                 <ns2:ModifiedTS>2015-09-09 00:00:00</ns2:ModifiedTS>
+                                 <ns2:ModifiedTS>"""+datetime.now().strftime("%Y-%m-%d %H:%M:%S")+"""</ns2:ModifiedTS>
                                  <ns2:OfferAttributes>
                                     <ns2:OfferAttribute>
                                        <ns2:Name>"""+offer_data_dict['OfferAttributes_OfferAttribute_Name']+"""</ns2:Name>
@@ -122,7 +126,7 @@ def get_xml(offer_obj):
                                              <ns2:Name>MEMBER_GROUPS</ns2:Name>
                                              <ns2:Operator>IN</ns2:Operator>
                                              <ns2:Values>
-                                                <ns2:Value>TC3_XR</ns2:Value>
+                                                <ns2:Value>"""+offer_data_dict['campaign_name']+"""</ns2:Value>
                                              </ns2:Values>
                                           </ns2:Condition>
                                        </ns2:Conditions>
@@ -182,7 +186,7 @@ def get_xml(offer_obj):
                                              <ns2:Property>
                                                 <ns2:Name>VALUE</ns2:Name>
                                                 <ns2:Values>
-                                                   <ns2:Value>4</ns2:Value>
+                                                   <ns2:Value>"""+offer_data_dict['surprise_points']+"""</ns2:Value>
                                                 </ns2:Values>
                                              </ns2:Property>
                                           </ns2:ActionProperty>
@@ -205,4 +209,60 @@ def get_xml(offer_obj):
         e = sys.exc_info()[0]
         logging.info("Oops!  That was no valid number.  Try again... : %s", e)
 
+    return xml_string
+
+
+def get_update_offer_xml(offer_entity):
+    xml_string = """<S:Envelope xmlns:S="http://www.w3.org/2003/05/soap-envelope">
+                   <S:Body>
+                      <ns2:UpdateOfferStatus xmlns="http://rewards.sears.com/schemas/" xmlns:ns2="http://rewards.sears.com/schemas/offer/">
+                         <MessageVersion>01</MessageVersion>
+                         <RequestorID>OFRP</RequestorID>
+                         <Source>TI</Source>
+                         <ns2:ModifiedTS>"""+datetime.now().strftime("%Y-%m-%d %H:%M:%S")+"""</ns2:ModifiedTS>
+                         <ns2:ModifiedBy>xoff</ns2:ModifiedBy>
+                         <ns2:OffersInfo>
+                            <ns2:OfferInfo>
+                               <ns2:OfferNumber>"""+offer_entity.OfferNumber+"""</ns2:OfferNumber>
+                               <ns2:OfferStatus>ACTIVATED</ns2:OfferStatus>
+                            </ns2:OfferInfo>
+                         </ns2:OffersInfo>
+                         <ns2:AdditionalAttributes>
+                            <ns2:AdditionalAttribute>
+                               <ns2:Name>RealTimeFlag</ns2:Name>
+                               <ns2:Values>
+                                  <ns2:Value>Y</ns2:Value>
+                               </ns2:Values>
+                            </ns2:AdditionalAttribute>
+                         </ns2:AdditionalAttributes>
+                      </ns2:UpdateOfferStatus>
+                   </S:Body>
+                </S:Envelope>"""
+    return xml_string
+
+
+def get_register_offer_xml(offer_entity, member_entity):
+    end_date = offer_entity.OfferEndDate+"T"+offer_entity.OfferEndTime
+    xml_string = """<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:web="http://www.epsilon.com/webservices/">
+                   <soap:Header/>
+                   <soap:Body>
+                      <web:OfferRegistration>
+                         <web:MessageVersion>01</web:MessageVersion>
+                         <web:ActionTag>A</web:ActionTag>
+
+                         <web:MemberNumber>7081027671644847</web:MemberNumber><web:RequestorID>TECG</web:RequestorID>
+                         <web:AssociateID>000000000000</web:AssociateID>
+                         <web:RegisterNumber>001</web:RegisterNumber>
+                         <web:StoreNumber>00800</web:StoreNumber>
+                         <web:RegistrationStartDTTM>"""+datetime.now().strftime("%Y-%m-%dT%H:%M:%S")+"""</web:RegistrationStartDTTM>
+                         <web:RegistrationEndDTTM>"""+end_date+"""</web:RegistrationEndDTTM>
+                         <web:MemberOfferReset>N</web:MemberOfferReset>
+                         <web:OfferMemberGroupList>
+                            <web:OfferMemberGroup>
+                               <web:OfferCode>"""+offer_entity.OfferNumber+"""</web:OfferCode><web:GroupName>"""+offer_entity.OfferNumber.split('_')[0]+"""</web:GroupName>
+                            </web:OfferMemberGroup>
+                         </web:OfferMemberGroupList>
+                      </web:OfferRegistration>
+                   </soap:Body>
+                </soap:Envelope>"""
     return xml_string

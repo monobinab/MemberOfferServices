@@ -73,3 +73,30 @@ class SendgridData(ndb.Model):
     SENDGRID_API_KEY = ndb.StringProperty(indexed=True)
     SENDGRID_SENDER = ndb.StringProperty(indexed=True)
     TEMPLATE_ID = ndb.StringProperty(indexed=False)
+
+
+class ConfigData(ndb.Model):
+    SENDGRID_API_KEY = ndb.StringProperty(indexed=True)
+    SENDGRID_SENDER = ndb.StringProperty(indexed=True)
+    TEMPLATE_ID = ndb.StringProperty(indexed=False)
+
+    GENERATE_TOKEN_HOST = ndb.StringProperty(indexed=False)
+    GENERATE_TOKEN_URL = ndb.StringProperty(indexed=False)
+
+    TELLURIDE_CLIENT_ID = ndb.StringProperty(indexed=False)
+
+    CREATE_OFFER_URL = ndb.StringProperty(indexed=False)
+    CREATE_OFFER_REQUEST = ndb.StringProperty(indexed=False)
+
+    ACTIVATE_OFFER_URL = ndb.StringProperty(indexed=False)
+    ACTIVATE_OFFER_REQUEST = ndb.StringProperty(indexed=False)
+    ACTIVATE_OFFER_PORT = ndb.StringProperty(indexed=False)
+
+    REGISTER_OFFER_URL = ndb.StringProperty(indexed=False)
+    REGISTER_OFFER_REQUEST = ndb.StringProperty(indexed=False)
+
+
+class FrontEndData(ndb.Model):
+    Categories = ndb.StringProperty(indexed=True, repeated=True)
+    Conversion_Ratio = ndb.IntegerProperty(indexed=True, repeated=True)
+    Offer_Type = ndb.StringProperty(indexed=False, repeated=True)
