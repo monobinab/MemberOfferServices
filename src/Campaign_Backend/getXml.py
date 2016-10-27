@@ -126,7 +126,7 @@ def get_create_offer_xml(offer_obj):
                                              <ns2:Name>MEMBER_GROUPS</ns2:Name>
                                              <ns2:Operator>IN</ns2:Operator>
                                              <ns2:Values>
-                                                <ns2:Value>"""+offer_data_dict['campaign_name']+"""</ns2:Value>
+                                                <ns2:Value>"""+offer_data_dict['OfferNumber']+"""</ns2:Value>
                                              </ns2:Values>
                                           </ns2:Condition>
                                        </ns2:Conditions>
@@ -250,7 +250,7 @@ def get_register_offer_xml(offer_entity, member_entity):
                          <web:MessageVersion>01</web:MessageVersion>
                          <web:ActionTag>A</web:ActionTag>
 
-                         <web:MemberNumber>7081027671644847</web:MemberNumber><web:RequestorID>TECG</web:RequestorID>
+                         <web:MemberNumber>"""+member_entity.member_id+"""</web:MemberNumber><web:RequestorID>TECG</web:RequestorID>
                          <web:AssociateID>000000000000</web:AssociateID>
                          <web:RegisterNumber>001</web:RegisterNumber>
                          <web:StoreNumber>00800</web:StoreNumber>
@@ -259,7 +259,7 @@ def get_register_offer_xml(offer_entity, member_entity):
                          <web:MemberOfferReset>N</web:MemberOfferReset>
                          <web:OfferMemberGroupList>
                             <web:OfferMemberGroup>
-                               <web:OfferCode>"""+offer_entity.OfferNumber+"""</web:OfferCode><web:GroupName>"""+offer_entity.OfferNumber.split('_')[0]+"""</web:GroupName>
+                               <web:OfferCode>"""+offer_entity.OfferNumber+"""</web:OfferCode><web:GroupName>"""+offer_entity.OfferNumber+"""</web:GroupName>
                             </web:OfferMemberGroup>
                          </web:OfferMemberGroupList>
                       </web:OfferRegistration>
