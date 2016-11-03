@@ -62,7 +62,7 @@ def send_template_message(member_dict, offer_dict):
     substitution = mail.Substitution(key="%activationurl%", value=activation_url.encode("utf-8"))
     personalization.add_substitution(substitution)
     message.add_personalization(personalization)
-    message.set_template_id(config_dict['TEMPLATE_ID'].encode("utf-8"))
+    message.set_template_id(config_dict['TEMPLATE_ID'].split('\n')[0].encode("utf-8"))
     logging.info("Activation URL included in email::" + activation_url)
     logging.info('message.get(): %s', message.get())
 

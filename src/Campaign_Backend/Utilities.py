@@ -1,8 +1,21 @@
 from models import ndb
+import logging
+from google.appengine.api import namespace_manager
+
+
+dev_namespace = 'dev'
+qa_namespace = 'qa'
+prod_namespace = 'prod'
+config_namespace = 'default'
 
 
 # Function to read sendgrid configurations
 def get_sendgrid_configuration():
+    try:
+        namespace_manager.set_namespace(config_namespace)
+        logging.info("Namespace set::" + config_namespace)
+    except Exception as e:
+        logging.error(e)
     data_map = dict()
     data_key = ndb.Key('ConfigData', 'SendGridConfig')
     data_entity = data_key.get()
@@ -15,6 +28,11 @@ def get_sendgrid_configuration():
 
 # Function to read url configurations
 def get_url_configuration():
+    try:
+        namespace_manager.set_namespace(config_namespace)
+        logging.info("Namespace set::" + config_namespace)
+    except Exception as e:
+        logging.error(e)
     data_map = dict()
     data_key = ndb.Key('ConfigData', 'URLConfig')
     data_entity = data_key.get()

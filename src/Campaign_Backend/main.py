@@ -1,17 +1,16 @@
 import json
 import logging
 import httplib
-from datetime import datetime
 import webapp2
 from models import CampaignData, MemberData, MemberOfferData, FrontEndData, ndb, OfferData
 from datastore import CampaignDataService, MemberOfferDataService, OfferDataService
 from telluride_service import TellurideService
-from random import randrange
 from sendEmail import send_mail
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from oauth2client.client import GoogleCredentials
-from datetime import datetime, timedelta
+from datetime import datetime
+from Utilities import dev_namespace as namespace_var, namespace_manager
 
 
 class BaseHandler(webapp2.RequestHandler):
@@ -31,7 +30,12 @@ class IndexPageHandler(webapp2.RequestHandler):
 
 
 class SaveCampaignHandler(webapp2.RequestHandler):
-    def get(self):
+    def get(self, namespace=namespace_var):
+        try:
+            namespace_manager.set_namespace(namespace)
+            logging.info("Namespace set::" + namespace)
+        except Exception as e:
+            logging.error(e)
         offer_data = self.request.get('offer_data')
         logging.info('****offerdata: %s', offer_data)
         json_data = json.loads(offer_data)
@@ -52,7 +56,13 @@ class SaveCampaignHandler(webapp2.RequestHandler):
 
 
 class GetAllCampaignsHandler(webapp2.RequestHandler):
-    def get(self):
+    def get(self, namespace=namespace_var):
+        # Save the current namespace.
+        try:
+            namespace_manager.set_namespace(namespace)
+            logging.info("Namespace set::" + namespace)
+        except Exception as e:
+            logging.error(e)
         query = CampaignData.query().order(-CampaignData.created_at)
         entity_list = query.fetch(100)
         result = list()
@@ -87,7 +97,12 @@ class GetAllCampaignsHandler(webapp2.RequestHandler):
 
 
 class GetAllMembersHandler(webapp2.RequestHandler):
-    def get(self):
+    def get(self, namespace=namespace_var):
+        try:
+            namespace_manager.set_namespace(namespace)
+            logging.info("Namespace set::" + namespace)
+        except Exception as e:
+            logging.error(e)
         query = MemberData.query()
         member_list = query.fetch(10)
         result = []
@@ -99,8 +114,13 @@ class GetAllMembersHandler(webapp2.RequestHandler):
 
 
 class ActivateOfferHandler(webapp2.RequestHandler):
-    def get(self):
+    def get(self, namespace=namespace_var):
         try:
+            try:
+                namespace_manager.set_namespace(namespace)
+                logging.info("Namespace set::" + namespace)
+            except Exception as e:
+                logging.error(e)
             offer_id = self.request.get('offer_id')
             logging.info("Request offer_id: " + offer_id)
             if offer_id is None or not offer_id:
@@ -161,7 +181,13 @@ class ActivateOfferHandler(webapp2.RequestHandler):
 
 
 class EmailOfferMembersHandler(BaseHandler):
-    def get(self):
+    def get(self, namespace=namespace_var):
+        try:
+            namespace_manager.set_namespace(namespace)
+            logging.info("Namespace set::" + namespace)
+        except Exception as e:
+            logging.error(e)
+
         member_entity = ndb.Key('MemberData', self.request.get('member_id')).get()
         offer_entity = ndb.Key('OfferData', self.request.get('offer_id')).get()
         if member_entity is None or offer_entity is None:
@@ -178,7 +204,12 @@ class EmailOfferMembersHandler(BaseHandler):
 
 
 class UIListItemsHandler(webapp2.RequestHandler):
-    def get(self):
+    def get(self, namespace=namespace_var):
+        try:
+            namespace_manager.set_namespace(namespace)
+            logging.info("Namespace set::" + namespace)
+        except Exception as e:
+            logging.error(e)
         key = ndb.Key('FrontEndData', '1')
         result = key.get()
         result_dict = dict()
@@ -191,12 +222,18 @@ class UIListItemsHandler(webapp2.RequestHandler):
 
 
 class MetricsHandler(webapp2.RequestHandler):
-    def get(self):
+    def get(self, namespace=namespace_var):
+        try:
+            namespace_manager.set_namespace(namespace)
+            logging.info("Namespace set::" + namespace)
+        except Exception as e:
+            logging.error(e)
         campaign_id = self.request.get("campaign_id")
         result_dict = MemberOfferDataService.get_offer_metrics(campaign_id=campaign_id)
         self.response.headers['Access-Control-Allow-Origin'] = '*'
         self.response.headers['Content-Type'] = 'application/json'
         self.response.write(json.dumps({'data': result_dict}))
+
 
 class BatchJobHandler(webapp2.RequestHandler):
     def get(self):
@@ -206,20 +243,20 @@ class BatchJobHandler(webapp2.RequestHandler):
             self.response.write(response_html)
             return
 
-        #dataset = 'test_member_offer'
-        #table_name = 'memberofferdata'
-        #project = 'syw-offers'
-        dataset_name =  self.request.get('dataset_name')
-        table_name =  self.request.get('table_name')
-        project =  self.request.get('project_id')
-        campaign_name =  self.request.get('campaign_name')
+        # dataset = 'test_member_offer'
+        # table_name = 'memberofferdata'
+        # project = 'syw-offers'
+        dataset_name = self.request.get('dataset_name')
+        table_name = self.request.get('table_name')
+        project = self.request.get('project_id')
+        campaign_name = self.request.get('campaign_name')
         response = BatchJobHandler.list_rows(dataset_name,table_name,campaign_name, project)
         response_html = "<html><head><title>Batch Job Execution</title></head><body><h3> " \
-                 + response['message']
+                        + response['message']
         self.response.write(response_html)
 
     @classmethod
-    def list_rows(self,dataset_name, table_name, campaign_name, project_id=None):
+    def list_rows(cls, dataset_name, table_name, campaign_name, project_id=None):
         response_dict = dict()
         new_line = '\n'
         # [START build_service]

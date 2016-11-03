@@ -72,6 +72,7 @@ class CampaignDataService(CampaignData):
         return ndb.Key('CampaignData', campaign_name)
 
     @classmethod
+    @ndb.transactional(xg=True)
     def save_campaign(cls, json_data, created_time):
         campaign_dict = json_data['campaign_details']
         offer_dict = json_data['offer_details']
