@@ -95,6 +95,8 @@ class ConfigData(ndb.Model):
     REGISTER_OFFER_URL = ndb.StringProperty(indexed=False)
     REGISTER_OFFER_REQUEST = ndb.StringProperty(indexed=False)
 
+    REDEEM_OFFER_REQUEST = ndb.StringProperty(indexed=False)
+
 
 class FrontEndData(ndb.Model):
     Categories = ndb.StringProperty(indexed=True, repeated=True)

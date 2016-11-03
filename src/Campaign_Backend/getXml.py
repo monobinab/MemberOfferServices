@@ -266,3 +266,98 @@ def get_register_offer_xml(offer_entity, member_entity):
                    </soap:Body>
                 </soap:Envelope>"""
     return xml_string
+
+
+def get_balance_xml():
+    xml_string = """<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:web="http://www.epsilon.com/webservices/">
+                   <soap:Header/>
+                   <soap:Body>
+                      <web:ProcessRedemption>
+                         <web:MessageVersion>06</web:MessageVersion>
+                         <web:Function>B</web:Function>
+                         <web:RequestorID>NPOS</web:RequestorID>
+                         <web:MemberNumber>7081317702051967</web:MemberNumber>
+                         <web:PickUpStoreNumber>01168</web:PickUpStoreNumber>
+                         <web:OrderStoreNumber>01168</web:OrderStoreNumber>
+                         <web:RegisterNumber>057</web:RegisterNumber>
+                         <web:TransactionDate>2016-11-01</web:TransactionDate>
+                         <web:TransactionTime>16:11:00</web:TransactionTime>
+                         <web:AssociateID>003574</web:AssociateID>
+                         <web:RedemptionPoints>0</web:RedemptionPoints>
+                         <web:RedemptionDollarValue>0</web:RedemptionDollarValue>
+                         <web:MaxRedeemablePoints>0</web:MaxRedeemablePoints>
+                         <web:MaxRedeemableDollarValue>0</web:MaxRedeemableDollarValue>
+                         <web:TotalAvailableRewardPoints>0</web:TotalAvailableRewardPoints>
+                         <web:LayawayFlag>0</web:LayawayFlag>
+                         <web:LineItems>
+                            <web:LineItem>
+                               <web:LineNumber>1</web:LineNumber>
+                               <web:ItemType>1</web:ItemType>
+                               <web:Division>76</web:Division>
+                               <web:ItemNumber>5332</web:ItemNumber>
+                               <web:LineItemAmountTypeCode>1</web:LineItemAmountTypeCode>
+                               <web:DollarValuePreDisc>50.00</web:DollarValuePreDisc>
+                               <web:DollarValuePostDisc>50.00</web:DollarValuePostDisc>
+                               <web:PriceMatchAmount>0</web:PriceMatchAmount>
+                               <web:PriceMatchBonusAmount>0</web:PriceMatchBonusAmount>
+                               <web:Quantity>1</web:Quantity>
+                               <web:PointsRedeemed>0</web:PointsRedeemed>
+                               <web:DollarValueOfPointsRedeemed>0</web:DollarValueOfPointsRedeemed>
+                               <web:RedemptionExclusionFlag>N</web:RedemptionExclusionFlag>
+                               <web:TaxAmount>0.00</web:TaxAmount>
+                               <web:PostSalesAdjustmentAmount>0</web:PostSalesAdjustmentAmount>
+                               <web:NonMemberPrice>0</web:NonMemberPrice>
+                            </web:LineItem>
+                         </web:LineItems>
+                      </web:ProcessRedemption>
+                   </soap:Body>
+                </soap:Envelope>"""
+    return xml_string
+
+
+def get_redeem_offer_xml():
+    xml_string = """<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:web="http://www.epsilon.com/webservices/">
+                   <soap:Header/>
+                   <soap:Body>
+                      <web:ProcessRedemption>
+                         <web:MessageVersion>06</web:MessageVersion>
+                         <web:Function>R</web:Function>
+                         <web:RequestorID>NPOS</web:RequestorID>
+                         <web:MemberNumber>7081317702051967</web:MemberNumber>
+                         <web:PickUpStoreNumber>01168</web:PickUpStoreNumber>
+                         <web:OrderStoreNumber>01168</web:OrderStoreNumber>
+                         <web:RegisterNumber>057</web:RegisterNumber>
+                         <web:TransactionDate>2016-11-01</web:TransactionDate>
+                         <web:TransactionTime>16:11:00</web:TransactionTime>
+                         <web:AssociateID>003574</web:AssociateID>
+                         <web:RedemptionPoints>2830</web:RedemptionPoints>
+                         <web:RedemptionDollarValue>2.83</web:RedemptionDollarValue>
+                         <web:MaxRedeemablePoints>2838</web:MaxRedeemablePoints>
+                         <web:MaxRedeemableDollarValue>2.83</web:MaxRedeemableDollarValue>
+                         <web:TotalAvailableRewardPoints>2838</web:TotalAvailableRewardPoints>
+                         <web:LayawayFlag>0</web:LayawayFlag>
+                         <web:LineItems>
+                            <web:LineItem>
+                               <web:LineNumber>1</web:LineNumber>
+                               <web:ItemType>1</web:ItemType>
+                               <web:Division>76</web:Division>
+                               <web:ItemNumber>5332</web:ItemNumber>
+                               <web:LineItemAmountTypeCode>1</web:LineItemAmountTypeCode>
+                               <web:DollarValuePreDisc>50.00</web:DollarValuePreDisc>
+                               <web:DollarValuePostDisc>50.00</web:DollarValuePostDisc>
+                               <web:PriceMatchAmount>0</web:PriceMatchAmount>
+                               <web:PriceMatchBonusAmount>0</web:PriceMatchBonusAmount>
+                               <web:Quantity>1</web:Quantity>
+                               <web:PointsRedeemed>0</web:PointsRedeemed>
+                               <web:DollarValueOfPointsRedeemed>0</web:DollarValueOfPointsRedeemed>
+                               <web:RedemptionExclusionFlag>N</web:RedemptionExclusionFlag>
+                               <web:TaxAmount>0.00</web:TaxAmount>
+                               <web:PostSalesAdjustmentAmount>0</web:PostSalesAdjustmentAmount>
+                               <web:NonMemberPrice>0</web:NonMemberPrice>
+                            </web:LineItem>
+                         </web:LineItems>
+                      </web:ProcessRedemption>
+                   </soap:Body>
+                </soap:Envelope>"""
+    return xml_string
+

@@ -10,7 +10,8 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from oauth2client.client import GoogleCredentials
 from datetime import datetime
-from Utilities import dev_namespace as namespace_var, namespace_manager
+from google.appengine.api import namespace_manager
+from Utilities import dev_namespace as namespace_var
 
 
 class BaseHandler(webapp2.RequestHandler):
@@ -374,6 +375,46 @@ class BatchJobHandler(webapp2.RequestHandler):
         return response_dict
 
 
+class BalanceHandler(webapp2.RequestHandler):
+    def get(self, namespace=namespace_var):
+        self.response.headers['Access-Control-Allow-Origin'] = '*'
+        self.response.headers['Content-Type'] = 'application/json'
+        try:
+            logging.info(str(self))
+            namespace_manager.set_namespace(namespace)
+            logging.info("Namespace set::" + namespace)
+            result = TellurideService.get_balance()
+            self.response.write(json.dumps({'data': result}))
+        except httplib.HTTPException as exc:
+            logging.error(exc)
+            self.response.set_status(408)
+            self.response.write("Request has timed out. Please try again.")
+        except Exception as e:
+            logging.error(e)
+            self.response.set_status(500)
+            self.response.write("Internal Server Error")
+
+
+class RedeemOfferHandler(webapp2.RequestHandler):
+    def get(self, namespace=namespace_var):
+        self.response.headers['Access-Control-Allow-Origin'] = '*'
+        self.response.headers['Content-Type'] = 'application/json'
+        try:
+            logging.info(str(self))
+            namespace_manager.set_namespace(namespace)
+            logging.info("Namespace set::" + namespace)
+            result = TellurideService.redeem_offer()
+            self.response.write(json.dumps({'data': result}))
+        except httplib.HTTPException as exc:
+            logging.error(exc)
+            self.response.set_status(408)
+            self.response.write("Request has timed out. Please try again.")
+        except Exception as e:
+            logging.error(e)
+            self.response.set_status(500)
+            self.response.write("Internal Server Error")
+
+
 # [START app]
 app = webapp2.WSGIApplication([
     ('/', IndexPageHandler),
@@ -384,7 +425,9 @@ app = webapp2.WSGIApplication([
     ('/emailMembers', EmailOfferMembersHandler),
     ('/getListItems', UIListItemsHandler),
     ('/getMetrics', MetricsHandler),
-    ('/batchJob', BatchJobHandler)
+    ('/batchJob', BatchJobHandler),
+    ('/getBalance', BalanceHandler),
+    ('/redeemOffer', RedeemOfferHandler)
 ], debug=True)
 
 # [END app]
