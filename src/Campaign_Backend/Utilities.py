@@ -4,7 +4,7 @@ from models import ConfigData
 dev_namespace = 'dev'
 qa_namespace = 'qa'
 prod_namespace = 'prod'
-config_namespace = ''
+config_namespace = ''  # default namespace in data store
 
 
 # Function to read sendgrid configurations

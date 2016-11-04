@@ -11,7 +11,7 @@ from googleapiclient.errors import HttpError
 from oauth2client.client import GoogleCredentials
 from datetime import datetime
 from google.appengine.api import namespace_manager
-from Utilities import dev_namespace as namespace_var
+from Utilities import dev_namespace as namespace_var, config_namespace
 
 
 class BaseHandler(webapp2.RequestHandler):
@@ -116,12 +116,10 @@ class GetAllMembersHandler(webapp2.RequestHandler):
 
 class ActivateOfferHandler(webapp2.RequestHandler):
     def get(self, namespace=namespace_var):
+        response_dict = dict()
         try:
-            try:
-                namespace_manager.set_namespace(namespace)
-                logging.info("Namespace set::" + namespace)
-            except Exception as e:
-                logging.error(e)
+            namespace_manager.set_namespace(namespace)
+            logging.info("Namespace set::" + namespace)
             offer_id = self.request.get('offer_id')
             logging.info("Request offer_id: " + offer_id)
             if offer_id is None or not offer_id:
@@ -143,12 +141,12 @@ class ActivateOfferHandler(webapp2.RequestHandler):
             member_key = ndb.Key('MemberData', member_id)
             self.response.headers['Access-Control-Allow-Origin'] = '*'
             logging.info("fetched offer_key and member key ")
-            response_dict = dict()
             offer = offer_key.get()
             member = member_key.get()
             if offer is not None and member is not None:
                 logging.info("offer is not None")
-                member_offer_obj = MemberOfferData.query(MemberOfferData.member == member_key, MemberOfferData.offer == offer_key).get()
+                member_offer_obj = MemberOfferData.query(MemberOfferData.member == member_key,
+                                                         MemberOfferData.offer == offer_key).get()
                 if member_offer_obj is not None:
                     status_code = TellurideService.register_member(offer, member)
                     logging.info("Status code:: %d" % status_code)
@@ -195,7 +193,8 @@ class EmailOfferMembersHandler(BaseHandler):
             response_dict = {'status': 'Failure', 'message': "Details not found for the request"}
         else:
             send_mail(member_entity=member_entity, offer_entity=offer_entity)
-            member_offer_data_key = MemberOfferDataService.create(offer_entity=offer_entity, member_entity=member_entity)
+            member_offer_data_key = MemberOfferDataService.create(offer_entity=offer_entity,
+                                                                  member_entity=member_entity)
             logging.info('member_offer_key:: %s', member_offer_data_key)
             logging.info('Offer %s email has been sent to: : %s', offer_entity, member_entity.email)
             response_dict = {'status': 'Success', 'message': "Offer email has been sent successfully!!!"}
@@ -206,12 +205,7 @@ class EmailOfferMembersHandler(BaseHandler):
 
 class UIListItemsHandler(webapp2.RequestHandler):
     def get(self, namespace=namespace_var):
-        try:
-            namespace_manager.set_namespace(namespace)
-            logging.info("Namespace set::" + namespace)
-        except Exception as e:
-            logging.error(e)
-        key = ndb.Key('FrontEndData', '1')
+        key = ndb.Key('FrontEndData', '1', namespace=config_namespace)
         result = key.get()
         result_dict = dict()
         result_dict['categories'] = list(result.Categories)
@@ -238,9 +232,13 @@ class MetricsHandler(webapp2.RequestHandler):
 
 class BatchJobHandler(webapp2.RequestHandler):
     def get(self):
-        if self.request.get('dataset_name') is None or not self.request.get('dataset_name') or self.request.get('table_name') is None or not self.request.get('table_name') or self.request.get('project_id') is None or not self.request.get('project_id') or self.request.get('campaign_name') is None or not self.request.get('campaign_name'):
+        if self.request.get('dataset_name') is None or not self.request.get('dataset_name') or \
+                        self.request.get('table_name') is None or not self.request.get('table_name') or \
+                        self.request.get('project_id') is None or not self.request.get('project_id') or \
+                        self.request.get('campaign_name') is None or not self.request.get('campaign_name'):
             response_html = "<html><head><title>Batch Job Execution</title></head><body><h3> " \
-                             + "Please provide dataset_name, table_name, project_id and campaign_name with the request</h3></body></html>"
+                             + "Please provide dataset_name, table_name, project_id and campaign_name with the " \
+                               "request</h3></body></html>"
             self.response.write(response_html)
             return
 
@@ -251,7 +249,7 @@ class BatchJobHandler(webapp2.RequestHandler):
         table_name = self.request.get('table_name')
         project = self.request.get('project_id')
         campaign_name = self.request.get('campaign_name')
-        response = BatchJobHandler.list_rows(dataset_name,table_name,campaign_name, project)
+        response = BatchJobHandler.list_rows(dataset_name, table_name, campaign_name, project)
         response_html = "<html><head><title>Batch Job Execution</title></head><body><h3> " \
                         + response['message']
         self.response.write(response_html)
@@ -267,7 +265,7 @@ class BatchJobHandler(webapp2.RequestHandler):
         bigquery_service = build('bigquery', 'v2', credentials=credentials)
         # [END build_service]
 
-        campaign_key = ndb.Key('CampaignData', campaign_name)
+        campaign_key = ndb.Key('CampaignData', campaign_name, namespace=namespace_var)
         logging.info("fetched campaign_key")
 
         campaign = campaign_key.get()
@@ -299,7 +297,7 @@ class BatchJobHandler(webapp2.RequestHandler):
                 member_offer_list = list()
 
                 for row in query_response['rows']:
-                    logging.info('row[f]:: %s',row['f'])
+                    logging.info('row[f]:: %s', row['f'])
 
                     memberOffer_dict = dict()
                     memberOffer_dict['member'] = row['f'][0]['v']

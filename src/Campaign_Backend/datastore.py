@@ -1,11 +1,12 @@
 from models import CampaignData, OfferData, MemberOfferData, MemberData, ndb
 import logging
 from datetime import datetime, timedelta
+from google.appengine.api import datastore_errors
+
 
 class OfferDataService(CampaignData):
-
     @classmethod
-    def create_offer_obj(self, campaign, offer_value):
+    def create_offer_obj(cls, campaign, offer_value):
         campaign_key = ndb.Key('CampaignData', campaign.name)
 
         start_date = campaign.start_date
@@ -17,22 +18,22 @@ class OfferDataService(CampaignData):
         offer_name = "%s_%s" % (str(campaign.name), str(offer_value))
 
         offer_obj = OfferData(surprise_points=int(offer_value), threshold=10, OfferNumber=offer_name,
-                          OfferPointsDollarName=offer_name, OfferDescription=offer_name,
-                          OfferType="Xtreme Redeem", OfferSubType="Item", OfferStartDate=start_date,
-                          OfferStartTime="00:00:00", OfferEndDate=end_date, OfferEndTime="23:59:00",
-                          OfferBUProgram_BUProgram_BUProgramName="BU - Apparel",
-                          OfferBUProgram_BUProgram_BUProgramCost=0.00, ReceiptDescription="TELL-16289",
-                          OfferCategory="Stackable", OfferAttributes_OfferAttribute_Name="MULTI_TRAN_IND",
-                          OfferAttributes_OfferAttribute_Values_Value="N", Rules_Rule_Entity="Product",
-                          Rules_Conditions_Condition_Name="PRODUCT_LEVEL",
-                          Rules_Conditions_Condition_Operator="IN",
-                          Rules_Conditions_Condition_Values_Value="SEARSLEGACY~801~608~14~1~1~1~93059",
-                          RuleActions_ActionID="ACTION-1", Actions_ActionID="ACTION-1",
-                          Actions_ActionName="XR",
-                          Actions_ActionProperty_PropertyType="Tier",
-                          Actions_ActionProperty_Property_Name="MIN",
-                          Actions_ActionProperty_Property_Values_Value="0.01",
-                          created_at=datetime.now())
+                              OfferPointsDollarName=offer_name, OfferDescription=offer_name,
+                              OfferType="Xtreme Redeem", OfferSubType="Item", OfferStartDate=start_date,
+                              OfferStartTime="00:00:00", OfferEndDate=end_date, OfferEndTime="23:59:00",
+                              OfferBUProgram_BUProgram_BUProgramName="BU - Apparel",
+                              OfferBUProgram_BUProgram_BUProgramCost=0.00, ReceiptDescription="TELL-16289",
+                              OfferCategory="Stackable", OfferAttributes_OfferAttribute_Name="MULTI_TRAN_IND",
+                              OfferAttributes_OfferAttribute_Values_Value="N", Rules_Rule_Entity="Product",
+                              Rules_Conditions_Condition_Name="PRODUCT_LEVEL",
+                              Rules_Conditions_Condition_Operator="IN",
+                              Rules_Conditions_Condition_Values_Value="SEARSLEGACY~801~608~14~1~1~1~93059",
+                              RuleActions_ActionID="ACTION-1", Actions_ActionID="ACTION-1",
+                              Actions_ActionName="XR",
+                              Actions_ActionProperty_PropertyType="Tier",
+                              Actions_ActionProperty_Property_Name="MIN",
+                              Actions_ActionProperty_Property_Values_Value="0.01",
+                              created_at=datetime.now())
         offer_obj.key = ndb.Key('OfferData', offer_name)
         offer_obj.campaign = campaign_key
 
