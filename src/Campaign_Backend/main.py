@@ -31,15 +31,15 @@ class IndexPageHandler(webapp2.RequestHandler):
 
 
 class SaveCampaignHandler(webapp2.RequestHandler):
-    def get(self, namespace=namespace_var):
+    def post(self, namespace=namespace_var):
         try:
             namespace_manager.set_namespace(namespace)
             logging.info("Namespace set::" + namespace)
         except Exception as e:
             logging.error(e)
-        offer_data = self.request.get('offer_data')
-        logging.info('****offerdata: %s', offer_data)
-        json_data = json.loads(offer_data)
+        json_string = self.request.body
+        json_data = json.loads(json_string)
+        logging.info('****offerdata: %s', )
         campaign_dict = json_data['campaign_details']
         campaign_name = campaign_dict['name']
         is_entity = ndb.Key('CampaignData', campaign_name).get()
@@ -53,7 +53,10 @@ class SaveCampaignHandler(webapp2.RequestHandler):
             CampaignDataService.save_campaign(json_data, is_entity.created_at)
 
         logging.info('Campaign saved in datastore')
+        self.response.headers['Content-Type'] = 'application/json'
         self.response.headers['Access-Control-Allow-Origin'] = '*'
+        self.response.write(json.dumps({'message': 'Campaign is saved successfully!!!',
+                                        'status': 'success'}))
 
 
 class GetAllCampaignsHandler(webapp2.RequestHandler):
@@ -231,11 +234,16 @@ class MetricsHandler(webapp2.RequestHandler):
 
 
 class BatchJobHandler(webapp2.RequestHandler):
-    def get(self):
+    def get(self, namespace=namespace_var):
+        try:
+            namespace_manager.set_namespace(namespace)
+            logging.info("Namespace set::" + namespace)
+        except Exception as e:
+            logging.error(e)
         if self.request.get('dataset_name') is None or not self.request.get('dataset_name') or \
-                        self.request.get('table_name') is None or not self.request.get('table_name') or \
-                        self.request.get('project_id') is None or not self.request.get('project_id') or \
-                        self.request.get('campaign_name') is None or not self.request.get('campaign_name'):
+            self.request.get('table_name') is None or not self.request.get('table_name') or \
+            self.request.get('project_id') is None or not self.request.get('project_id') or \
+            self.request.get('campaign_name') is None or not self.request.get('campaign_name'):
             response_html = "<html><head><title>Batch Job Execution</title></head><body><h3> " \
                              + "Please provide dataset_name, table_name, project_id and campaign_name with the " \
                                "request</h3></body></html>"
@@ -323,13 +331,13 @@ class BatchJobHandler(webapp2.RequestHandler):
                         logging.info('Offer %s already created and activated', offer_name)
                         continue
                     else:
-                        #Create offer in datastore
+                        # Create offer in datastore
                         response_offer = OfferDataService.save_offer(campaign, memberoffer['offervalue'])
 
                     if response_offer['message'] == 'success':
                         offer = response_offer['offer']
 
-                        #Create offer in telluride
+                        # Create offer in telluride
                         if offer_name in offer_list:
                             logging.info('Offer %s already created and activated', offer_name)
                         else:
