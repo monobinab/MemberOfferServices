@@ -15,7 +15,7 @@ class TellurideService:
     def create_offer(cls, offer):
         response_dict = dict()
         post_data = get_create_offer_xml(offer).rstrip('\n')
-        # logging.info("post_data: %s", post_data)
+        logging.info("post_data: %s", post_data)
         config_data = get_url_configuration()
         logging.info("Config Data:: %s" % config_data)
 

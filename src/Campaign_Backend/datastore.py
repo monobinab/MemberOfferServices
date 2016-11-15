@@ -21,7 +21,7 @@ class OfferDataService(CampaignData):
                               OfferPointsDollarName=offer_name, OfferDescription=offer_name,
                               OfferType="Xtreme Redeem", OfferSubType="Item", OfferStartDate=start_date,
                               OfferStartTime="00:00:00", OfferEndDate=end_date, OfferEndTime="23:59:00",
-                              OfferBUProgram_BUProgram_BUProgramName="BU - Apparel",
+                              OfferBUProgram_BUProgram_BUProgramName="BU - "+campaign.category,
                               OfferBUProgram_BUProgram_BUProgramCost=0.00, ReceiptDescription="TELL-16289",
                               OfferCategory="Stackable", OfferAttributes_OfferAttribute_Name="MULTI_TRAN_IND",
                               OfferAttributes_OfferAttribute_Values_Value="N", Rules_Rule_Entity="Product",
@@ -81,6 +81,7 @@ class CampaignDataService(CampaignData):
         campaign_name = campaign_dict['name']
         campaign_budget = int(campaign_dict['money'])
         campaign_category = campaign_dict['category']
+        campaign_format_level = campaign_dict['format_level'] if campaign_dict['format_level'] is not None else ""
         campaign_convratio = int(campaign_dict['conversion_ratio'])
         campaign_period = campaign_dict['period']
         start_date = campaign_dict['start_date']
@@ -96,7 +97,8 @@ class CampaignDataService(CampaignData):
         offer_max_val = offer_max_val if (offer_max_val in range(1, 11)) else 10
 
         campaign = CampaignData(name=campaign_name, money=campaign_budget, category=campaign_category,
-                                conversion_ratio=campaign_convratio, period=campaign_period, offer_type=offer_type,
+                                format_level=campaign_format_level, conversion_ratio=campaign_convratio,
+                                period=campaign_period, offer_type=offer_type,
                                 max_per_member_issuance_frequency=offer_mbr_issuance, max_value=offer_max_val,
                                 min_value=offer_min_val, valid_till=offer_valid_till, start_date=start_date)
 

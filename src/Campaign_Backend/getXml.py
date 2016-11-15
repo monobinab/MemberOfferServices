@@ -257,7 +257,7 @@ def get_register_offer_xml(offer_entity, member_entity):
                          <web:ActionTag>A</web:ActionTag>
 
                          <web:MemberNumber>"""+member_entity.member_id+"""</web:MemberNumber>
-
+                         <web:RequestorID>NPOS</web:RequestorID>
                          <web:AssociateID>000000000000</web:AssociateID>
                          <web:RegisterNumber>001</web:RegisterNumber>
                          <web:StoreNumber>00800</web:StoreNumber>

@@ -31,13 +31,14 @@ class IndexPageHandler(webapp2.RequestHandler):
 
 
 class SaveCampaignHandler(webapp2.RequestHandler):
-    def post(self, namespace=namespace_var):
+    def get(self, namespace=namespace_var):
         try:
             namespace_manager.set_namespace(namespace)
             logging.info("Namespace set::" + namespace)
         except Exception as e:
             logging.error(e)
-        json_string = self.request.body
+        # json_string = self.request.body
+        json_string = self.request.get('offer_data')
         json_data = json.loads(json_string)
         logging.info('****offerdata: %s', )
         campaign_dict = json_data['campaign_details']
@@ -82,6 +83,7 @@ class GetAllCampaignsHandler(webapp2.RequestHandler):
             campaign_dict['category'] = each_entity.category
             campaign_dict['conversion_ratio'] = each_entity.conversion_ratio
             campaign_dict['period'] = each_entity.period
+            campaign_dict['format_level'] = str(each_entity.format_level)
             campaign_dict['start_date'] = str(each_entity.start_date)
             campaign_dict['created_at'] = str(each_entity.created_at)
 
@@ -207,13 +209,17 @@ class EmailOfferMembersHandler(BaseHandler):
 
 
 class UIListItemsHandler(webapp2.RequestHandler):
-    def get(self, namespace=namespace_var):
-        key = ndb.Key('FrontEndData', '1', namespace=config_namespace)
-        result = key.get()
+    def get(self, namespace=config_namespace):
+        key = ndb.Key('FrontEndData', '1', namespace=namespace)
+        result = key.get(use_datastore=True, use_memcache=False, use_cache=False)
         result_dict = dict()
         result_dict['categories'] = list(result.Categories)
         result_dict['offer_type'] = list(result.Offer_Type)
         result_dict['conversion_ratio'] = list(result.Conversion_Ratio)
+        result_dict['minimum_surprise_points'] = result.Minimum_Surprise_Points
+        result_dict['maximum_surprise_points'] = result.Maximum_Surprise_Points
+        result_dict['format_level'] = list(result.Format_Level)
+        logging.info(result_dict)
         self.response.headers['Content-Type'] = 'application/json'
         self.response.headers['Access-Control-Allow-Origin'] = '*'
         self.response.write(json.dumps({'data': result_dict}))
