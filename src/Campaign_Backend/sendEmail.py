@@ -5,7 +5,7 @@ import logging
 import os
 
 
-def send_mail(member_entity, offer_entity):
+def send_mail(member_entity, offer_entity, campaign_entity):
     member_dict = dict()
     member_dict['email'] = member_entity.email
     member_dict['name'] = member_entity.first_name + " " + member_entity.last_name
@@ -16,6 +16,8 @@ def send_mail(member_entity, offer_entity):
     offer_dict['threshold'] = offer_entity.threshold
     offer_dict['expiration'] = offer_entity.OfferEndDate
     offer_dict['offer_id'] = offer_entity.OfferNumber
+    offer_dict['formatlevel'] = campaign_entity.format_level
+    offer_dict['category'] = campaign_entity.category
 
     response = send_template_message(member_dict, offer_dict)
 
@@ -60,6 +62,10 @@ def send_template_message(member_dict, offer_dict):
     substitution = mail.Substitution(key="%dollarthresholdvalue%", value='25')
     personalization.add_substitution(substitution)
     substitution = mail.Substitution(key="%activationurl%", value=activation_url.encode("utf-8"))
+    personalization.add_substitution(substitution)
+    substitution = mail.Substitution(key="%category%", value=offer_dict['category'].encode("utf-8"))
+    personalization.add_substitution(substitution)
+    substitution = mail.Substitution(key="%formatlevel%", value=offer_dict['formatlevel'].encode("utf-8"))
     personalization.add_substitution(substitution)
     message.add_personalization(personalization)
     message.set_template_id(config_dict['TEMPLATE_ID'].split('\n')[0].encode("utf-8"))

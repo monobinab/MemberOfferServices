@@ -365,7 +365,8 @@ class BatchJobHandler(webapp2.RequestHandler):
                                     response_dict['message'] = "Member ID "+member_id+" not found in datastore"
                                     return response_dict
                                 else:
-                                    send_mail(member_entity=member, offer_entity=offer)
+                                    send_mail(member_entity=member, offer_entity=offer,
+                                              campaign_entity=offer.campaign.get())
                                     member_offer_data_key = MemberOfferDataService.create(offer, member)
 
                                     logging.info('member_offer_key:: %s', member_offer_data_key)

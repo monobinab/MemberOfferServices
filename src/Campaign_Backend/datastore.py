@@ -2,7 +2,7 @@ from models import CampaignData, OfferData, MemberOfferData, MemberData, ndb
 import logging
 from datetime import datetime, timedelta
 from google.appengine.api import datastore_errors
-
+from telluride_service import TellurideService
 
 class OfferDataService(CampaignData):
     @classmethod
@@ -16,7 +16,12 @@ class OfferDataService(CampaignData):
         logging.info("Offer Start_date:: %s and end_date %s", start_date, end_date)
 
         offer_name = "%s_%s" % (str(campaign.name), str(offer_value))
-
+        rules_condition = ""
+        if campaign.format_level == 'Sears':
+            rules_condition = "SEARSLEGACY~803~~~~~~" if campaign.category == "Apparel" else \
+                "SEARSLEGACY~803~615~~~~~~"
+        elif campaign.format_level == 'Kmart':
+            rules_condition = "KMARTSHC~1~35~~~~~~"
         offer_obj = OfferData(surprise_points=int(offer_value), threshold=10, OfferNumber=offer_name,
                               OfferPointsDollarName=offer_name, OfferDescription=offer_name,
                               OfferType="Xtreme Redeem", OfferSubType="Item", OfferStartDate=start_date,
@@ -27,7 +32,7 @@ class OfferDataService(CampaignData):
                               OfferAttributes_OfferAttribute_Values_Value="N", Rules_Rule_Entity="Product",
                               Rules_Conditions_Condition_Name="PRODUCT_LEVEL",
                               Rules_Conditions_Condition_Operator="IN",
-                              Rules_Conditions_Condition_Values_Value="SEARSLEGACY~801~608~14~1~1~1~93059",
+                              Rules_Conditions_Condition_Values_Value=rules_condition,
                               RuleActions_ActionID="ACTION-1", Actions_ActionID="ACTION-1",
                               Actions_ActionName="XR",
                               Actions_ActionProperty_PropertyType="Tier",
@@ -49,6 +54,7 @@ class OfferDataService(CampaignData):
         try:
             offer_key = offer.put()
             logging.info('Offer created in datastore with key:: %s', offer_key)
+            TellurideService.create_offer(offer)
             response_dict['message'] = 'success'
             return response_dict
         except datastore_errors.Timeout:
@@ -105,6 +111,10 @@ class CampaignDataService(CampaignData):
         campaign.key = CampaignDataService.get_campaign_key(campaign_name)
         campaign_key = campaign.put()
         logging.info('campaign_key:: %s', campaign_key)
+
+        # Creating offers from min values to max values
+        for surprise_point in range(offer_min_val, offer_max_val+1):
+            OfferDataService.save_offer(campaign, surprise_point)
 
 
 class MemberOfferDataService(MemberOfferData):
