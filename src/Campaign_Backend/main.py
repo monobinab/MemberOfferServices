@@ -185,15 +185,9 @@ class ActivateOfferHandler(webapp2.RequestHandler):
 
 
 class EmailOfferMembersHandler(BaseHandler):
-    def get(self, namespace=namespace_var):
-        try:
-            namespace_manager.set_namespace(namespace)
-            logging.info("Namespace set::" + namespace)
-        except Exception as e:
-            logging.error(e)
-
-        member_entity = ndb.Key('MemberData', self.request.get('member_id')).get()
-        offer_entity = ndb.Key('OfferData', self.request.get('offer_id')).get()
+    def get(self, namespace=config_namespace):
+        member_entity = ndb.Key('MemberData', self.request.get('member_id'), namespace=namespace).get()
+        offer_entity = ndb.Key('OfferData', self.request.get('offer_id'), namespace=namespace_var).get()
         if member_entity is None or offer_entity is None:
             response_dict = {'status': 'Failure', 'message': "Details not found for the request"}
         else:

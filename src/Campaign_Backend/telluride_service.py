@@ -15,7 +15,7 @@ class TellurideService:
     def create_offer(cls, offer):
         response_dict = dict()
         post_data = get_create_offer_xml(offer).rstrip('\n')
-        logging.info("post_data: %s", post_data)
+        # logging.info("post_data: %s", post_data)
         config_data = get_url_configuration()
         logging.info("Config Data:: %s" % config_data)
 
@@ -36,18 +36,19 @@ class TellurideService:
                 status_code = doc.find('.//{http://rewards.sears.com/schemas/}Status').text
                 if int(status_code) == 0:
                     logging.info("Activated offer")
-                    response_dict['data'] = str(result)
                     response_dict['message'] = "Offer has been created and activated successfully"
             else:
-                response_dict['data'] = str(result)
                 response_dict['message'] = "Offer has been created successfully, but could not activate."
         else:
-            logging.error("Create offer failed:: Telluride call returned with error."
-                          " Status:: %s, Status Text:: %s", status_code,
-                          doc.find('.//{http://rewards.sears.com/schemas/}StatusText').text)
-            response_dict['data'] = str(result)
-            response_dict['message'] = "Offer activation has failed!!!"
-
+            error_text = doc.find('.//{http://rewards.sears.com/schemas/}ErrorText').text
+            if not error_text == "Offer update only allowed in DRAFT status":
+                logging.error("Create offer failed:: Telluride call returned with error."
+                              " Status:: %s, Status Text:: %s and Error Text:: %s", status_code,
+                              doc.find('.//{http://rewards.sears.com/schemas/}StatusText').text, error_text)
+                response_dict['message'] = "Offer activation has failed!!!"
+            else:
+                response_dict['message'] = "Offer has been created successfully, but could not activate."
+        response_dict['data'] = str(result)
         return response_dict
 
     @classmethod

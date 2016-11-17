@@ -97,11 +97,6 @@ class CampaignDataService(CampaignData):
         offer_max_val = int(offer_dict['max_value'])
         offer_valid_till = offer_dict['valid_till']
         offer_mbr_issuance = offer_dict['member_issuance']
-
-        # Check min and max value are in the range 1 to 10
-        offer_min_val = offer_min_val if (offer_min_val in range(1, 11)) else 1
-        offer_max_val = offer_max_val if (offer_max_val in range(1, 11)) else 10
-
         campaign = CampaignData(name=campaign_name, money=campaign_budget, category=campaign_category,
                                 format_level=campaign_format_level, conversion_ratio=campaign_convratio,
                                 period=campaign_period, offer_type=offer_type,
