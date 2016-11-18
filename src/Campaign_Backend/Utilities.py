@@ -6,8 +6,6 @@ import base64
 
 # Function to read sendgrid configurations
 def get_sendgrid_configuration():
-    context = ndb.get_context()
-    context.clear_cache()
     data_map = dict()
     data_key = ndb.Key('ConfigData', 'SendGridConfig')
     data_entity = data_key.get()
@@ -20,8 +18,6 @@ def get_sendgrid_configuration():
 
 # Function to read url configurations
 def get_url_configuration():
-    context = ndb.get_context()
-    context.clear_cache()
     data_map = dict()
     data_key = ndb.Key('ConfigData', 'URLConfig')
     data_entity = data_key.get()
@@ -43,8 +39,6 @@ def get_url_configuration():
 
 # Function to read PubSub configurations
 def get_pubsub_configuration():
-    context = ndb.get_context()
-    context.clear_cache()
     data_map = dict()
     data_key = ndb.Key('ConfigData', 'PubSubConfig')
     data_entity = data_key.get()
