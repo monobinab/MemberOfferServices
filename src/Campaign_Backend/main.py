@@ -1,3 +1,5 @@
+import sys
+sys.path.insert(0, 'lib')
 import json
 import logging
 import httplib
@@ -12,7 +14,10 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from oauth2client.client import GoogleCredentials
 from datetime import datetime, timedelta
-
+import pubsub_utils
+import urllib
+import base64
+import Utilities
 
 class BaseHandler(webapp2.RequestHandler):
     def handle_exception(self, exception, debug):
@@ -33,7 +38,7 @@ class IndexPageHandler(webapp2.RequestHandler):
 class SaveCampaignHandler(webapp2.RequestHandler):
     def get(self):
         offer_data = self.request.get('offer_data')
-        logging.info('****offerdata: %s', offer_data)
+        logging.info('****campaign data: %s', offer_data)
         json_data = json.loads(offer_data)
         campaign_dict = json_data['campaign_details']
         campaign_name = campaign_dict['name']
@@ -47,9 +52,26 @@ class SaveCampaignHandler(webapp2.RequestHandler):
         else:
             CampaignDataService.save_campaign(json_data, is_entity.created_at)
 
-        logging.info('Campaign saved in datastore')
-        self.response.headers['Access-Control-Allow-Origin'] = '*'
+        logging.info('Campaign: %s saved in datastore', campaign_name)
 
+        logging.info('Creating pubsub publish message')
+        campaign_json_data = Utilities.create_pubsub_message(json_data)
+        logging.info('Created pubsub publish message')
+
+        # Sending pubsub message to topic
+        if campaign_json_data is not None:
+            pubsub_response = pubsub_utils.post_pubsub(campaign_json_data)
+            logging.info('pubsub_response:: %s', pubsub_response)
+
+            if pubsub_response == 200:
+                logging.info('Campaign: %s save notification to pubsub: Success', campaign_name)
+            else:
+                logging.info('Campaign: %s save notification to pubsub: Fail', campaign_name)
+        else:
+            logging.info('pubsub message is None')
+            logging.info('Campaign: %s save notification to pubsub: Fail', campaign_name)
+
+        self.response.headers['Access-Control-Allow-Origin'] = '*'
 
 class GetAllCampaignsHandler(webapp2.RequestHandler):
     def get(self):
@@ -335,7 +357,6 @@ class BatchJobHandler(webapp2.RequestHandler):
 
         logging.info('response_dict[message]: %s', response_dict['message'])
         return response_dict
-
 
 # [START app]
 app = webapp2.WSGIApplication([
