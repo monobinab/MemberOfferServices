@@ -371,11 +371,10 @@ class ModelDataSendEmailHandler(webapp2.RequestHandler):
         offer_value =  self.request.get('offer_value')
         campaign_name =  self.request.get('campaign_name')
 
-        response = ModelDataSendEmailHandler.process_data(member_id, offer_value, campaign_name)
+        response = self.process_data(member_id, offer_value, campaign_name)
 
         self.response.write(response['message'])
 
-    @classmethod
     def process_data(self,member_id, offer_value, campaign_name):
         response_dict = dict()
         response_offer = dict()
@@ -392,11 +391,7 @@ class ModelDataSendEmailHandler(webapp2.RequestHandler):
             try:
                 success_msg = "Offer email sent successfully"
                 response_dict['message'] = ""
-
-                logging.info('campaign_name: %s', campaign_name)
-                logging.info('member_id: %s', member_id)
-                logging.info('offer_value: %s', offer_value)
-
+                logging.info('campaign_name: %s , member_id: %s, offer_value: %s', campaign_name, member_id, offer_value)
                 offer_name = "%s_%s" % (str(campaign.name), str(offer_value))
 
                 offer_key = ndb.Key('OfferData', offer_name)
@@ -405,17 +400,15 @@ class ModelDataSendEmailHandler(webapp2.RequestHandler):
                 offer_entry = offer_key.get()
 
                 if offer_entry is None:
-                    logging.info("offer is None")
+                    logging.info("Offer is None")
                     response_dict['message'] = "Error: Offer not found"
                     return response_dict
                 else:
-                    logging.info("offer is not None")
-                    logging.info('Sending email for Offer %s', offer_name)
+                    logging.info('Offer is not None. Sending email for Offer: %s', offer_name)
                     offer = OfferDataService.create_offer_obj(campaign, offer_value)
 
-                    # Start: Only for testing purpose. Need to remove later.
+                    # HACK: Need to remove later. Only for testing purpose. <>
                     member_id = '7081327663412819'
-                    # End: Only for testing purpose. Need to remove later.
 
                     member_key = ndb.Key('MemberData', member_id)
                     logging.info("Fetched member_key for member: %s", member_id)
@@ -423,7 +416,7 @@ class ModelDataSendEmailHandler(webapp2.RequestHandler):
                     member = member_key.get()
                     if member is None:
                         logging.info("member is None")
-                        response_dict['message'] = "Member ID "+member_id+" not found in datastore"
+                        response_dict['message'] = "Member ID " + member_id + " not found in datastore"
                         return response_dict
                     else:
                         send_mail(member_entity=member, offer_entity=offer)
@@ -436,12 +429,12 @@ class ModelDataSendEmailHandler(webapp2.RequestHandler):
             except HttpError as err:
                 print('Error: {}'.format(err.content))
                 logging.error('Error: {}'.format(err.content))
-                response_dict['message'] = "HttpError exception: "+ err.content
+                response_dict['message'] = "HttpError exception: " + err.content
                 raise err
 
         logging.info('response_dict[message]: %s', response_dict['message'])
         return response_dict
-        
+
 
 # [START app]
 app = webapp2.WSGIApplication([
