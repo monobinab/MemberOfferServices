@@ -11,7 +11,7 @@ from googleapiclient.errors import HttpError
 from oauth2client.client import GoogleCredentials
 from datetime import datetime
 from google.appengine.api import namespace_manager
-from Utilities import dev_namespace as namespace_var, config_namespace
+from Utilities import qa_namespace as namespace_var, config_namespace
 
 
 class BaseHandler(webapp2.RequestHandler):
