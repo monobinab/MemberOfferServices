@@ -1,3 +1,5 @@
+import sys
+sys.path.insert(0, 'lib')
 import json
 import logging
 import httplib
@@ -59,6 +61,20 @@ class SaveCampaignHandler(webapp2.RequestHandler):
         self.response.write(json.dumps({'message': 'Campaign is saved successfully!!!',
                                         'status': 'success'}))
 
+        # Sending pubsub message to topic
+        if campaign_json_data is not None:
+            pubsub_response = pubsub_utils.post_pubsub(campaign_json_data)
+            logging.info('pubsub_response:: %s', pubsub_response)
+
+            if pubsub_response == 200:
+                logging.info('Campaign: %s save notification to pubsub: Success', campaign_name)
+            else:
+                logging.info('Campaign: %s save notification to pubsub: Fail', campaign_name)
+        else:
+            logging.info('pubsub message is None')
+            logging.info('Campaign: %s save notification to pubsub: Fail', campaign_name)
+
+        self.response.headers['Access-Control-Allow-Origin'] = '*'
 
 class GetAllCampaignsHandler(webapp2.RequestHandler):
     def get(self, namespace=namespace_var):

@@ -9,6 +9,8 @@ config_namespace = ''  # default namespace in data store
 
 # Function to read sendgrid configurations
 def get_sendgrid_configuration():
+    context = ndb.get_context()
+    context.clear_cache()
     data_map = dict()
     try:
         data_entity = ConfigData.get_by_id('SendGridConfig', namespace=config_namespace)
@@ -23,6 +25,8 @@ def get_sendgrid_configuration():
 
 # Function to read url configurations
 def get_url_configuration():
+    context = ndb.get_context()
+    context.clear_cache()
     data_map = dict()
     try:
         # namespace_manager.set_namespace(config_namespace)
