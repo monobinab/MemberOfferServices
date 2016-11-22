@@ -18,7 +18,7 @@ def send_mail(member_entity, offer_entity, campaign_entity):
     offer_dict['offer_id'] = offer_entity.OfferNumber
     offer_dict['formatlevel'] = campaign_entity.format_level
     offer_dict['category'] = campaign_entity.category
-
+    logging.info("Mail offer dict:: %s", offer_dict)
     response = send_template_message(member_dict, offer_dict)
 
     if response.status_code == 202:
@@ -48,6 +48,7 @@ def send_template_message(member_dict, offer_dict):
     # https://syw-offers-services-qa-dot-syw-offers.appspot.com/
     activation_url = "https://" + os.environ['CURRENT_VERSION_ID'].split('.')[0] + "-dot-syw-offers.appspot.com/" \
                      "activateOffer?offer_id=" + offer_dict['offer_id'].encode("utf-8") + "&&member_id=" + member_dict['memberid'].encode("utf-8")
+    logging.info("Activation URL included in email::" + activation_url)
 
     substitution = mail.Substitution(key="%name%", value=member_dict['name'].encode("utf-8"))
     personalization.add_substitution(substitution)
@@ -69,7 +70,6 @@ def send_template_message(member_dict, offer_dict):
     personalization.add_substitution(substitution)
     message.add_personalization(personalization)
     message.set_template_id(config_dict['TEMPLATE_ID'].split('\n')[0].encode("utf-8"))
-    logging.info("Activation URL included in email::" + activation_url)
     logging.info('message.get(): %s', message.get())
 
     response = sg.client.mail.send.post(request_body=message.get())

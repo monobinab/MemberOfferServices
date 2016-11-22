@@ -186,20 +186,30 @@ class ActivateOfferHandler(webapp2.RequestHandler):
 
 class EmailOfferMembersHandler(BaseHandler):
     def get(self, namespace=config_namespace):
-        member_entity = ndb.Key('MemberData', self.request.get('member_id'), namespace=namespace).get()
-        offer_entity = ndb.Key('OfferData', self.request.get('offer_id'), namespace=namespace_var).get()
-        if member_entity is None or offer_entity is None:
-            response_dict = {'status': 'Failure', 'message': "Details not found for the request"}
-        else:
-            send_mail(member_entity=member_entity, offer_entity=offer_entity)
-            member_offer_data_key = MemberOfferDataService.create(offer_entity=offer_entity,
-                                                                  member_entity=member_entity)
-            logging.info('member_offer_key:: %s', member_offer_data_key)
-            logging.info('Offer %s email has been sent to: : %s', offer_entity, member_entity.email)
-            response_dict = {'status': 'Success', 'message': "Offer email has been sent successfully!!!"}
-        self.response.headers['Access-Control-Allow-Origin'] = '*'
-        self.response.headers['Content-type'] = 'application/json'
-        self.response.write(json.dumps(response_dict))
+        try:
+            logging.info("Member id:: %s", self.request.get('member_id'))
+            logging.info("Offer id:: %s", self.request.get('offer_id'))
+            member_entity = ndb.Key('MemberData', self.request.get('member_id'), namespace=namespace).get()
+            offer_entity = ndb.Key('OfferData', self.request.get('offer_id'), namespace=namespace_var).get()
+            logging.info("Member :: %s", member_entity)
+            logging.info("Offer :: %s", offer_entity)
+            if member_entity is None or offer_entity is None:
+                response_dict = {'status': 'Failure', 'message': "Details not found for the request"}
+            else:
+                campaign_entity = offer_entity.campaign.get()
+                send_mail(member_entity=member_entity, offer_entity=offer_entity, campaign_entity=campaign_entity)
+                member_offer_data_key = MemberOfferDataService.create(offer_entity=offer_entity,
+                                                                      member_entity=member_entity)
+                logging.info('member_offer_key:: %s', member_offer_data_key)
+                logging.info('Offer %s email has been sent to: : %s', offer_entity, member_entity.email)
+                response_dict = {'status': 'Success', 'message': "Offer email has been sent successfully!!!"}
+        except Exception as e:
+            logging.error(e)
+            response_dict = {'status': 'Failure', 'message': "Server error has encountered an error"}
+        finally:
+            self.response.headers['Access-Control-Allow-Origin'] = '*'
+            self.response.headers['Content-type'] = 'application/json'
+            self.response.write(json.dumps(response_dict))
 
 
 class UIListItemsHandler(webapp2.RequestHandler):
