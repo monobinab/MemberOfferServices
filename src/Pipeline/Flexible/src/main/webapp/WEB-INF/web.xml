@@ -1,0 +1,14 @@
+<web-app xmlns="http://java.sun.com/xml/ns/javaee" version="3.1">
+	<servlet>
+		<servlet-name>ProcessModelDataServlet</servlet-name>
+		<servlet-class>
+			com.flexappengine.syw.ProcessData.ProcessModelDataServlet
+		</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>ProcessModelDataServlet</servlet-name>
+		<url-pattern>/receive_message</url-pattern>
+	</servlet-mapping>
+
+
+</web-app>
