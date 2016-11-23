@@ -1,7 +1,10 @@
+import sys
+sys.path.insert(0, 'lib')
 import json
 import logging
 import httplib
 import webapp2
+import pubsub_utils
 from models import CampaignData, MemberData, MemberOfferData, FrontEndData, ndb, OfferData
 from datastore import CampaignDataService, MemberOfferDataService, OfferDataService
 from telluride_service import TellurideService
@@ -9,9 +12,9 @@ from sendEmail import send_mail
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from oauth2client.client import GoogleCredentials
-from datetime import datetime
 from google.appengine.api import namespace_manager
-from Utilities import qa_namespace as namespace_var, config_namespace
+from Utilities import qa_namespace as namespace_var, config_namespace, create_pubsub_message
+from datetime import datetime
 
 
 class BaseHandler(webapp2.RequestHandler):
@@ -37,10 +40,9 @@ class SaveCampaignHandler(webapp2.RequestHandler):
             logging.info("Namespace set::" + namespace)
         except Exception as e:
             logging.error(e)
-        # json_string = self.request.body
-        json_string = self.request.get('offer_data')
-        json_data = json.loads(json_string)
-        logging.info('****offerdata: %s', )
+        offer_data = self.request.get('offer_data')
+        logging.info('****campaign data: %s', offer_data)
+        json_data = json.loads(offer_data)
         campaign_dict = json_data['campaign_details']
         campaign_name = campaign_dict['name']
         is_entity = ndb.Key('CampaignData', campaign_name).get()
@@ -53,7 +55,26 @@ class SaveCampaignHandler(webapp2.RequestHandler):
         else:
             CampaignDataService.save_campaign(json_data, is_entity.created_at)
 
-        logging.info('Campaign saved in datastore')
+        logging.info('Campaign: %s saved in datastore', campaign_name)
+
+        logging.info('Creating pubsub publish message')
+        campaign_json_data = create_pubsub_message(json_data)
+        logging.info('Created pubsub publish message')
+
+
+        # Sending pubsub message to topic
+        if campaign_json_data is not None:
+            pubsub_response = pubsub_utils.post_pubsub(campaign_json_data)
+            logging.info('pubsub_response:: %s', pubsub_response)
+
+            if pubsub_response == 200:
+                logging.info('Campaign: %s save notification to pubsub: Success', campaign_name)
+            else:
+                logging.info('Campaign: %s save notification to pubsub: Fail', campaign_name)
+        else:
+            logging.info('pubsub message is None')
+            logging.info('Campaign: %s save notification to pubsub: Fail', campaign_name)
+
         self.response.headers['Content-Type'] = 'application/json'
         self.response.headers['Access-Control-Allow-Origin'] = '*'
         self.response.write(json.dumps({'message': 'Campaign is saved successfully!!!',
@@ -430,7 +451,6 @@ class RedeemOfferHandler(webapp2.RequestHandler):
             logging.error(e)
             self.response.set_status(500)
             self.response.write("Internal Server Error")
-
 
 # [START app]
 app = webapp2.WSGIApplication([
