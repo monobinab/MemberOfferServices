@@ -1,7 +1,7 @@
-
 import logging
 from models import ConfigData, ndb
 import json
+from models import ConfigData
 
 dev_namespace = 'dev'
 qa_namespace = 'qa'
@@ -66,6 +66,7 @@ def get_pubsub_configuration():
     data_map['SERVICE_TOPIC'] = data_entity.SERVICE_TOPIC
     data_map['PUBLISH_TOKEN'] = data_entity.PUBLISH_TOKEN
     return data_map
+
 
 # Function to read PubSub configurations
 def create_pubsub_message(json_data):

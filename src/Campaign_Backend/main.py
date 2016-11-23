@@ -12,6 +12,7 @@ from sendEmail import send_mail
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from oauth2client.client import GoogleCredentials
+
 from google.appengine.api import namespace_manager
 from Utilities import qa_namespace as namespace_var, config_namespace, create_pubsub_message
 from datetime import datetime
@@ -43,6 +44,7 @@ class SaveCampaignHandler(webapp2.RequestHandler):
         offer_data = self.request.get('offer_data')
         logging.info('****campaign data: %s', offer_data)
         json_data = json.loads(offer_data)
+
         campaign_dict = json_data['campaign_details']
         campaign_name = campaign_dict['name']
         is_entity = ndb.Key('CampaignData', campaign_name).get()
@@ -60,7 +62,6 @@ class SaveCampaignHandler(webapp2.RequestHandler):
         logging.info('Creating pubsub publish message')
         campaign_json_data = create_pubsub_message(json_data)
         logging.info('Created pubsub publish message')
-
 
         # Sending pubsub message to topic
         if campaign_json_data is not None:
@@ -451,6 +452,7 @@ class RedeemOfferHandler(webapp2.RequestHandler):
             logging.error(e)
             self.response.set_status(500)
             self.response.write("Internal Server Error")
+
 
 # [START app]
 app = webapp2.WSGIApplication([
