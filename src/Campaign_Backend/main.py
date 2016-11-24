@@ -5,7 +5,8 @@ import logging
 import httplib
 import webapp2
 import pubsub_utils
-from models import CampaignData, MemberData, MemberOfferData, FrontEndData, ndb, OfferData
+import csv
+from models import CampaignData, MemberData, MemberOfferData, FrontEndData, ndb, OfferData, StoreData
 from datastore import CampaignDataService, MemberOfferDataService, OfferDataService
 from telluride_service import TellurideService
 from sendEmail import send_mail
@@ -14,7 +15,7 @@ from googleapiclient.errors import HttpError
 from oauth2client.client import GoogleCredentials
 
 from google.appengine.api import namespace_manager
-from Utilities import qa_namespace as namespace_var, config_namespace, create_pubsub_message
+from Utilities import dev_namespace as namespace_var, config_namespace, create_pubsub_message
 from datetime import datetime
 
 
@@ -106,6 +107,7 @@ class GetAllCampaignsHandler(webapp2.RequestHandler):
             campaign_dict['conversion_ratio'] = each_entity.conversion_ratio
             campaign_dict['period'] = each_entity.period
             campaign_dict['format_level'] = str(each_entity.format_level)
+            campaign_dict['store_location'] = str(each_entity.store_location)
             campaign_dict['start_date'] = str(each_entity.start_date)
             campaign_dict['created_at'] = str(each_entity.created_at)
 
@@ -238,6 +240,9 @@ class UIListItemsHandler(webapp2.RequestHandler):
     def get(self, namespace=config_namespace):
         key = ndb.Key('FrontEndData', '1', namespace=namespace)
         result = key.get(use_datastore=True, use_memcache=False, use_cache=False)
+        sears_entity = ndb.Key('StoreData', 'SEARS FORMAT', namespace=namespace).get()
+        kmart_entity = ndb.Key('StoreData', 'KMART FORMAT', namespace=namespace).get()
+
         result_dict = dict()
         result_dict['categories'] = list(result.Categories)
         result_dict['offer_type'] = list(result.Offer_Type)
@@ -245,6 +250,13 @@ class UIListItemsHandler(webapp2.RequestHandler):
         result_dict['minimum_surprise_points'] = result.Minimum_Surprise_Points
         result_dict['maximum_surprise_points'] = result.Maximum_Surprise_Points
         result_dict['format_level'] = list(result.Format_Level)
+
+        store_dict = dict()
+        store_dict['kmart'] = list(kmart_entity.Locations)
+        store_dict['sears'] = list(sears_entity.Locations)
+
+        result_dict['store_locations'] = store_dict
+
         logging.info(result_dict)
         self.response.headers['Content-Type'] = 'application/json'
         self.response.headers['Access-Control-Allow-Origin'] = '*'
@@ -454,6 +466,58 @@ class RedeemOfferHandler(webapp2.RequestHandler):
             self.response.write("Internal Server Error")
 
 
+class UploadStoreIDHandler(webapp2.RequestHandler):
+    def get(self, namespace=namespace_var):
+        with open('lu_shc_location.csv', 'rb') as f:
+            reader = csv.reader(f)
+            header = next(reader, None)
+
+        for index, column in enumerate(header):
+            if column.upper() == "LOCN_NBR":
+                locn_nbr_index = index
+
+            if column.upper() == "LOCN_NM":
+                locn_nm_index = index
+
+            if column.upper() == "NATL_DESC":
+                natl_desc_index = index
+
+        KMART, SEARS, ACCTG, DISTR = (list() for _ in range(4))
+        sears_format = "SEARS FORMAT"
+        kmart_format = "KMART FORMAT"
+        acctg_format = "ACCTG FORMAT"
+        distr_format = "DISTR FORMAT"
+
+        with open('lu_shc_location.csv', 'rb') as f:
+            reader = csv.reader(f)
+            next(reader, None)  # skip header row
+
+            for row in reader:
+                location_number = row[locn_nbr_index]
+                location_name = row[locn_nm_index]
+                locn_nbr_locn_nm = location_number + "-" + location_name
+
+                if row[natl_desc_index].upper() == kmart_format:
+                    KMART.append(locn_nbr_locn_nm)
+
+                if row[natl_desc_index].upper() == sears_format:
+                    SEARS.append(locn_nbr_locn_nm)
+
+                if row[natl_desc_index].upper() == acctg_format:
+                    ACCTG.append(locn_nbr_locn_nm)
+
+                if row[natl_desc_index].upper() == distr_format:
+                    DISTR.append(locn_nbr_locn_nm)
+
+        formats_list = [sears_format, kmart_format, acctg_format, distr_format]
+        nmbr_nm_list = [SEARS, KMART, ACCTG, DISTR]
+
+        for format, values in zip(formats_list, nmbr_nm_list):
+            store_data = StoreData(Format_Level=format, Locations=values)
+            store_data.key = ndb.Key('StoreData', format)
+            store_data.put()
+
+
 # [START app]
 app = webapp2.WSGIApplication([
     ('/', IndexPageHandler),
@@ -466,7 +530,8 @@ app = webapp2.WSGIApplication([
     ('/getMetrics', MetricsHandler),
     ('/batchJob', BatchJobHandler),
     ('/getBalance', BalanceHandler),
-    ('/redeemOffer', RedeemOfferHandler)
+    ('/redeemOffer', RedeemOfferHandler),
+    ('/uploadStoreIDs', UploadStoreIDHandler)
 ], debug=True)
 
 # [END app]

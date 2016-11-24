@@ -12,6 +12,7 @@ class CampaignData(ndb.Model):
     max_per_member_issuance_frequency = ndb.StringProperty(indexed=False)
     max_value = ndb.IntegerProperty(indexed=False)
     min_value = ndb.IntegerProperty(indexed=False)
+    store_location = ndb.StringProperty(indexed=False)
     valid_till = ndb.StringProperty(indexed=False)
     start_date = ndb.StringProperty(indexed=False)
     created_at = ndb.DateTimeProperty(auto_now_add=True, indexed=True)
@@ -109,3 +110,7 @@ class FrontEndData(ndb.Model):
     Minimum_Surprise_Points = ndb.IntegerProperty(indexed=True)
     Maximum_Surprise_Points = ndb.IntegerProperty(indexed=True)
     Format_Level = ndb.StringProperty(indexed=True, repeated=True)
+
+class StoreData(ndb.Model):
+    Format_Level = ndb.StringProperty(indexed=True)
+    Locations = ndb.StringProperty(indexed=False, repeated=True)

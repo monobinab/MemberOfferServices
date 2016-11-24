@@ -77,12 +77,15 @@ def create_pubsub_message(json_data):
     campaign_data = {}
     campaign_data['message'] = {}
     campaign_data['message']["token"] = config_dict['PUBLISH_TOKEN']
+
     campaign_data['message']["campaign_name"] = campaign_dict['name']
     campaign_data['message']["campaign_budget"] = campaign_dict['money']
     campaign_data['message']["campaign_category"] = campaign_dict['category']
     campaign_data['message']["campaign_convratio"] = campaign_dict['conversion_ratio']
     campaign_data['message']["campaign_period"] = campaign_dict['period']
     campaign_data['message']["start_date"] = campaign_dict['start_date']
+    campaign_data['message']["store_location"] = campaign_dict['store_location']
+
     campaign_data['message']["offer_type"] = offer_dict['offer_type']
     campaign_data['message']["offer_min_val"] = offer_dict['min_value']
     campaign_data['message']["offer_max_val"] = offer_dict['max_value']

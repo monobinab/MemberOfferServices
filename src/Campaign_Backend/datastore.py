@@ -89,6 +89,8 @@ class CampaignDataService(CampaignData):
         campaign_category = campaign_dict['category']
         campaign_format_level = campaign_dict['format_level'] if campaign_dict['format_level'] is not None else ""
         campaign_convratio = int(campaign_dict['conversion_ratio'])
+
+        store_location = campaign_dict['store_location'] if campaign_dict['store_location'] is not None else ""
         campaign_period = campaign_dict['period']
         start_date = campaign_dict['start_date']
 
@@ -101,7 +103,7 @@ class CampaignDataService(CampaignData):
                                 format_level=campaign_format_level, conversion_ratio=campaign_convratio,
                                 period=campaign_period, offer_type=offer_type,
                                 max_per_member_issuance_frequency=offer_mbr_issuance, max_value=offer_max_val,
-                                min_value=offer_min_val, valid_till=offer_valid_till, start_date=start_date)
+                                min_value=offer_min_val, store_location=store_location, valid_till=offer_valid_till, start_date=start_date)
 
         campaign.key = CampaignDataService.get_campaign_key(campaign_name)
         campaign_key = campaign.put()
