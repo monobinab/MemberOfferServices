@@ -116,8 +116,8 @@ class CampaignDataService(CampaignData):
 
 class MemberOfferDataService(MemberOfferData):
     @classmethod
-    def create(cls, offer_entity, member_entity):
-        member_offer_data = MemberOfferData(offer=offer_entity.key, member=member_entity.key, status=False)
+    def create(cls, offer_entity, member_entity, channel):
+        member_offer_data = MemberOfferData(offer=offer_entity.key, member=member_entity.key, status=False, email_sent_at=datetime.now(), channel = channel)
         member_offer_data_key = member_offer_data.put()
         return member_offer_data_key
 

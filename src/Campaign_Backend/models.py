@@ -67,6 +67,9 @@ class MemberOfferData(ndb.Model):
     offer = ndb.KeyProperty(kind="OfferData")
     member = ndb.KeyProperty(kind="MemberData")
     status = ndb.BooleanProperty(default=False)
+    channel = ndb.StringProperty(indexed=True)
+    email_sent_at = ndb.DateTimeProperty(auto_now_add=True, indexed=True)
+    activated_at = ndb.DateTimeProperty(indexed=True)
     created_at = ndb.DateTimeProperty(auto_now_add=True, indexed=True)
     updated_at = ndb.DateTimeProperty(auto_now=True, auto_now_add=False)
 

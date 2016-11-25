@@ -181,6 +181,7 @@ class ActivateOfferHandler(webapp2.RequestHandler):
                     logging.info("Status code:: %d" % status_code)
                     if status_code == 0:
                             member_offer_obj.status = True
+                            member_offer_obj.activated_at = datetime.now()
                             member_offer_obj.put()
                             response_dict['message'] = "Offer has been activated successfully"
                     elif status_code == 1 or status_code == 99:
@@ -526,15 +527,16 @@ class ModelDataSendEmailHandler(webapp2.RequestHandler):
             self.response.write(response_html)
             return
 
-        member_id = self.request.get('member_id')
-        offer_value = self.request.get('offer_value')
-        campaign_name = self.request.get('campaign_name')
+        member_id =  self.request.get('member_id')
+        offer_value =  self.request.get('offer_value')
+        campaign_name =  self.request.get('campaign_name')
+        channel = "EMAIL"
 
-        response = self.process_data(member_id, offer_value, campaign_name)
+        response = self.process_data(member_id, offer_value, campaign_name, channel)
 
         self.response.write(response['message'])
 
-    def process_data(self,member_id, offer_value, campaign_name):
+    def process_data(self,member_id, offer_value, campaign_name, channel):
         response_dict = dict()
         response_offer = dict()
         campaign_key = ndb.Key('CampaignData', campaign_name)
@@ -579,7 +581,7 @@ class ModelDataSendEmailHandler(webapp2.RequestHandler):
                         return response_dict
                     else:
                         send_mail(member_entity=member, offer_entity=offer)
-                        member_offer_data_key = MemberOfferDataService.create(offer, member)
+                        member_offer_data_key = MemberOfferDataService.create(offer, member, channel)
 
                         logging.info('member_offer_key:: %s', member_offer_data_key)
                         logging.info('Offer %s email has been sent to:: %s', offer.OfferNumber, member.email)
