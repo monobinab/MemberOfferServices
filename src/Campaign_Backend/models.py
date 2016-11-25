@@ -5,12 +5,14 @@ class CampaignData(ndb.Model):
     name = ndb.StringProperty(indexed=True)
     money = ndb.IntegerProperty(indexed=False)
     category = ndb.StringProperty(indexed=True)
+    format_level = ndb.StringProperty(indexed=False)
     conversion_ratio = ndb.IntegerProperty(indexed=False)
     period = ndb.StringProperty(indexed=False)
     offer_type = ndb.StringProperty(indexed=False)
     max_per_member_issuance_frequency = ndb.StringProperty(indexed=False)
     max_value = ndb.IntegerProperty(indexed=False)
     min_value = ndb.IntegerProperty(indexed=False)
+    store_location = ndb.StringProperty(indexed=False)
     valid_till = ndb.StringProperty(indexed=False)
     start_date = ndb.StringProperty(indexed=False)
     created_at = ndb.DateTimeProperty(auto_now_add=True, indexed=True)
@@ -98,6 +100,8 @@ class ConfigData(ndb.Model):
     REGISTER_OFFER_URL = ndb.StringProperty(indexed=False)
     REGISTER_OFFER_REQUEST = ndb.StringProperty(indexed=False)
 
+    REDEEM_OFFER_REQUEST = ndb.StringProperty(indexed=False)
+
     SERVICE_TOPIC = ndb.StringProperty(indexed=False)
     PUBLISH_TOKEN = ndb.StringProperty(indexed=False)
 
@@ -106,3 +110,10 @@ class FrontEndData(ndb.Model):
     Categories = ndb.StringProperty(indexed=True, repeated=True)
     Conversion_Ratio = ndb.IntegerProperty(indexed=True, repeated=True)
     Offer_Type = ndb.StringProperty(indexed=False, repeated=True)
+    Minimum_Surprise_Points = ndb.IntegerProperty(indexed=True)
+    Maximum_Surprise_Points = ndb.IntegerProperty(indexed=True)
+    Format_Level = ndb.StringProperty(indexed=True, repeated=True)
+
+class StoreData(ndb.Model):
+    Format_Level = ndb.StringProperty(indexed=True)
+    Locations = ndb.StringProperty(indexed=False, repeated=True)
