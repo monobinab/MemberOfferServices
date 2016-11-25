@@ -197,12 +197,6 @@
 				<groupId>com.google.cloud.tools</groupId>
 				<artifactId>appengine-maven-plugin</artifactId>
 				<version>${appengine.maven.plugin}</version>
-				<configuration>
-					<deploy.version>syw-offers-pipeline-qa</deploy.version>
-					<deploy.promote>false</deploy.promote>
-					<deploy.stopPreviousVersion>false</deploy.stopPreviousVersion>
-
-				</configuration>
 			</plugin>
 
 			<plugin>
