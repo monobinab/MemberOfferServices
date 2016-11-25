@@ -2,7 +2,7 @@ import logging
 import httplib
 from google.appengine.api import memcache
 import json
-from getXml import get_create_offer_xml, get_update_offer_xml, get_register_offer_xml
+from getXml import get_create_offer_xml, get_update_offer_xml, get_register_offer_xml, get_redeem_offer_xml, get_balance_xml
 import xml.etree.ElementTree as ET
 from Utilities import get_url_configuration
 
@@ -36,18 +36,19 @@ class TellurideService:
                 status_code = doc.find('.//{http://rewards.sears.com/schemas/}Status').text
                 if int(status_code) == 0:
                     logging.info("Activated offer")
-                    response_dict['data'] = str(result)
                     response_dict['message'] = "Offer has been created and activated successfully"
             else:
-                response_dict['data'] = str(result)
                 response_dict['message'] = "Offer has been created successfully, but could not activate."
         else:
-            logging.error("Create offer failed:: Telluride call returned with error."
-                          " Status:: %s, Status Text:: %s", status_code,
-                          doc.find('.//{http://rewards.sears.com/schemas/}StatusText').text)
-            response_dict['data'] = str(result)
-            response_dict['message'] = "Offer activation has failed!!!"
-
+            error_text = doc.find('.//{http://rewards.sears.com/schemas/}ErrorText').text
+            if not error_text == "Offer update only allowed in DRAFT status":
+                logging.error("Create offer failed:: Telluride call returned with error."
+                              " Status:: %s, Status Text:: %s and Error Text:: %s", status_code,
+                              doc.find('.//{http://rewards.sears.com/schemas/}StatusText').text, error_text)
+                response_dict['message'] = "Offer activation has failed!!!"
+            else:
+                response_dict['message'] = "Offer has been created successfully, but could not activate."
+        response_dict['data'] = str(result)
         return response_dict
 
     @classmethod
@@ -63,6 +64,34 @@ class TellurideService:
         doc = ET.fromstring(result)
         status_code = doc.find('.//{http://www.epsilon.com/webservices/}Status').text
         return int(status_code)
+
+    @classmethod
+    def get_balance(cls):
+        post_data = get_balance_xml().rstrip('\n')
+        logging.info("post_data: %s", post_data)
+        config_data = get_url_configuration()
+        logging.info("Config Data:: %s" % config_data)
+        result = TellurideService.make_request(url=config_data['REGISTER_OFFER_URL'],
+                                               put_request=config_data['REDEEM_OFFER_REQUEST'],
+                                               request_type="POST", data=post_data, config_data=config_data,
+                                               is_token_required=False)
+        # doc = ET.fromstring(result)
+        # status_code = doc.find('.//{http://www.epsilon.com/webservices/}Status').text
+        return result
+
+    @classmethod
+    def redeem_offer(cls):
+        post_data = get_redeem_offer_xml().rstrip('\n')
+        logging.info("post_data: %s", post_data)
+        config_data = get_url_configuration()
+        logging.info("Config Data:: %s" % config_data)
+        result = TellurideService.make_request(url=config_data['REGISTER_OFFER_URL'],
+                                               put_request=config_data['REDEEM_OFFER_REQUEST'],
+                                               request_type="POST", data=post_data, config_data=config_data,
+                                               is_token_required=False)
+        # doc = ET.fromstring(result)
+        # status_code = doc.find('.//{http://www.epsilon.com/webservices/}Status').text
+        return result
 
     @classmethod
     def make_request(cls, url, put_request, request_type, data, config_data, is_token_required):

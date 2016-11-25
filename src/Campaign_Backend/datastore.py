@@ -1,11 +1,12 @@
 from models import CampaignData, OfferData, MemberOfferData, MemberData, ndb
 import logging
 from datetime import datetime, timedelta
+from google.appengine.api import datastore_errors
+from telluride_service import TellurideService
 
 class OfferDataService(CampaignData):
-
     @classmethod
-    def create_offer_obj(self, campaign, offer_value):
+    def create_offer_obj(cls, campaign, offer_value):
         campaign_key = ndb.Key('CampaignData', campaign.name)
 
         start_date = campaign.start_date
@@ -15,24 +16,29 @@ class OfferDataService(CampaignData):
         logging.info("Offer Start_date:: %s and end_date %s", start_date, end_date)
 
         offer_name = "%s_%s" % (str(campaign.name), str(offer_value))
-
+        rules_condition = ""
+        if campaign.format_level == 'Sears':
+            rules_condition = "SEARSLEGACY~803~~~~~~" if campaign.category == "Apparel" else \
+                "SEARSLEGACY~803~615~~~~~~"
+        elif campaign.format_level == 'Kmart':
+            rules_condition = "KMARTSHC~1~35~~~~~~"
         offer_obj = OfferData(surprise_points=int(offer_value), threshold=10, OfferNumber=offer_name,
-                          OfferPointsDollarName=offer_name, OfferDescription=offer_name,
-                          OfferType="Xtreme Redeem", OfferSubType="Item", OfferStartDate=start_date,
-                          OfferStartTime="00:00:00", OfferEndDate=end_date, OfferEndTime="23:59:00",
-                          OfferBUProgram_BUProgram_BUProgramName="BU - Apparel",
-                          OfferBUProgram_BUProgram_BUProgramCost=0.00, ReceiptDescription="TELL-16289",
-                          OfferCategory="Stackable", OfferAttributes_OfferAttribute_Name="MULTI_TRAN_IND",
-                          OfferAttributes_OfferAttribute_Values_Value="N", Rules_Rule_Entity="Product",
-                          Rules_Conditions_Condition_Name="PRODUCT_LEVEL",
-                          Rules_Conditions_Condition_Operator="IN",
-                          Rules_Conditions_Condition_Values_Value="SEARSLEGACY~801~608~14~1~1~1~93059",
-                          RuleActions_ActionID="ACTION-1", Actions_ActionID="ACTION-1",
-                          Actions_ActionName="XR",
-                          Actions_ActionProperty_PropertyType="Tier",
-                          Actions_ActionProperty_Property_Name="MIN",
-                          Actions_ActionProperty_Property_Values_Value="0.01",
-                          created_at=datetime.now())
+                              OfferPointsDollarName=offer_name, OfferDescription=offer_name,
+                              OfferType="Xtreme Redeem", OfferSubType="Item", OfferStartDate=start_date,
+                              OfferStartTime="00:00:00", OfferEndDate=end_date, OfferEndTime="23:59:00",
+                              OfferBUProgram_BUProgram_BUProgramName="BU - "+campaign.category,
+                              OfferBUProgram_BUProgram_BUProgramCost=0.00, ReceiptDescription="TELL-16289",
+                              OfferCategory="Stackable", OfferAttributes_OfferAttribute_Name="MULTI_TRAN_IND",
+                              OfferAttributes_OfferAttribute_Values_Value="N", Rules_Rule_Entity="Product",
+                              Rules_Conditions_Condition_Name="PRODUCT_LEVEL",
+                              Rules_Conditions_Condition_Operator="IN",
+                              Rules_Conditions_Condition_Values_Value=rules_condition,
+                              RuleActions_ActionID="ACTION-1", Actions_ActionID="ACTION-1",
+                              Actions_ActionName="XR",
+                              Actions_ActionProperty_PropertyType="Tier",
+                              Actions_ActionProperty_Property_Name="MIN",
+                              Actions_ActionProperty_Property_Values_Value="0.01",
+                              created_at=datetime.now())
         offer_obj.key = ndb.Key('OfferData', offer_name)
         offer_obj.campaign = campaign_key
 
@@ -48,6 +54,7 @@ class OfferDataService(CampaignData):
         try:
             offer_key = offer.put()
             logging.info('Offer created in datastore with key:: %s', offer_key)
+            TellurideService.create_offer(offer)
             response_dict['message'] = 'success'
             return response_dict
         except datastore_errors.Timeout:
@@ -72,6 +79,7 @@ class CampaignDataService(CampaignData):
         return ndb.Key('CampaignData', campaign_name)
 
     @classmethod
+    @ndb.transactional(xg=True)
     def save_campaign(cls, json_data, created_time):
         campaign_dict = json_data['campaign_details']
         offer_dict = json_data['offer_details']
@@ -79,7 +87,10 @@ class CampaignDataService(CampaignData):
         campaign_name = campaign_dict['name']
         campaign_budget = int(campaign_dict['money'])
         campaign_category = campaign_dict['category']
+        campaign_format_level = campaign_dict['format_level'] if campaign_dict['format_level'] is not None else ""
         campaign_convratio = int(campaign_dict['conversion_ratio'])
+
+        store_location = campaign_dict['store_location'] if campaign_dict['store_location'] is not None else ""
         campaign_period = campaign_dict['period']
         start_date = campaign_dict['start_date']
 
@@ -88,25 +99,25 @@ class CampaignDataService(CampaignData):
         offer_max_val = int(offer_dict['max_value'])
         offer_valid_till = offer_dict['valid_till']
         offer_mbr_issuance = offer_dict['member_issuance']
-
-        # Check min and max value are in the range 1 to 10
-        offer_min_val = offer_min_val if (offer_min_val in range(1, 11)) else 1
-        offer_max_val = offer_max_val if (offer_max_val in range(1, 11)) else 10
-
         campaign = CampaignData(name=campaign_name, money=campaign_budget, category=campaign_category,
-                                conversion_ratio=campaign_convratio, period=campaign_period, offer_type=offer_type,
+                                format_level=campaign_format_level, conversion_ratio=campaign_convratio,
+                                period=campaign_period, offer_type=offer_type,
                                 max_per_member_issuance_frequency=offer_mbr_issuance, max_value=offer_max_val,
-                                min_value=offer_min_val, valid_till=offer_valid_till, start_date=start_date)
+                                min_value=offer_min_val, store_location=store_location, valid_till=offer_valid_till, start_date=start_date)
 
         campaign.key = CampaignDataService.get_campaign_key(campaign_name)
         campaign_key = campaign.put()
         logging.info('campaign_key:: %s', campaign_key)
 
+        # Creating offers from min values to max values
+        for surprise_point in range(offer_min_val, offer_max_val+1):
+            OfferDataService.save_offer(campaign, surprise_point)
+
 
 class MemberOfferDataService(MemberOfferData):
     @classmethod
-    def create(cls, offer_entity, member_entity):
-        member_offer_data = MemberOfferData(offer=offer_entity.key, member=member_entity.key, status=False)
+    def create(cls, offer_entity, member_entity, channel):
+        member_offer_data = MemberOfferData(offer=offer_entity.key, member=member_entity.key, status=False, email_sent_at=datetime.now(), channel = channel)
         member_offer_data_key = member_offer_data.put()
         return member_offer_data_key
 
