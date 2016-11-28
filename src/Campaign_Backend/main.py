@@ -6,7 +6,8 @@ import httplib
 import webapp2
 import pubsub_utils
 import csv
-from models import CampaignData, MemberData, MemberOfferData, FrontEndData, ndb, OfferData, StoreData
+from models import CampaignData, MemberData, MemberOfferData, FrontEndData, ndb, OfferData, StoreData, \
+    ConfigData
 from datastore import CampaignDataService, MemberOfferDataService, OfferDataService
 from telluride_service import TellurideService
 from sendEmail import send_mail
@@ -518,6 +519,42 @@ class UploadStoreIDHandler(webapp2.RequestHandler):
             store_data.put()
 
 
+class MigrateNamespaceData(webapp2.RequestHandler):
+    def migrateConfigData(self, namespace_var):
+        configurations = ['URLConfig', 'PubSubConfig', 'SendGridConfig']
+
+        for conf in configurations:
+            url_entity = ndb.Key('ConfigData', conf, namespace=config_namespace).get()
+            url_entity.key = ndb.Key('ConfigData', conf, namespace=namespace_var)
+            url_entity.put()
+
+    def migrateFrontendData(self, namespace_var):
+        entity = ndb.Key('FrontEndData', '1', namespace=config_namespace).get()
+        entity.key = ndb.Key('FrontEndData', '1', namespace=namespace_var)
+        entity.put()
+
+    def migrateMemberData(self, namespace_var):
+        ids = ['1', '7081327663412819', '3', '4']
+
+        for idx in ids:
+            entity = ndb.Key('MemberData', idx, namespace=config_namespace).get()
+            entity.key = ndb.Key('MemberData', idx, namespace=namespace_var)
+            entity.put()
+
+    def migrateSendGridData(self, namespace_var):
+        entity = ndb.Key('SendgridData', '1', namespace=config_namespace).get()
+        entity.key = ndb.Key('SendgridData', '1', namespace=namespace_var)
+        entity.put()
+
+    def get(self):
+        ns = self.request.get('namespace')
+        self.migrateConfigData(namespace_var=ns)
+        self.migrateFrontendData(namespace_var=ns)
+        self.migrateMemberData(namespace_var=ns)
+        self.migrateSendGridData(namespace_var=ns)
+        self.response.write("Data migrated successfully!!!")
+
+
 # [START app]
 app = webapp2.WSGIApplication([
     ('/', IndexPageHandler),
@@ -531,7 +568,8 @@ app = webapp2.WSGIApplication([
     ('/batchJob', BatchJobHandler),
     ('/getBalance', BalanceHandler),
     ('/redeemOffer', RedeemOfferHandler),
-    ('/uploadStoreIDs', UploadStoreIDHandler)
+    ('/uploadStoreIDs', UploadStoreIDHandler),
+    ('/migrateEntities', MigrateNamespaceData)
 ], debug=True)
 
 # [END app]
