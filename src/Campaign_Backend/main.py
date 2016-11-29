@@ -470,19 +470,22 @@ class RedeemOfferHandler(webapp2.RequestHandler):
 
 class UploadStoreIDHandler(webapp2.RequestHandler):
     def get(self, namespace=namespace_var):
-        with open('lu_shc_location.csv', 'rb') as f:
+        with open('shclocn.csv', 'rb') as f:
             reader = csv.reader(f)
             header = next(reader, None)
 
         for index, column in enumerate(header):
-            if column.upper() == "LOCN_NBR":
-                locn_nbr_index = index
+            if column.upper() == "LOCATION NUMBER":
+                location_number_index = index
 
-            if column.upper() == "LOCN_NM":
-                locn_nm_index = index
+            if column.upper() == "LOCATION NAME":
+                location_name_index = index
 
-            if column.upper() == "NATL_DESC":
-                natl_desc_index = index
+            if column.upper() == "NATIONAL DESCRIPTION":
+                nat_description_index = index
+
+            if column.upper() == "ROW CREATE TIMESTAMP":
+                shop_status_index = index
 
         KMART, SEARS, ACCTG, DISTR = (list() for _ in range(4))
         sears_format = "SEARS FORMAT"
@@ -490,29 +493,29 @@ class UploadStoreIDHandler(webapp2.RequestHandler):
         acctg_format = "ACCTG FORMAT"
         distr_format = "DISTR FORMAT"
 
-        with open('lu_shc_location.csv', 'rb') as f:
+        with open('shclocn.csv', 'rU') as f:
             reader = csv.reader(f)
             next(reader, None)  # skip header row
+            for index, row in enumerate(reader):
+                if row[shop_status_index].upper() == "OPEN":
+                    location_number = row[location_number_index]
+                    location_name = row[location_name_index]
+                    location_id = location_number + "-" + location_name
 
-            for row in reader:
-                location_number = row[locn_nbr_index]
-                location_name = row[locn_nm_index]
-                locn_nbr_locn_nm = location_number + "-" + location_name
+                    if row[nat_description_index].upper() == "KMART FORMAT":
+                        KMART.append(location_id)
 
-                if row[natl_desc_index].upper() == kmart_format:
-                    KMART.append(locn_nbr_locn_nm)
+                    if row[nat_description_index].upper() == "SEARS FORMAT":
+                        SEARS.append(location_id)
 
-                if row[natl_desc_index].upper() == sears_format:
-                    SEARS.append(locn_nbr_locn_nm)
+                    if row[nat_description_index].upper() == "ACCTG FORMAT":
+                        ACCTG.append(location_id)
 
-                if row[natl_desc_index].upper() == acctg_format:
-                    ACCTG.append(locn_nbr_locn_nm)
-
-                if row[natl_desc_index].upper() == distr_format:
-                    DISTR.append(locn_nbr_locn_nm)
+                    if row[nat_description_index].upper() == "DISTR FORMAT":
+                        DISTR.append(location_id)
 
         formats_list = [sears_format, kmart_format, acctg_format, distr_format]
-        nmbr_nm_list = [SEARS, KMART, ACCTG, DISTR]
+        nmbr_nm_list = [sorted(SEARS), sorted(KMART), sorted(ACCTG), sorted(DISTR)]
 
         for format, values in zip(formats_list, nmbr_nm_list):
             store_data = StoreData(Format_Level=format, Locations=values)
