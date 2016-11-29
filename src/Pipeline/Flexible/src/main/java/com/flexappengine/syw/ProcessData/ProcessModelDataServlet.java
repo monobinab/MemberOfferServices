@@ -7,8 +7,6 @@ import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -32,22 +30,31 @@ import com.google.cloud.dataflow.sdk.transforms.DoFn;
 import com.google.cloud.dataflow.sdk.transforms.ParDo;
 import com.google.cloud.dataflow.sdk.transforms.Sum;
 import com.google.cloud.dataflow.sdk.values.PCollection;
+import com.google.appengine.api.NamespaceManager;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
+import com.google.appengine.api.utils.SystemProperty;
 import com.google.appengine.repackaged.com.google.api.client.util.Strings;
+import com.google.apphosting.api.ApiProxy;
+import com.flexappengine.syw.ProcessData.Utility;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 @SuppressWarnings("serial")
 public class ProcessModelDataServlet extends HttpServlet {
-	static final Logger Log = Logger.getLogger(ProcessModelDataServlet.class.getName());
+	static final Logger Log = LoggerFactory.getLogger(ProcessModelDataServlet.class.getName());
 	private static final String PIPELINE_PROJECT_ID = "syw-offers";
 	private static final String STAGING_LOCATION = "gs://dataflowpipeline-staging";
 	private static final String TEMP_LOCATION = "gs://dataflowpipeline-temp";
 
 	@Override
+	/**
+	 * Method to accept the POST request, fetch relevant data nodes from the request body and call method to run dataflow pipeline.
+	 */
 	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		Log.info("PubSub message received in doPost");
 		String subscriptionToken = "ModelClient";
@@ -79,7 +86,7 @@ public class ProcessModelDataServlet extends HttpServlet {
 				Log.info("Token received: " + token);
 
 				if (!subscriptionToken.equals(token)) {
-					Log.info("Invalid token");
+					Log.warn("Invalid token");
 					// Return SC_OK to acknowledge PubSub otherwise it will keep retrying till the request succeeds
 					resp.setStatus(HttpServletResponse.SC_OK);
 					resp.getWriter().write("Invalid token");
@@ -92,20 +99,19 @@ public class ProcessModelDataServlet extends HttpServlet {
 				tableId = (String)messageJsonObject.get("table_id");
 			}
 		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			Log.log(Level.SEVERE, e.getMessage(), e);
+			Log.error("Error: " + e.getMessage());
 		}
 
 		PrintWriter out = resp.getWriter();
 		Log.info("campaignName received: " + campaignName + " , projectId received: " + projectId + " , datasetId received: " + datasetId + " , tableId received: " + tableId);
 
-		if(!Strings.isNullOrEmpty(campaignName) && !Strings.isNullOrEmpty(projectId) &&
+		if(!Strings.isNullOrEmpty(campaignName) && !Strings.isNullOrEmpty(projectId) && 
 				!Strings.isNullOrEmpty(datasetId) && !Strings.isNullOrEmpty(tableId)){
 			BigQueryPipeline(campaignName, projectId, datasetId, tableId);
 			Log.info("Returned from BigQuery dataflow");
 		}else{
 			// Return SC_OK to acknowledge PubSub otherwise it will keep retrying till the request succeeds
-			Log.info("Please provide all the data entities: Token, Campaign name, Project Id, Dataset Id and Table Id");
+			Log.warn("Please provide all the data entities: Token, Campaign name, Project Id, Dataset Id and Table Id");
 			out.println("Please provide all the data entities: Token, Campaign name, Project Id, Dataset Id and Table Id");
 			resp.setStatus(HttpServletResponse.SC_OK);
 			resp.getWriter().close();
@@ -117,7 +123,9 @@ public class ProcessModelDataServlet extends HttpServlet {
 		resp.getWriter().close();
 	}
 
-	// HTTP GET request to email sending service
+	/** 
+	 * Method to request email sending service.
+	 */
 	public static String sendGet(String member, String offer, String campaign, String endpoint) throws Exception {
 		Log.info("sending GET request");
 		Log.info("Endpoint: " + endpoint);
@@ -155,29 +163,39 @@ public class ProcessModelDataServlet extends HttpServlet {
 				createAggregator("failEmailSend", new Sum.SumLongFn());
 		private final Aggregator<Long, Long> tableRowCount =
 				createAggregator("tableRowCount", new Sum.SumLongFn());
-		private final ArrayList<String> fetchedEndpoint = new ArrayList<String>();
+		private String fetchedEndpoint = null;
+		private Boolean sendEmailFlag = null;
 
+		/**
+		 * Constructor to fetch configuration data from datastore.
+		 */
 		public SplitLineDataTask(){
 			// Reading service endpoint from datastore to call for sending emails
-			Key pubsubConfigKey = KeyFactory.createKey("ConfigData", "PubSubConfig");
-			DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-			Entity emailServiceEndpointEntity;
-
+			Utility util = new Utility();
+			Entity PubSubConfigEntity;
 			try {
-				emailServiceEndpointEntity = datastore.get(pubsubConfigKey);
-				String emailServiceEndpoint = (String)emailServiceEndpointEntity.getProperty("EMAIL_SERVICE_ENDPOINT");
-				fetchedEndpoint.add(emailServiceEndpoint);
+				PubSubConfigEntity = util.fetchDatastoreProperties();
+
+				if(null != PubSubConfigEntity){
+					String emailServiceEndpoint = (String)PubSubConfigEntity.getProperty("EMAIL_SERVICE_ENDPOINT");
+					fetchedEndpoint = emailServiceEndpoint;
+					Boolean isSendEmail = (Boolean)PubSubConfigEntity.getProperty("SEND_EMAIL_FLAG");
+					sendEmailFlag = isSendEmail;
+				}
 			}
 			catch (Exception e)
 			{
-				Log.info("emailServiceEndpoint not found in datastore");
-				Log.log(Level.SEVERE, e.getMessage(), e);
+				Log.error("Error. EMAIL_SERVICE_ENDPOINT/SEND_EMAIL_FLAG not found in datastore : " + e.getMessage());
 				return;
 			}
-			Log.info("Fetched Endpoint from datastore: " + fetchedEndpoint.get(0));
+			Log.info("Fetched Endpoint from datastore: " + fetchedEndpoint);
+			Log.info("Fetched sendEmailFlag from datastore: " + sendEmailFlag);
 		}
 
 		@Override
+		/**
+		 * This method fetches relevant information from BigQuery row data, forms datastore entity and calls another service to send email. 
+		 */
 		public void processElement(ProcessContext c){
 			String sendEmailResponse = "";
 			TableRow row = c.element();
@@ -193,37 +211,42 @@ public class ProcessModelDataServlet extends HttpServlet {
 
 			Log.info("campaignName: " + campaignName + " ,   memberId: " + memberId + " ,  offerValue: " + offerValue);
 
-			// Call for sending email
+			/** Call method for sending email */
 			if(null != campaignName && !campaignName.isEmpty() && null != memberId && !memberId.isEmpty() &&
 					null != offerValue && !offerValue.isEmpty()){
 				tableRowCount.addValue(1L);
 
+				// If email sending flag is false then service is not called to send any email
+				if(null != sendEmailFlag && sendEmailFlag == false){
+					successEmailSend.addValue(1L);
+					c.output(outArray);
+				}
+
 				Log.info("Calling python service for sending email for member: " + memberId + "  , offer: " + offerValue + " ,  campaign:  " + campaignName);
 				try {
-					Log.info("processElement fetched Endpoint from constructor: " + fetchedEndpoint.get(0));
-					sendEmailResponse = sendGet(memberId, offerValue, campaignName, fetchedEndpoint.get(0));
+					Log.info("processElement fetched Endpoint from constructor: " + fetchedEndpoint);
+					sendEmailResponse = sendGet(memberId, offerValue, campaignName, fetchedEndpoint);
 					offersProcessed.add(memberId+"_" + offerValue);
 					Log.info("Returned from python service for sending email for member: " + memberId + " ,  offer: " + offerValue + " ,  campaign:  " + campaignName);
+					Log.info("sendEmailResponse for member: " + memberId + " is : " + sendEmailResponse);
+					
+					if(sendEmailResponse.equalsIgnoreCase("Success")){
+						successEmailSend.addValue(1L);
+						Log.info("Email sending Success for memberId: " + memberId + " ,  offerValue: " + offerValue);
+					}else{
+						failEmailSend.addValue(1L);
+						Log.warn("Email sending Fail for memberId: " + memberId + " ,  offerValue: " + offerValue);
+					}
 				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					Log.info("Error Returned from python service for sending email for member: " + memberId + "  , offer: " + offerValue + " ,  campaign:  " + campaignName);
-					Log.log(Level.SEVERE, e.getMessage(), e);
+					Log.error("Error while sending email for member: " + memberId + "  , offer: " + offerValue + " ,  campaign:  " + campaignName + " :: " + e.getMessage());
 				}
 			}
 
-			Log.info("sendEmailResponse: " + sendEmailResponse);
-			if(sendEmailResponse.equalsIgnoreCase("Success")){
-				successEmailSend.addValue(1L);
-				Log.info("Email sending Success for memberId: " + memberId + " ,  offerValue: " + offerValue);
-			}else{
-				failEmailSend.addValue(1L);
-				Log.info("Email sending Fail for memberId: " + memberId + " ,  offerValue: " + offerValue);
-			}
 			c.output(outArray);
 		}
 	}
 
-	/* Custom pipeline option class. */
+	/** Custom pipeline option class. */
 	public static interface MyOptions extends DataflowPipelineOptions {
 		@Default.String(PIPELINE_PROJECT_ID)
 		String getProject();
@@ -238,15 +261,43 @@ public class ProcessModelDataServlet extends HttpServlet {
 		void setTempLocation(String value);
 	}
 
+	/**
+	 * This method creates the dataflow pipeline and initiates it using DataflowPipelineRunner in cloud.
+	 * 
+	 * @param campaignName
+	 * @param projectId
+	 * @param datasetId
+	 * @param tableId
+	 */
 	public void BigQueryPipeline(String campaignName, String projectId, String datasetId, String tableId){
 		Log.info("Start BigQuery dataflow");
 
 		String inputTable = projectId + ":" + datasetId + "." + tableId;
 		MyOptions bigOptions = PipelineOptionsFactory.as(MyOptions.class);
 		bigOptions.setRunner(DataflowPipelineRunner.class);
+		
+		Utility util = new Utility();
+		String queryLimit = null;
+		Entity PubSubConfigEntity;
+		try {
+			PubSubConfigEntity = util.fetchDatastoreProperties();
+
+			if(null != PubSubConfigEntity){
+				queryLimit = (String)PubSubConfigEntity.getProperty("QUERY_LIMIT");
+			}
+		}
+		catch (Exception e)
+		{
+			Log.error("QUERY_LIMIT not found in datastore." + e.getMessage());
+			return;
+		}
 
 		String query = "SELECT Campaign_Name as Campaign, LYL_ID_NO as Member, ofr_val as Offer FROM [" + inputTable + "] where Campaign_Name = \'" + campaignName + "\'";
 
+		if(!Strings.isNullOrEmpty(queryLimit)){
+			query = query + " LIMIT " + queryLimit;
+		}
+		
 		Log.info("Input table: " + inputTable + ", Input getStagingLocation: " + bigOptions.getStagingLocation());
 		Log.info("Input getTempLocation: " + bigOptions.getTempLocation() + " , Input getProject: " + bigOptions.getProject());
 		Log.info("Query: " + query);
@@ -261,8 +312,7 @@ public class ProcessModelDataServlet extends HttpServlet {
 			Log.info("Initiated BigQuery dataflow");
 		}
 		catch (Exception e) {
-			Log.info("Exception: " + e.getMessage());
-			Log.log(Level.SEVERE, e.getMessage(), e);
+			Log.error("Error: " + e.getMessage());
 		}
 	}
 }
