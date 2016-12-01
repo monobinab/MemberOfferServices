@@ -471,6 +471,12 @@ class RedeemOfferHandler(webapp2.RequestHandler):
 
 class UploadStoreIDHandler(webapp2.RequestHandler):
     def get(self, namespace=namespace_var):
+        try:
+            namespace_manager.set_namespace(namespace)
+            logging.info("Namespace set::" + namespace)
+        except Exception as e:
+            logging.error(e)
+
         project = 'syw-offers'
         client = bigquery.Client(project=project)
 
