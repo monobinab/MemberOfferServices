@@ -5,18 +5,19 @@ import logging
 import httplib
 import webapp2
 import pubsub_utils
-import csv
-from models import CampaignData, MemberData, MemberOfferData, FrontEndData, ndb, OfferData, StoreData, \
-    ConfigData
+from models import CampaignData, MemberData, MemberOfferData, FrontEndData, ndb, OfferData, \
+    ConfigData, StoreData
 from datastore import CampaignDataService, MemberOfferDataService, OfferDataService
 from telluride_service import TellurideService
 from sendEmail import send_mail
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+from google.cloud import bigquery
 from oauth2client.client import GoogleCredentials
 
 from google.appengine.api import namespace_manager
-from Utilities import dev_namespace as namespace_var, config_namespace, create_pubsub_message
+from Utilities import dev_namespace as namespace_var, config_namespace, create_pubsub_message, \
+    check_namespace
 from datetime import datetime
 
 
@@ -470,52 +471,74 @@ class RedeemOfferHandler(webapp2.RequestHandler):
 
 class UploadStoreIDHandler(webapp2.RequestHandler):
     def get(self, namespace=namespace_var):
-        with open('shclocn.csv', 'rb') as f:
-            reader = csv.reader(f)
-            header = next(reader, None)
+        project = 'syw-offers'
+        client = bigquery.Client(project=project)
 
-        for index, column in enumerate(header):
-            if column.upper() == "LOCATION NUMBER":
+        QUERY = (
+            'SELECT natldesc, locnnbr, strfmt, locncity, locnstcd, locnnm, '
+            'locnstat, origfacilnbr, closedt '
+            'FROM [syw-offers:L0_MAP_TBLS.shc_locn] '
+            'WHERE LocnStat<>"CLOSED" '
+            'AND NatlDesc in ("KMART FORMAT", "SEARS FORMAT") '
+            'AND StrFmt IN ("FLS", "SAC", "KMA", "KMB", "KMC", "KMO", "INT", "SVC") '
+            'and locnNbr not in (-1, 930) '
+            'and locnnbr < 10000 '
+            'ORDER BY NATLDESC, LOCNNBR '
+        )
+
+        query = client.run_sync_query('%s' % QUERY)
+        query.run()
+        logging.info("Query successful.")
+
+        schema = [field.name.upper() for field in query.schema]
+        logging.info("Schema: %s", schema)
+
+        for index, column in enumerate(schema):
+            if column == "LOCNNBR":
                 location_number_index = index
 
-            if column.upper() == "LOCATION NAME":
+            if column == "LOCNNM":
                 location_name_index = index
 
-            if column.upper() == "NATIONAL DESCRIPTION":
+            if column == "NATLDESC":
                 nat_description_index = index
 
-            if column.upper() == "ROW CREATE TIMESTAMP":
-                shop_status_index = index
+            if column == "LOCNCITY":
+                locncity_index = index
 
-        KMART, SEARS, ACCTG, DISTR = (list() for _ in range(4))
-        sears_format = "SEARS FORMAT"
-        kmart_format = "KMART FORMAT"
-        acctg_format = "ACCTG FORMAT"
-        distr_format = "DISTR FORMAT"
+            if column == "LOCNSTCD":
+                locnstcd_index = index
 
-        with open('shclocn.csv', 'rU') as f:
-            reader = csv.reader(f)
-            next(reader, None)  # skip header row
-            for index, row in enumerate(reader):
-                if row[shop_status_index].upper() == "OPEN":
+        SEARS = list()
+        KMART = list()
+
+        for row in query.rows:
+            try:
+                location_number = row[location_number_index]
+                location_name = row[location_name_index]
+                location_id = str(location_number) + "-" + location_name
+            except:
+                logging.info("Location name or number missing")
+                if location_number is None:
+                    location_number = 0
+                else:
                     location_number = row[location_number_index]
+
+                if location_name is None:
+                    location_name = row[locncity_index] + row[locnstcd_index]
+                else:
                     location_name = row[location_name_index]
-                    location_id = location_number + "-" + location_name
 
-                    if row[nat_description_index].upper() == "KMART FORMAT":
-                        KMART.append(location_id)
+                location_id = str(location_number) + "-" + location_name
 
-                    if row[nat_description_index].upper() == "SEARS FORMAT":
-                        SEARS.append(location_id)
+            if row[nat_description_index].upper() == "KMART FORMAT":
+                KMART.append(location_id)
 
-                    if row[nat_description_index].upper() == "ACCTG FORMAT":
-                        ACCTG.append(location_id)
+            if row[nat_description_index].upper() == "SEARS FORMAT":
+                SEARS.append(location_id)
 
-                    if row[nat_description_index].upper() == "DISTR FORMAT":
-                        DISTR.append(location_id)
-
-        formats_list = [sears_format, kmart_format, acctg_format, distr_format]
-        nmbr_nm_list = [sorted(SEARS), sorted(KMART), sorted(ACCTG), sorted(DISTR)]
+        formats_list = ["SEARS FORMAT", "KMART FORMAT"]
+        nmbr_nm_list = [SEARS, KMART]
 
         for format, values in zip(formats_list, nmbr_nm_list):
             store_data = StoreData(Format_Level=format, Locations=values)
