@@ -14,8 +14,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from oauth2client.client import GoogleCredentials
 
-from google.appengine.api import namespace_manager
-from Utilities import dev_namespace as namespace_var, config_namespace, create_pubsub_message
+from Utilities import create_pubsub_message, check_namespace
 from datetime import datetime
 
 
@@ -31,17 +30,14 @@ class BaseHandler(webapp2.RequestHandler):
 
 
 class IndexPageHandler(webapp2.RequestHandler):
+    @check_namespace
     def get(self):
         self.response.write("campaign-backend-service")
 
 
 class SaveCampaignHandler(webapp2.RequestHandler):
-    def get(self, namespace=namespace_var):
-        try:
-            namespace_manager.set_namespace(namespace)
-            logging.info("Namespace set::" + namespace)
-        except Exception as e:
-            logging.error(e)
+    @check_namespace
+    def get(self):
         offer_data = self.request.get('offer_data')
         logging.info('****campaign data: %s', offer_data)
         json_data = json.loads(offer_data)
@@ -84,13 +80,8 @@ class SaveCampaignHandler(webapp2.RequestHandler):
 
 
 class GetAllCampaignsHandler(webapp2.RequestHandler):
-    def get(self, namespace=namespace_var):
-        # Save the current namespace.
-        try:
-            namespace_manager.set_namespace(namespace)
-            logging.info("Namespace set::" + namespace)
-        except Exception as e:
-            logging.error(e)
+    @check_namespace
+    def get(self):
         query = CampaignData.query().order(-CampaignData.created_at)
         entity_list = query.fetch(100)
         result = list()
@@ -127,12 +118,8 @@ class GetAllCampaignsHandler(webapp2.RequestHandler):
 
 
 class GetAllMembersHandler(webapp2.RequestHandler):
-    def get(self, namespace=namespace_var):
-        try:
-            namespace_manager.set_namespace(namespace)
-            logging.info("Namespace set::" + namespace)
-        except Exception as e:
-            logging.error(e)
+    @check_namespace
+    def get(self):
         query = MemberData.query()
         member_list = query.fetch(10)
         result = []
@@ -144,11 +131,10 @@ class GetAllMembersHandler(webapp2.RequestHandler):
 
 
 class ActivateOfferHandler(webapp2.RequestHandler):
-    def get(self, namespace=namespace_var):
+    @check_namespace
+    def get(self):
         response_dict = dict()
         try:
-            namespace_manager.set_namespace(namespace)
-            logging.info("Namespace set::" + namespace)
             offer_id = self.request.get('offer_id')
             logging.info("Request offer_id: " + offer_id)
             if offer_id is None or not offer_id:
@@ -210,12 +196,13 @@ class ActivateOfferHandler(webapp2.RequestHandler):
 
 
 class EmailOfferMembersHandler(BaseHandler):
-    def get(self, namespace=config_namespace):
+    @check_namespace
+    def get(self):
         try:
             logging.info("Member id:: %s", self.request.get('member_id'))
             logging.info("Offer id:: %s", self.request.get('offer_id'))
-            member_entity = ndb.Key('MemberData', self.request.get('member_id'), namespace=namespace).get()
-            offer_entity = ndb.Key('OfferData', self.request.get('offer_id'), namespace=namespace_var).get()
+            member_entity = ndb.Key('MemberData', self.request.get('member_id')).get()
+            offer_entity = ndb.Key('OfferData', self.request.get('offer_id')).get()
             logging.info("Member :: %s", member_entity)
             logging.info("Offer :: %s", offer_entity)
             if member_entity is None or offer_entity is None:
@@ -238,11 +225,12 @@ class EmailOfferMembersHandler(BaseHandler):
 
 
 class UIListItemsHandler(webapp2.RequestHandler):
-    def get(self, namespace=config_namespace):
-        key = ndb.Key('FrontEndData', '1', namespace=namespace)
+    @check_namespace
+    def get(self):
+        key = ndb.Key('FrontEndData', '1')
         result = key.get(use_datastore=True, use_memcache=False, use_cache=False)
-        sears_entity = ndb.Key('StoreData', 'SEARS FORMAT', namespace=namespace).get()
-        kmart_entity = ndb.Key('StoreData', 'KMART FORMAT', namespace=namespace).get()
+        sears_entity = ndb.Key('StoreData', 'SEARS FORMAT').get()
+        kmart_entity = ndb.Key('StoreData', 'KMART FORMAT').get()
 
         result_dict = dict()
         result_dict['categories'] = list(result.Categories)
@@ -265,12 +253,8 @@ class UIListItemsHandler(webapp2.RequestHandler):
 
 
 class MetricsHandler(webapp2.RequestHandler):
-    def get(self, namespace=namespace_var):
-        try:
-            namespace_manager.set_namespace(namespace)
-            logging.info("Namespace set::" + namespace)
-        except Exception as e:
-            logging.error(e)
+    @check_namespace
+    def get(self):
         campaign_id = self.request.get("campaign_id")
         result_dict = MemberOfferDataService.get_offer_metrics(campaign_id=campaign_id)
         self.response.headers['Access-Control-Allow-Origin'] = '*'
@@ -279,12 +263,9 @@ class MetricsHandler(webapp2.RequestHandler):
 
 
 class BatchJobHandler(webapp2.RequestHandler):
-    def get(self, namespace=namespace_var):
-        try:
-            namespace_manager.set_namespace(namespace)
-            logging.info("Namespace set::" + namespace)
-        except Exception as e:
-            logging.error(e)
+    @check_namespace
+    def get(self):
+
         if self.request.get('dataset_name') is None or not self.request.get('dataset_name') or \
             self.request.get('table_name') is None or not self.request.get('table_name') or \
             self.request.get('project_id') is None or not self.request.get('project_id') or \
@@ -428,13 +409,11 @@ class BatchJobHandler(webapp2.RequestHandler):
 
 
 class BalanceHandler(webapp2.RequestHandler):
-    def get(self, namespace=namespace_var):
+    @check_namespace
+    def get(self):
         self.response.headers['Access-Control-Allow-Origin'] = '*'
         self.response.headers['Content-Type'] = 'application/json'
         try:
-            logging.info(str(self))
-            namespace_manager.set_namespace(namespace)
-            logging.info("Namespace set::" + namespace)
             result = TellurideService.get_balance()
             self.response.write(json.dumps({'data': result}))
         except httplib.HTTPException as exc:
@@ -448,13 +427,11 @@ class BalanceHandler(webapp2.RequestHandler):
 
 
 class RedeemOfferHandler(webapp2.RequestHandler):
-    def get(self, namespace=namespace_var):
+    @check_namespace
+    def get(self):
         self.response.headers['Access-Control-Allow-Origin'] = '*'
         self.response.headers['Content-Type'] = 'application/json'
         try:
-            logging.info(str(self))
-            namespace_manager.set_namespace(namespace)
-            logging.info("Namespace set::" + namespace)
             result = TellurideService.redeem_offer()
             self.response.write(json.dumps({'data': result}))
         except httplib.HTTPException as exc:
@@ -468,7 +445,8 @@ class RedeemOfferHandler(webapp2.RequestHandler):
 
 
 class UploadStoreIDHandler(webapp2.RequestHandler):
-    def get(self, namespace=namespace_var):
+    @check_namespace
+    def get(self):
         with open('lu_shc_location.csv', 'rb') as f:
             reader = csv.reader(f)
             header = next(reader, None)
@@ -520,23 +498,25 @@ class UploadStoreIDHandler(webapp2.RequestHandler):
 
 
 class ModelDataSendEmailHandler(webapp2.RequestHandler):
+    @check_namespace
     def get(self):
         if self.request.get('member_id') is None or not self.request.get('member_id') or self.request.get('offer_value') is None or not self.request.get('offer_value') or self.request.get('campaign_name') is None or not self.request.get('campaign_name') :
-            response_html = "<html><head><title>Batch Job Execution</title></head><body><h3> " \
-                             + "Please provide member_id, offer_value and campaign_name with the request</h3></body></html>"
+            response_html = "<html><head><title>Batch Job Execution</title></head><body><h3> Please provide " \
+                            "member_id, offer_value and campaign_name with the request</h3></body></html>"
+
             self.response.write(response_html)
             return
 
-        member_id =  self.request.get('member_id')
-        offer_value =  self.request.get('offer_value')
-        campaign_name =  self.request.get('campaign_name')
+        member_id = self.request.get('member_id')
+        offer_value = self.request.get('offer_value')
+        campaign_name = self.request.get('campaign_name')
         channel = "EMAIL"
 
         response = self.process_data(member_id, offer_value, campaign_name, channel)
 
         self.response.write(response['message'])
 
-    def process_data(self,member_id, offer_value, campaign_name, channel):
+    def process_data(self, member_id, offer_value, campaign_name, channel):
         response_dict = dict()
         response_offer = dict()
         campaign_key = ndb.Key('CampaignData', campaign_name)

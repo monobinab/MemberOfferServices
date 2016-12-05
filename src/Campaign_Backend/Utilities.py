@@ -2,6 +2,7 @@ import logging
 from models import ConfigData, ndb
 import json
 from models import ConfigData
+from google.appengine.api import namespace_manager
 
 dev_namespace = 'dev'
 qa_namespace = 'qa'
@@ -88,3 +89,23 @@ def create_pubsub_message(json_data):
     campaign_json_data = json.dumps(campaign_data)
 
     return campaign_json_data
+
+
+def check_namespace(original_function):
+    def new_function(*args, **kwargs):
+        namespace_var = dev_namespace
+        try:
+            # Save the current namespace.
+            previous_namespace = namespace_manager.get_namespace()
+            if previous_namespace != namespace_var:
+                namespace_manager.set_namespace(namespace_var)
+                logging.info("Previous Namespace::" + previous_namespace)
+                logging.info("Namespace set::" + namespace_manager.get_namespace())
+            else:
+                logging.info("Namespace set::" + previous_namespace)
+            original_function(*args, **kwargs)
+
+        except Exception as e:
+            logging.error(e)
+
+    return new_function
