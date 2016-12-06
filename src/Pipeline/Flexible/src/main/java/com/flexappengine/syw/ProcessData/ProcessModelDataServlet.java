@@ -2,7 +2,6 @@ package com.flexappengine.syw.ProcessData;
 
 import static com.google.datastore.v1.client.DatastoreHelper.makeKey;
 import static com.google.datastore.v1.client.DatastoreHelper.makeValue;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -110,7 +109,7 @@ public class ProcessModelDataServlet extends HttpServlet {
 		PrintWriter out = resp.getWriter();
 		Log.info("campaignName received: " + campaignName + " , projectId received: " + projectId + " , datasetId received: " + datasetId + " , tableId received: " + tableId);
 
-		if(!Strings.isNullOrEmpty(campaignName) && !Strings.isNullOrEmpty(projectId) && 
+		if(!Strings.isNullOrEmpty(campaignName) && !Strings.isNullOrEmpty(projectId) &&
 				!Strings.isNullOrEmpty(datasetId) && !Strings.isNullOrEmpty(tableId)){
 			BigQueryPipeline(campaignName, projectId, datasetId, tableId);
 			Log.info("Returned from BigQuery dataflow");
@@ -128,7 +127,7 @@ public class ProcessModelDataServlet extends HttpServlet {
 		resp.getWriter().close();
 	}
 
-	/** 
+	/**
 	 * Method to request email sending service.
 	 */
 	public static String sendGet(String member, String offer, String campaign, String endpoint) throws Exception {
@@ -137,7 +136,7 @@ public class ProcessModelDataServlet extends HttpServlet {
 		String url = endpoint + "member_id=" + member + "&&offer_value=" + offer + "&&campaign_name=" + campaign;
 		URL obj = new URL(url);
 		HttpURLConnection con = (HttpURLConnection)obj.openConnection();
-		Log.info("\nSending 'GET' request to URL : " + url);
+		Log.info("Sending 'GET' request to URL : " + url);
 
 		con.setRequestMethod("GET");
 		//Adding request header
@@ -182,6 +181,7 @@ public class ProcessModelDataServlet extends HttpServlet {
 		public SplitLineDataTask(){
 			Utility util = new Utility();
 			com.google.appengine.api.datastore.Entity PubSubConfigEntity;
+
 			try {
 				PubSubConfigEntity = util.fetchDatastoreProperties();
 
@@ -191,13 +191,11 @@ public class ProcessModelDataServlet extends HttpServlet {
 					this.namespace = util.getNamespace();
 				}
 			}
-			catch (Exception e)
-			{
+			catch (Exception e) {
 				Log.error("Error. EMAIL_SERVICE_ENDPOINT/SEND_EMAIL_FLAG not found in datastore : " + e.getMessage());
 				this.fetchedEndpoint = null;
 				this.sendEmailFlag = null;
 				this.namespace = util.getNamespace();
-				return;
 			}
 			Log.info("Fetched Endpoint from datastore: " + this.fetchedEndpoint);
 			Log.info("Fetched sendEmailFlag from datastore: " + this.sendEmailFlag);
@@ -206,7 +204,7 @@ public class ProcessModelDataServlet extends HttpServlet {
 
 		@Override
 		/**
-		 * This method fetches relevant information from BigQuery row data, forms datastore entity and calls another service to send email. 
+		 * This method fetches relevant information from BigQuery row data, forms datastore entity and calls another service to send email.
 		 */
 		public void processElement(ProcessContext c){
 			String sendEmailResponse = "";
@@ -218,7 +216,7 @@ public class ProcessModelDataServlet extends HttpServlet {
 			String campaignName = (String)row.get("Campaign");
 
 			Log.info("campaignName: " + campaignName + " ,   memberId: " + memberId + " ,  offerValue: " + offerValue);
-			
+
 			/** Check for the sendEmailFlag and endpoint to send emails.*/
 			if(null == this.sendEmailFlag){
 				Log.warn("Email sending flag is null. Can't determine if to send emails or not.");
@@ -237,37 +235,37 @@ public class ProcessModelDataServlet extends HttpServlet {
 			format.setTimeZone(TimeZone.getTimeZone("CST"));
 			String currentDateTime = format.format(new Date());
 			Log.info("Current Datetime: " + currentDateTime);
-			
+
 			/** Check for entries that are duplicate and have already been processed. No entity is output if duplicate found*/
-			if(!memberOfferEntityCreated.contains(keyName)){
-				memberOfferEntityCreated.add(keyName);					
-			}else{
+			if(!memberOfferEntityCreated.contains(keyName)) {
+				memberOfferEntityCreated.add(keyName);
+			}else {
 				duplicateEntires.addValue(1L);
 				Log.warn("Key already exists and written in another entity:: " + keyName);
 				return;
 			}
 
 			/** Create datastore entity. */
-			Entity.Builder entityBuilder = Entity.newBuilder(); 
+			Entity.Builder entityBuilder = Entity.newBuilder();
 			Key pkey = makeKey("ModelDataTest1", keyName).build();
 			entityBuilder.setKey(pkey);
 
-			Map<String, Value> pProperties = new HashMap<>(); 
+			Map<String, Value> pProperties = new HashMap<>();
 			pProperties.put("Campaign", makeValue(modelData.getCamapignName()).build());
 			pProperties.put("Member", makeValue(modelData.getMemberId()).build());
 			pProperties.put("Offer", makeValue(modelData.getOfferValue()).build());
-			pProperties.put("created_at", makeValue(currentDateTime).build());
+			pProperties.put("created_at", makeValue(currentDateTime).setExcludeFromIndexes(true).build());
 			entityBuilder.putAllProperties(pProperties);
 			entityBuilder.getKeyBuilder().getPartitionIdBuilder().setNamespaceId(namespace);
 
 			/** Call method for sending email */
 			if(null != campaignName && !campaignName.isEmpty() && null != memberId && !memberId.isEmpty() &&
-					null != offerValue && !offerValue.isEmpty()){
+					null != offerValue && !offerValue.isEmpty()) {
 				tableRowCount.addValue(1L);
 				Log.info("this.sendEmailFlag: " + this.sendEmailFlag);
 
 				/** If email sending flag is false then service is not called to send any email */
-				if(null != this.sendEmailFlag && !this.sendEmailFlag){
+				if(null != this.sendEmailFlag && !this.sendEmailFlag) {
 					noEmailSend.addValue(1L);
 				}else{
 					Log.info("Calling python service for sending email for member: " + memberId + "  , offer: " + offerValue + " ,  campaign:  " + campaignName);
@@ -323,7 +321,7 @@ public class ProcessModelDataServlet extends HttpServlet {
 
 	/**
 	 * This method creates the dataflow pipeline and initiates it using DataflowPipelineRunner in cloud.
-	 * 
+	 *
 	 * @param campaignName
 	 * @param projectId
 	 * @param datasetId
@@ -347,8 +345,7 @@ public class ProcessModelDataServlet extends HttpServlet {
 				queryLimit = (String)PubSubConfigEntity.getProperty("QUERY_LIMIT");
 			}
 		}
-		catch (Exception e)
-		{
+		catch (Exception e) {
 			Log.error("QUERY_LIMIT not found in datastore. Setting it to null" + e.getMessage());
 			queryLimit = null;
 		}
@@ -363,7 +360,7 @@ public class ProcessModelDataServlet extends HttpServlet {
 		Log.info("Input getTempLocation: " + bigOptions.getTempLocation() + " , Input getProject: " + bigOptions.getProject());
 		Log.info("Query: " + query);
 
-		try{
+		try {
 			Pipeline bp = Pipeline.create(bigOptions);
 			Log.info("BigQuery pipeline created");
 
