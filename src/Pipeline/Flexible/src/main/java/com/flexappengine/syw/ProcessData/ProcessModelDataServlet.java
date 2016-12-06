@@ -2,6 +2,7 @@ package com.flexappengine.syw.ProcessData;
 
 import static com.google.datastore.v1.client.DatastoreHelper.makeKey;
 import static com.google.datastore.v1.client.DatastoreHelper.makeValue;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -122,6 +123,7 @@ public class ProcessModelDataServlet extends HttpServlet {
 			return;
 		}
 
+		Log.info("Writing response for BigQuery dataflow now for Campaign Name - " + campaignName);
 		out.println("Campaign Name - " + campaignName);
 		resp.setStatus(HttpServletResponse.SC_OK);
 		resp.getWriter().close();
@@ -250,7 +252,7 @@ public class ProcessModelDataServlet extends HttpServlet {
 			Key pkey = makeKey("ModelDataTest1", keyName).build();
 			entityBuilder.setKey(pkey);
 
-			Map<String, Value> pProperties = new HashMap<>();
+			Map<String, Value> pProperties = new HashMap<String, Value>();
 			pProperties.put("Campaign", makeValue(modelData.getCamapignName()).build());
 			pProperties.put("Member", makeValue(modelData.getMemberId()).build());
 			pProperties.put("Offer", makeValue(modelData.getOfferValue()).build());
@@ -287,6 +289,7 @@ public class ProcessModelDataServlet extends HttpServlet {
 					}
 				}
 			}
+			Log.info("Entity key: " + entityBuilder.getKey());
 			c.output(entityBuilder.build());
 		}
 	}

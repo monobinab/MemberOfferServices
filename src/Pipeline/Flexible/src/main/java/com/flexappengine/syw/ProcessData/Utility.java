@@ -19,25 +19,7 @@ public class Utility{
 	 * This method returns the configuration entity from datastore.
 	 */
 	public Entity fetchDatastoreProperties(){
-		String namespace = null;
-		String env = getNamespace();
-		Log.info("environment: " + env);
-
-		if(null == env){
-			namespace = "dev";
-		}else{
-			switch(env) {
-			case "prod" :
-				namespace = "prod";
-				break;
-			case "qa" :
-				namespace = "qa";
-				break;
-			default :
-				namespace = "dev";
-			}
-		}
-
+		String namespace = getNamespace();
 		Log.info("namespace: " + namespace);
 
 		NamespaceManager.set(namespace);
@@ -48,8 +30,7 @@ public class Utility{
 		try {
 			PubSubConfigEntity = datastore.get(pubsubConfigKey);
 			return PubSubConfigEntity;
-		}catch (Exception e)
-		{
+		}catch (Exception e){
 			Log.error("Entity not found in datastore. " +  e.getMessage());
 			return PubSubConfigEntity;
 		}
@@ -59,6 +40,7 @@ public class Utility{
 	 * This method returns the namespace.
 	 */
 	public String getNamespace(){
+		String namespace = null;
 		String env = null;
 		InputStream is = Utility.class.getClassLoader().getResourceAsStream("systemenvironment.properties");
 		Properties props = new Properties();
@@ -69,6 +51,19 @@ public class Utility{
 			Log.error("Error getting namespace env: " + e1.getMessage());
 		}
 
-		return env;
+		Log.info("environment: " + env);
+
+		switch(env == null ? "" : env) {
+		case "prod" :
+			namespace = "prod";
+			break;
+		case "qa" :
+			namespace = "qa";
+			break;
+		default :
+			namespace = "dev";
+		}
+
+		return namespace;
 	}
 }
