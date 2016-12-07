@@ -15,7 +15,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from oauth2client.client import GoogleCredentials
 from google.appengine.api import namespace_manager
-from Utilities import dev_namespace as namespace_var, config_namespace, create_pubsub_message
+from Utilities import qa_namespace as namespace_var, config_namespace, create_pubsub_message
 from datetime import datetime
 
 
@@ -557,7 +557,7 @@ class MigrateNamespaceData(webapp2.RequestHandler):
 
 
 class ModelDataSendEmailHandler(webapp2.RequestHandler):
-    def get(self):
+    def get(self, namespace=namespace_var):
         if self.request.get('member_id') is None or not self.request.get('member_id') or self.request.get('offer_value') is None or not self.request.get('offer_value') or self.request.get('campaign_name') is None or not self.request.get('campaign_name') :
             response_html = "<html><head><title>Batch Job Execution</title></head><body><h3> " \
                              + "Please provide member_id, offer_value and campaign_name with the request</h3></body></html>"
@@ -569,11 +569,17 @@ class ModelDataSendEmailHandler(webapp2.RequestHandler):
         campaign_name =  self.request.get('campaign_name')
         channel = "EMAIL"
 
-        response = self.process_data(member_id, offer_value, campaign_name, channel)
+        response = self.process_data(member_id, offer_value, campaign_name, channel, namespace)
 
         self.response.write(response['message'])
 
-    def process_data(self,member_id, offer_value, campaign_name, channel):
+    def process_data(self,member_id, offer_value, campaign_name, channel, namespace):
+        try:
+            namespace_manager.set_namespace(namespace)
+            logging.info("Namespace set::" + namespace)
+        except Exception as e:
+            logging.error(e)
+
         response_dict = dict()
         response_offer = dict()
         campaign_key = ndb.Key('CampaignData', campaign_name)
@@ -617,7 +623,7 @@ class ModelDataSendEmailHandler(webapp2.RequestHandler):
                         response_dict['message'] = "Member ID " + member_id + " not found in datastore"
                         return response_dict
                     else:
-                        send_mail(member_entity=member, offer_entity=offer)
+                        send_mail(member_entity=member, offer_entity=offer, campaign_entity=campaign)
                         member_offer_data_key = MemberOfferDataService.create(offer, member, channel)
 
                         logging.info('member_offer_key:: %s', member_offer_data_key)
