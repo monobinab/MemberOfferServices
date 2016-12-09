@@ -12,13 +12,13 @@ import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
 
-public class Utility{
+public class Utility {
 	static final Logger Log = LoggerFactory.getLogger(Utility.class.getName());
 
 	/**
 	 * This method returns the configuration entity from datastore.
 	 */
-	public Entity fetchDatastoreProperties(){
+	public Entity fetchDatastoreProperties() {
 		String namespace = getNamespace();
 		Log.info("namespace: " + namespace);
 
@@ -30,8 +30,8 @@ public class Utility{
 		try {
 			PubSubConfigEntity = datastore.get(pubsubConfigKey);
 			return PubSubConfigEntity;
-		}catch (Exception e){
-			Log.error("Entity not found in datastore. " +  e.getMessage());
+		} catch (Exception e) {
+			Log.error("Entity not found in datastore. " + e.getMessage());
 			return PubSubConfigEntity;
 		}
 	}
@@ -39,7 +39,7 @@ public class Utility{
 	/**
 	 * This method returns the namespace.
 	 */
-	public String getNamespace(){
+	public String getNamespace() {
 		String namespace = null;
 		String env = null;
 		InputStream is = Utility.class.getClassLoader().getResourceAsStream("systemenvironment.properties");
@@ -47,20 +47,20 @@ public class Utility{
 		try {
 			props.load(is);
 			env = (String) props.get("env");
-		}catch (IOException e1) {
+		} catch (IOException e1) {
 			Log.error("Error getting namespace env: " + e1.getMessage());
 		}
 
 		Log.info("environment: " + env);
 
-		switch(env == null ? "" : env) {
-		case "prod" :
+		switch (env == null ? "" : env) {
+		case "prod":
 			namespace = "prod";
 			break;
-		case "qa" :
+		case "qa":
 			namespace = "qa";
 			break;
-		default :
+		default:
 			namespace = "dev";
 		}
 
