@@ -6,14 +6,14 @@ import httplib
 import webapp2
 import pubsub_utils
 import csv
-from models import CampaignData, MemberData, MemberOfferData, FrontEndData, ndb, OfferData, StoreData
+from models import CampaignData, MemberData, MemberOfferData, FrontEndData, ndb, OfferData, \
+    ConfigData, StoreData
 from datastore import CampaignDataService, MemberOfferDataService, OfferDataService
 from telluride_service import TellurideService
 from sendEmail import send_mail
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from oauth2client.client import GoogleCredentials
-
 from google.appengine.api import namespace_manager
 from Utilities import qa_namespace as namespace_var, config_namespace, create_pubsub_message
 from datetime import datetime
@@ -469,54 +469,91 @@ class RedeemOfferHandler(webapp2.RequestHandler):
 
 class UploadStoreIDHandler(webapp2.RequestHandler):
     def get(self, namespace=namespace_var):
-        with open('lu_shc_location.csv', 'rb') as f:
+        try:
+            namespace_manager.set_namespace(namespace)
+            logging.info("Namespace set::" + namespace)
+        except Exception as e:
+            logging.error(e)
+
+        with open('shc_locn.csv', 'rb') as f:
             reader = csv.reader(f)
-            header = next(reader, None)
+            schema = next(reader, None)
 
-        for index, column in enumerate(header):
-            if column.upper() == "LOCN_NBR":
-                locn_nbr_index = index
+        for index, column in enumerate(schema):
+            if column.upper() == "LOCNNBR":
+                location_number_index = index
 
-            if column.upper() == "LOCN_NM":
-                locn_nm_index = index
+            if column.upper() == "LOCNNM":
+                location_name_index = index
 
-            if column.upper() == "NATL_DESC":
-                natl_desc_index = index
+            if column.upper() == "NATLDESC":
+                nat_description_index = index
 
-        KMART, SEARS, ACCTG, DISTR = (list() for _ in range(4))
-        sears_format = "SEARS FORMAT"
-        kmart_format = "KMART FORMAT"
-        acctg_format = "ACCTG FORMAT"
-        distr_format = "DISTR FORMAT"
+        SEARS = list()
+        KMART = list()
 
-        with open('lu_shc_location.csv', 'rb') as f:
+        with open('shc_locn.csv', 'rU') as f:
             reader = csv.reader(f)
-            next(reader, None)  # skip header row
+            next(reader, None)
 
             for row in reader:
-                location_number = row[locn_nbr_index]
-                location_name = row[locn_nm_index]
-                locn_nbr_locn_nm = location_number + "-" + location_name
+                try:
+                    location_number = row[location_number_index]
+                    location_name = row[location_name_index]
+                    location_id = str(location_number) + "-" + location_name
+                except:
+                    logging.info("Location name or number missing")
+                    pass
 
-                if row[natl_desc_index].upper() == kmart_format:
-                    KMART.append(locn_nbr_locn_nm)
+                if row[nat_description_index].upper() == "KMART FORMAT":
+                    KMART.append(location_id)
 
-                if row[natl_desc_index].upper() == sears_format:
-                    SEARS.append(locn_nbr_locn_nm)
+                if row[nat_description_index].upper() == "SEARS FORMAT":
+                    SEARS.append(location_id)
 
-                if row[natl_desc_index].upper() == acctg_format:
-                    ACCTG.append(locn_nbr_locn_nm)
+        formats_list = ["SEARS FORMAT", "KMART FORMAT"]
+        locations_list = [SEARS, KMART]
 
-                if row[natl_desc_index].upper() == distr_format:
-                    DISTR.append(locn_nbr_locn_nm)
-
-        formats_list = [sears_format, kmart_format, acctg_format, distr_format]
-        nmbr_nm_list = [SEARS, KMART, ACCTG, DISTR]
-
-        for format, values in zip(formats_list, nmbr_nm_list):
+        for format, values in zip(formats_list, locations_list):
             store_data = StoreData(Format_Level=format, Locations=values)
             store_data.key = ndb.Key('StoreData', format)
             store_data.put()
+
+
+class MigrateNamespaceData(webapp2.RequestHandler):
+    def migrateConfigData(self, namespace_var):
+        configurations = ['URLConfig', 'PubSubConfig', 'SendGridConfig']
+
+        for conf in configurations:
+            url_entity = ndb.Key('ConfigData', conf, namespace=config_namespace).get()
+            url_entity.key = ndb.Key('ConfigData', conf, namespace=namespace_var)
+            url_entity.put()
+
+    def migrateFrontendData(self, namespace_var):
+        entity = ndb.Key('FrontEndData', '1', namespace=config_namespace).get()
+        entity.key = ndb.Key('FrontEndData', '1', namespace=namespace_var)
+        entity.put()
+
+    def migrateMemberData(self, namespace_var):
+        ids = ['1', '7081327663412819', '3', '4']
+
+        for idx in ids:
+            entity = ndb.Key('MemberData', idx, namespace=config_namespace).get()
+            entity.key = ndb.Key('MemberData', idx, namespace=namespace_var)
+            entity.put()
+
+    def migrateSendGridData(self, namespace_var):
+        entity = ndb.Key('SendgridData', '1', namespace=config_namespace).get()
+        entity.key = ndb.Key('SendgridData', '1', namespace=namespace_var)
+        entity.put()
+
+    def get(self):
+        ns = self.request.get('namespace')
+        self.migrateConfigData(namespace_var=ns)
+        self.migrateFrontendData(namespace_var=ns)
+        self.migrateMemberData(namespace_var=ns)
+        self.migrateSendGridData(namespace_var=ns)
+        self.response.write("Data migrated successfully!!!")
 
 
 class ModelDataSendEmailHandler(webapp2.RequestHandler):
@@ -617,6 +654,7 @@ app = webapp2.WSGIApplication([
     ('/getBalance', BalanceHandler),
     ('/redeemOffer', RedeemOfferHandler),
     ('/uploadStoreIDs', UploadStoreIDHandler),
+    ('/migrateEntities', MigrateNamespaceData),
     ('/sendEmailJob', ModelDataSendEmailHandler)
 ], debug=True)
 
