@@ -3,9 +3,8 @@ package com.flexappengine.syw.ProcessData;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.google.appengine.api.NamespaceManager;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
@@ -13,42 +12,14 @@ import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
 
-public class Utility{
-	static final Logger Log = Logger.getLogger(Utility.class.getName());
+public class Utility {
+	static final Logger Log = LoggerFactory.getLogger(Utility.class.getName());
 
 	/**
-	 * This method returns the configuration entity from datastore. 
+	 * This method returns the configuration entity from datastore.
 	 */
-	public Entity fetchDatastoreProperties(){
-		String namespace = null;
-		String env = null;
-		InputStream is = Utility.class.getClassLoader().getResourceAsStream("systemenvironment.properties");
-		Properties props = new Properties();
-		try {
-			props.load(is);
-			env = (String) props.get("env");
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			Log.log(Level.SEVERE, e1.getMessage(), e1);
-			e1.printStackTrace();
-		}
-
-		Log.info("environment: " + env);
-
-		if(null == env){
-			namespace = "dev";
-		}else{		
-			switch(env) {
-			case "prod" :
-				namespace = "prod"; 
-				break;
-			case "qa" :
-				namespace = "qa";
-				break;
-			default :
-				namespace = "dev";
-			}
-		}
+	public Entity fetchDatastoreProperties() {
+		String namespace = getNamespace();
 		Log.info("namespace: " + namespace);
 
 		NamespaceManager.set(namespace);
@@ -59,13 +30,40 @@ public class Utility{
 		try {
 			PubSubConfigEntity = datastore.get(pubsubConfigKey);
 			return PubSubConfigEntity;
-		}
-		catch (Exception e)
-		{
-			Log.info("Entity not found in datastore");
-			Log.log(Level.SEVERE, e.getMessage(), e);
+		} catch (Exception e) {
+			Log.error("Entity not found in datastore. " + e.getMessage());
 			return PubSubConfigEntity;
 		}
+	}
 
+	/**
+	 * This method returns the namespace.
+	 */
+	public String getNamespace() {
+		String namespace = null;
+		String env = null;
+		InputStream is = Utility.class.getClassLoader().getResourceAsStream("systemenvironment.properties");
+		Properties props = new Properties();
+		try {
+			props.load(is);
+			env = (String) props.get("env");
+		} catch (IOException e1) {
+			Log.error("Error getting namespace env: " + e1.getMessage());
+		}
+
+		Log.info("environment: " + env);
+
+		switch (env == null ? "" : env) {
+		case "prod":
+			namespace = "prod";
+			break;
+		case "qa":
+			namespace = "qa";
+			break;
+		default:
+			namespace = "dev";
+		}
+
+		return namespace;
 	}
 }
