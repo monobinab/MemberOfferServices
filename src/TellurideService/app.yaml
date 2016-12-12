@@ -1,0 +1,11 @@
+runtime: python27
+api_version: 1
+threadsafe: false
+module: dev-telluride-service
+
+handlers:
+- url: .*
+  script: main.py
+
+automatic_scaling:
+  min_idle_instances: 1  

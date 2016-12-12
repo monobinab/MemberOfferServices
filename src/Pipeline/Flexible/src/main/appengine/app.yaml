@@ -1,0 +1,11 @@
+runtime: java
+vm: true
+
+handlers:
+- url: /receive_message
+  script: ProcessModelDataServlet.java
+  secure: always  # Require HTTPS
+
+
+manual_scaling:
+  instances: 1
