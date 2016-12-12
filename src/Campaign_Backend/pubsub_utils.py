@@ -7,7 +7,7 @@ import json
 from google.appengine.api import app_identity
 from google.appengine.api import memcache
 from google.appengine.api import modules
-import Utilities
+import utilities
 import sys
 import time
 
@@ -43,7 +43,7 @@ def get_full_topic_name():
 def post_pubsub(message):
     """Publishes the message via the Pub/Sub API."""
     logging.info('Going to get client')
-    config_dict = Utilities.get_pubsub_configuration()
+    config_dict = utilities.get_pubsub_configuration()
 
     client = get_client()
     logging.info('Got client')

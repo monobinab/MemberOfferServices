@@ -6,17 +6,15 @@ import httplib
 import webapp2
 import pubsub_utils
 import csv
-from models import CampaignData, MemberData, MemberOfferData, FrontEndData, ndb, OfferData, \
-    ConfigData, StoreData
+from models import CampaignData, MemberData, MemberOfferData, ndb, StoreData
 from datastore import CampaignDataService, MemberOfferDataService, OfferDataService
-from telluride_service import TellurideService
-from sendEmail import send_mail
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from oauth2client.client import GoogleCredentials
-from google.appengine.api import namespace_manager
-from Utilities import qa_namespace as namespace_var, config_namespace, create_pubsub_message
+from utilities import create_pubsub_message, make_request
 from datetime import datetime
+import xml.etree.ElementTree as ET
+import os
 
 
 class BaseHandler(webapp2.RequestHandler):
@@ -36,12 +34,7 @@ class IndexPageHandler(webapp2.RequestHandler):
 
 
 class SaveCampaignHandler(webapp2.RequestHandler):
-    def get(self, namespace=namespace_var):
-        try:
-            namespace_manager.set_namespace(namespace)
-            logging.info("Namespace set::" + namespace)
-        except Exception as e:
-            logging.error(e)
+    def get(self):
         offer_data = self.request.get('offer_data')
         logging.info('****campaign data: %s', offer_data)
         json_data = json.loads(offer_data)
@@ -60,6 +53,9 @@ class SaveCampaignHandler(webapp2.RequestHandler):
 
         logging.info('Campaign: %s saved in datastore', campaign_name)
 
+        host = "telluride-service-" + os.environ.get('NAMESPACE') + "-dot-syw-offers.appspot.com/"
+        relative_url = "createCampaign?campaign_id=" + campaign_name
+        make_request(host=host, relative_url=relative_url, request_type="GET", payload='')
         logging.info('Creating pubsub publish message')
         campaign_json_data = create_pubsub_message(json_data)
         logging.info('Created pubsub publish message')
@@ -84,13 +80,8 @@ class SaveCampaignHandler(webapp2.RequestHandler):
 
 
 class GetAllCampaignsHandler(webapp2.RequestHandler):
-    def get(self, namespace=namespace_var):
-        # Save the current namespace.
-        try:
-            namespace_manager.set_namespace(namespace)
-            logging.info("Namespace set::" + namespace)
-        except Exception as e:
-            logging.error(e)
+
+    def get(self):
         query = CampaignData.query().order(-CampaignData.created_at)
         entity_list = query.fetch(100)
         result = list()
@@ -127,12 +118,8 @@ class GetAllCampaignsHandler(webapp2.RequestHandler):
 
 
 class GetAllMembersHandler(webapp2.RequestHandler):
-    def get(self, namespace=namespace_var):
-        try:
-            namespace_manager.set_namespace(namespace)
-            logging.info("Namespace set::" + namespace)
-        except Exception as e:
-            logging.error(e)
+
+    def get(self):
         query = MemberData.query()
         member_list = query.fetch(10)
         result = []
@@ -144,11 +131,9 @@ class GetAllMembersHandler(webapp2.RequestHandler):
 
 
 class ActivateOfferHandler(webapp2.RequestHandler):
-    def get(self, namespace=namespace_var):
+    def get(self):
         response_dict = dict()
         try:
-            namespace_manager.set_namespace(namespace)
-            logging.info("Namespace set::" + namespace)
             offer_id = self.request.get('offer_id')
             logging.info("Request offer_id: " + offer_id)
             if offer_id is None or not offer_id:
@@ -177,17 +162,27 @@ class ActivateOfferHandler(webapp2.RequestHandler):
                 member_offer_obj = MemberOfferData.query(MemberOfferData.member == member_key,
                                                          MemberOfferData.offer == offer_key).get()
                 if member_offer_obj is not None:
-                    status_code = TellurideService.register_member(offer, member)
-                    logging.info("Status code:: %d" % status_code)
-                    if status_code == 0:
+
+                    host = "telluride-service-" + os.environ.get('NAMESPACE') + "-dot-syw-offers.appspot.com/"
+                    relative_url = "registerMember?offer_id=%s&&member_id=%s", offer_id, member_id
+                    result = make_request(host=host, relative_url=relative_url, request_type="GET", payload='')
+                    result = json.loads(result).get('data')
+                    doc = ET.fromstring(result)
+                    if doc is not None:
+                        status_code = doc.find('.//{http://www.epsilon.com/webservices/}Status').text
+                        logging.info("Status code:: %d" % status_code)
+                        if status_code == 0:
+                                member_offer_obj.status = True
+                                member_offer_obj.activated_at = datetime.now()
+                                member_offer_obj.put()
+                                response_dict['message'] = "Offer has been activated successfully"
+                        elif status_code == 1 or status_code == 99:
                             member_offer_obj.status = True
-                            member_offer_obj.activated_at = datetime.now()
                             member_offer_obj.put()
-                            response_dict['message'] = "Offer has been activated successfully"
-                    elif status_code == 1 or status_code == 99:
-                        member_offer_obj.status = True
-                        member_offer_obj.put()
-                        response_dict['message'] = "Member already registered for this offer"
+                            response_dict['message'] = "Member already registered for this offer"
+                        else:
+                            logging.error("Telluride call failed.")
+                            response_dict['message'] = "Sorry, Offer could not be activated"
                     else:
                         logging.error("Telluride call failed.")
                         response_dict['message'] = "Sorry, Offer could not be activated"
@@ -197,7 +192,6 @@ class ActivateOfferHandler(webapp2.RequestHandler):
 
                     logging.info("Activated offer %s for member %s", str(offer_key), str(member_key))
                     response_dict['message'] = "Sorry, Offer could not be activated. Member Offer Object not found."
-
             else:
                 logging.error("could not fetch offer or member details for key:: %s", offer_key)
                 response_dict['message'] = "Sorry could not fetch member offer details."
@@ -209,40 +203,13 @@ class ActivateOfferHandler(webapp2.RequestHandler):
         self.response.write(response_html)
 
 
-class EmailOfferMembersHandler(BaseHandler):
-    def get(self, namespace=config_namespace):
-        try:
-            logging.info("Member id:: %s", self.request.get('member_id'))
-            logging.info("Offer id:: %s", self.request.get('offer_id'))
-            member_entity = ndb.Key('MemberData', self.request.get('member_id'), namespace=namespace).get()
-            offer_entity = ndb.Key('OfferData', self.request.get('offer_id'), namespace=namespace_var).get()
-            logging.info("Member :: %s", member_entity)
-            logging.info("Offer :: %s", offer_entity)
-            if member_entity is None or offer_entity is None:
-                response_dict = {'status': 'Failure', 'message': "Details not found for the request"}
-            else:
-                campaign_entity = offer_entity.campaign.get()
-                send_mail(member_entity=member_entity, offer_entity=offer_entity, campaign_entity=campaign_entity)
-                member_offer_data_key = MemberOfferDataService.create(offer_entity=offer_entity,
-                                                                      member_entity=member_entity)
-                logging.info('member_offer_key:: %s', member_offer_data_key)
-                logging.info('Offer %s email has been sent to: : %s', offer_entity, member_entity.email)
-                response_dict = {'status': 'Success', 'message': "Offer email has been sent successfully!!!"}
-        except Exception as e:
-            logging.error(e)
-            response_dict = {'status': 'Failure', 'message': "Server error has encountered an error"}
-        finally:
-            self.response.headers['Access-Control-Allow-Origin'] = '*'
-            self.response.headers['Content-type'] = 'application/json'
-            self.response.write(json.dumps(response_dict))
-
-
 class UIListItemsHandler(webapp2.RequestHandler):
-    def get(self, namespace=config_namespace):
-        key = ndb.Key('FrontEndData', '1', namespace=namespace)
+
+    def get(self):
+        key = ndb.Key('FrontEndData', '1')
         result = key.get(use_datastore=True, use_memcache=False, use_cache=False)
-        sears_entity = ndb.Key('StoreData', 'SEARS FORMAT', namespace=namespace).get()
-        kmart_entity = ndb.Key('StoreData', 'KMART FORMAT', namespace=namespace).get()
+        sears_entity = ndb.Key('StoreData', 'SEARS FORMAT').get()
+        kmart_entity = ndb.Key('StoreData', 'KMART FORMAT').get()
 
         result_dict = dict()
         result_dict['categories'] = list(result.Categories)
@@ -265,12 +232,8 @@ class UIListItemsHandler(webapp2.RequestHandler):
 
 
 class MetricsHandler(webapp2.RequestHandler):
-    def get(self, namespace=namespace_var):
-        try:
-            namespace_manager.set_namespace(namespace)
-            logging.info("Namespace set::" + namespace)
-        except Exception as e:
-            logging.error(e)
+
+    def get(self):
         campaign_id = self.request.get("campaign_id")
         result_dict = MemberOfferDataService.get_offer_metrics(campaign_id=campaign_id)
         self.response.headers['Access-Control-Allow-Origin'] = '*'
@@ -279,12 +242,9 @@ class MetricsHandler(webapp2.RequestHandler):
 
 
 class BatchJobHandler(webapp2.RequestHandler):
-    def get(self, namespace=namespace_var):
-        try:
-            namespace_manager.set_namespace(namespace)
-            logging.info("Namespace set::" + namespace)
-        except Exception as e:
-            logging.error(e)
+
+    def get(self):
+
         if self.request.get('dataset_name') is None or not self.request.get('dataset_name') or \
             self.request.get('table_name') is None or not self.request.get('table_name') or \
             self.request.get('project_id') is None or not self.request.get('project_id') or \
@@ -318,7 +278,7 @@ class BatchJobHandler(webapp2.RequestHandler):
         bigquery_service = build('bigquery', 'v2', credentials=credentials)
         # [END build_service]
 
-        campaign_key = ndb.Key('CampaignData', campaign_name, namespace=namespace_var)
+        campaign_key = ndb.Key('CampaignData', campaign_name)
         logging.info("fetched campaign_key")
 
         campaign = campaign_key.get()
@@ -386,8 +346,11 @@ class BatchJobHandler(webapp2.RequestHandler):
                         if offer_name in offer_list:
                             logging.info('Offer %s already created and activated', offer_name)
                         else:
-                            response_telluride = TellurideService.create_offer(offer)
-                            if(response_telluride['message'] == success_msg):
+                            # response_telluride = TellurideService.create_offer(offer)
+                            host = "telluride-service-" + os.environ.get('NAMESPACE') + "-dot-syw-offers.appspot.com/"
+                            relative_url = "createOffer?offer_id=" + offer.OfferNumber
+                            response_telluride = make_request(host=host, relative_url=relative_url, request_type="GET", payload='')
+                            if response_telluride['message'] == success_msg:
                                 logging.info('Offer created in Telluride system:: %s', offer_name)
                                 logging.info('Offer %s has been created and activated successfully', offer_name)
                                 logging.info('Adding it to offers created list')
@@ -404,13 +367,37 @@ class BatchJobHandler(webapp2.RequestHandler):
                                     response_dict['message'] = "Member ID "+member_id+" not found in datastore"
                                     return response_dict
                                 else:
-                                    send_mail(member_entity=member, offer_entity=offer,
-                                              campaign_entity=offer.campaign.get())
-                                    member_offer_data_key = MemberOfferDataService.create(offer, member)
-
-                                    logging.info('member_offer_key:: %s', member_offer_data_key)
-                                    logging.info('Offer %s email has been sent to:: %s', offer.OfferNumber, member.email)
-                                    response_dict['message'] = response_dict['message'] + new_line + " Offer "+offer.OfferNumber+" emails has been sent to: "+member.email
+                                    #TODO: remove hardcoded urls
+                                    # send_mail(member_entity=member, offer_entity=offer,
+                                    #           campaign_entity=offer.campaign.get())
+                                    host = "email-service-"+os.environ.get('NAMESPACE')+"-dot-syw-offers.appspot.com/"
+                                    relative_url = "emailMembers?offer_id=%s&&member_id=%s", offer.OfferNumber, member_id
+                                    result = make_request(host=host, relative_url=relative_url, request_type="GET",
+                                                          payload='')
+                                    data = json.loads(result).get('data')
+                                    if data is not None:
+                                        status = data.get('status')
+                                        if status == "Success":
+                                            member_offer_data_key = MemberOfferDataService.create(offer, member)
+                                            logging.info('member_offer_key:: %s', member_offer_data_key)
+                                            logging.info('Offer %s email has been sent to:: %s', offer.OfferNumber, member.email)
+                                            response_dict['message'] = response_dict['message'] + new_line + " Offer "\
+                                                                       +offer.OfferNumber+" emails has been sent to: "\
+                                                                       +member.email
+                                        else:
+                                            logging.info(
+                                                'Error creating offer %s in telluride system. Response from telluride call is: %s',
+                                                offer.OfferNumber, response_dict['message'])
+                                            response_dict['message'] = response_dict[
+                                                                           'message'] + new_line + " Error creating offer " + offer.OfferNumber + " in telluride system. Response from telluride call is:: " + \
+                                                                       response_dict['message']
+                                    else:
+                                        logging.info(
+                                            'Error creating offer %s in telluride system. Response from telluride call is: %s',
+                                            offer.OfferNumber, response_dict['message'])
+                                        response_dict['message'] = response_dict[
+                                                                       'message'] + new_line + " Error creating offer " + offer.OfferNumber + " in telluride system. Response from telluride call is:: " + \
+                                                                   response_dict['message']
                             else:
                                 logging.info('Error creating offer %s in telluride system. Response from telluride call is: %s', offer.OfferNumber,response_dict['message'])
                                 response_dict['message'] = response_dict['message'] + new_line +" Error creating offer "+offer.OfferNumber+" in telluride system. Response from telluride call is:: "+response_dict['message']
@@ -427,54 +414,8 @@ class BatchJobHandler(webapp2.RequestHandler):
         return response_dict
 
 
-class BalanceHandler(webapp2.RequestHandler):
-    def get(self, namespace=namespace_var):
-        self.response.headers['Access-Control-Allow-Origin'] = '*'
-        self.response.headers['Content-Type'] = 'application/json'
-        try:
-            logging.info(str(self))
-            namespace_manager.set_namespace(namespace)
-            logging.info("Namespace set::" + namespace)
-            result = TellurideService.get_balance()
-            self.response.write(json.dumps({'data': result}))
-        except httplib.HTTPException as exc:
-            logging.error(exc)
-            self.response.set_status(408)
-            self.response.write("Request has timed out. Please try again.")
-        except Exception as e:
-            logging.error(e)
-            self.response.set_status(500)
-            self.response.write("Internal Server Error")
-
-
-class RedeemOfferHandler(webapp2.RequestHandler):
-    def get(self, namespace=namespace_var):
-        self.response.headers['Access-Control-Allow-Origin'] = '*'
-        self.response.headers['Content-Type'] = 'application/json'
-        try:
-            logging.info(str(self))
-            namespace_manager.set_namespace(namespace)
-            logging.info("Namespace set::" + namespace)
-            result = TellurideService.redeem_offer()
-            self.response.write(json.dumps({'data': result}))
-        except httplib.HTTPException as exc:
-            logging.error(exc)
-            self.response.set_status(408)
-            self.response.write("Request has timed out. Please try again.")
-        except Exception as e:
-            logging.error(e)
-            self.response.set_status(500)
-            self.response.write("Internal Server Error")
-
-
 class UploadStoreIDHandler(webapp2.RequestHandler):
-    def get(self, namespace=namespace_var):
-        try:
-            namespace_manager.set_namespace(namespace)
-            logging.info("Namespace set::" + namespace)
-        except Exception as e:
-            logging.error(e)
-
+    def get(self):
         with open('shc_locn.csv', 'rb') as f:
             reader = csv.reader(f)
             schema = next(reader, None)
@@ -521,123 +462,44 @@ class UploadStoreIDHandler(webapp2.RequestHandler):
 
 
 class MigrateNamespaceData(webapp2.RequestHandler):
-    def migrateConfigData(self, namespace_var):
+    @staticmethod
+    def migrate_config_data(from_ns, to_ns):
         configurations = ['URLConfig', 'PubSubConfig', 'SendGridConfig']
 
         for conf in configurations:
-            url_entity = ndb.Key('ConfigData', conf, namespace=config_namespace).get()
-            url_entity.key = ndb.Key('ConfigData', conf, namespace=namespace_var)
+            url_entity = ndb.Key('ConfigData', conf, namespace=from_ns).get()
+            url_entity.key = ndb.Key('ConfigData', conf, namespace=to_ns)
             url_entity.put()
 
-    def migrateFrontendData(self, namespace_var):
-        entity = ndb.Key('FrontEndData', '1', namespace=config_namespace).get()
-        entity.key = ndb.Key('FrontEndData', '1', namespace=namespace_var)
+    @staticmethod
+    def migrate_frontend_data(from_ns, to_ns):
+        entity = ndb.Key('FrontEndData', '1', namespace=from_ns).get()
+        entity.key = ndb.Key('FrontEndData', '1', namespace=to_ns)
         entity.put()
 
-    def migrateMemberData(self, namespace_var):
+    @staticmethod
+    def migrate_member_data(from_ns, to_ns):
         ids = ['1', '7081327663412819', '3', '4']
 
         for idx in ids:
-            entity = ndb.Key('MemberData', idx, namespace=config_namespace).get()
-            entity.key = ndb.Key('MemberData', idx, namespace=namespace_var)
+            entity = ndb.Key('MemberData', idx, namespace=from_ns).get()
+            entity.key = ndb.Key('MemberData', idx, namespace=to_ns)
             entity.put()
 
-    def migrateSendGridData(self, namespace_var):
-        entity = ndb.Key('SendgridData', '1', namespace=config_namespace).get()
-        entity.key = ndb.Key('SendgridData', '1', namespace=namespace_var)
+    @staticmethod
+    def migrate_sendgrid_data(from_ns, to_ns):
+        entity = ndb.Key('SendgridData', '1', namespace=from_ns).get()
+        entity.key = ndb.Key('SendgridData', '1', namespace=to_ns)
         entity.put()
 
     def get(self):
-        ns = self.request.get('namespace')
-        self.migrateConfigData(namespace_var=ns)
-        self.migrateFrontendData(namespace_var=ns)
-        self.migrateMemberData(namespace_var=ns)
-        self.migrateSendGridData(namespace_var=ns)
+        from_ns = self.request.get('from_ns')
+        to_ns = self.request.get('to_ns')
+        self.migrate_config_data(from_ns=from_ns, to_ns=to_ns)
+        self.migrate_frontend_data(from_ns=from_ns, to_ns=to_ns)
+        self.migrate_member_data(from_ns=from_ns, to_ns=to_ns)
+        self.migrate_sendgrid_data(from_ns=from_ns, to_ns=to_ns)
         self.response.write("Data migrated successfully!!!")
-
-
-class ModelDataSendEmailHandler(webapp2.RequestHandler):
-    def get(self, namespace=namespace_var):
-        if self.request.get('member_id') is None or not self.request.get('member_id') or self.request.get('offer_value') is None or not self.request.get('offer_value') or self.request.get('campaign_name') is None or not self.request.get('campaign_name') :
-            response_html = "<html><head><title>Batch Job Execution</title></head><body><h3> " \
-                             + "Please provide member_id, offer_value and campaign_name with the request</h3></body></html>"
-            self.response.write(response_html)
-            return
-
-        member_id =  self.request.get('member_id')
-        offer_value =  self.request.get('offer_value')
-        campaign_name =  self.request.get('campaign_name')
-        channel = "EMAIL"
-
-        response = self.process_data(member_id, offer_value, campaign_name, channel, namespace)
-
-        self.response.write(response['message'])
-
-    def process_data(self,member_id, offer_value, campaign_name, channel, namespace):
-        try:
-            namespace_manager.set_namespace(namespace)
-            logging.info("Namespace set::" + namespace)
-        except Exception as e:
-            logging.error(e)
-
-        response_dict = dict()
-        response_offer = dict()
-        campaign_key = ndb.Key('CampaignData', campaign_name)
-        logging.info("fetched campaign_key for: %s", campaign_name)
-
-        campaign = campaign_key.get()
-        if campaign is None:
-            logging.info("campaign is None")
-            response_dict['message'] = "Error: Campaign not found"
-            return response_dict
-        else:
-            logging.info("campaign is not None")
-            try:
-                success_msg = "Offer email sent successfully"
-                response_dict['message'] = ""
-                logging.info('campaign_name: %s , member_id: %s, offer_value: %s', campaign_name, member_id, offer_value)
-                offer_name = "%s_%s" % (str(campaign.name), str(offer_value))
-
-                offer_key = ndb.Key('OfferData', offer_name)
-                logging.info("fetched offer_key")
-
-                offer_entry = offer_key.get()
-
-                if offer_entry is None:
-                    logging.info("Offer is None")
-                    response_dict['message'] = "Error: Offer not found"
-                    return response_dict
-                else:
-                    logging.info('Offer is not None. Sending email for Offer: %s', offer_name)
-                    offer = OfferDataService.create_offer_obj(campaign, offer_value)
-
-                    # HACK: Need to remove later. Only for testing purpose. <>
-                    member_id = '7081327663412819'
-
-                    member_key = ndb.Key('MemberData', member_id)
-                    logging.info("Fetched member_key for member: %s", member_id)
-
-                    member = member_key.get()
-                    if member is None:
-                        logging.info("member is None")
-                        response_dict['message'] = "Member ID " + member_id + " not found in datastore"
-                        return response_dict
-                    else:
-                        send_mail(member_entity=member, offer_entity=offer, campaign_entity=campaign)
-                        member_offer_data_key = MemberOfferDataService.create(offer, member, channel)
-
-                        logging.info('member_offer_key:: %s', member_offer_data_key)
-                        logging.info('Offer %s email has been sent to:: %s', offer.OfferNumber, member.email)
-                        response_dict['message'] = "Success"
-
-            except HttpError as err:
-                print('Error: {}'.format(err.content))
-                logging.error('Error: {}'.format(err.content))
-                response_dict['message'] = "HttpError exception: " + err.content
-                raise err
-
-        logging.info('response_dict[message]: %s', response_dict['message'])
-        return response_dict
 
 
 # [START app]
@@ -647,15 +509,11 @@ app = webapp2.WSGIApplication([
     ('/campaigns', GetAllCampaignsHandler),
     ('/members', GetAllMembersHandler),
     ('/activateOffer', ActivateOfferHandler),
-    ('/emailMembers', EmailOfferMembersHandler),
     ('/getListItems', UIListItemsHandler),
     ('/getMetrics', MetricsHandler),
     ('/batchJob', BatchJobHandler),
-    ('/getBalance', BalanceHandler),
-    ('/redeemOffer', RedeemOfferHandler),
     ('/uploadStoreIDs', UploadStoreIDHandler),
-    ('/migrateEntities', MigrateNamespaceData),
-    ('/sendEmailJob', ModelDataSendEmailHandler)
+    ('/migrateEntities', MigrateNamespaceData)
 ], debug=True)
 
 # [END app]
