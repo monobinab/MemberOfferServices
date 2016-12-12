@@ -415,9 +415,8 @@ class BatchJobHandler(webapp2.RequestHandler):
 
 
 class UploadStoreIDHandler(webapp2.RequestHandler):
-
     def get(self):
-        with open('lu_shc_location.csv', 'rb') as f:
+        with open('shc_locn.csv', 'rb') as f:
             reader = csv.reader(f)
             schema = next(reader, None)
 

@@ -41,12 +41,15 @@ class TellurideService:
             else:
                 response_dict['message'] = "Offer has been created successfully, but could not activate."
         else:
-            error_text = doc.find('.//{http://rewards.sears.com/schemas/}ErrorText').text
-            if not error_text == "Offer update only allowed in DRAFT status":
-                logging.error("Create offer failed:: Telluride call returned with error."
-                              " Status:: %s, Status Text:: %s and Error Text:: %s", status_code,
-                              doc.find('.//{http://rewards.sears.com/schemas/}StatusText').text, error_text)
-                response_dict['message'] = "Offer activation has failed!!!"
+            if doc.find('.//{http://rewards.sears.com/schemas/}ErrorText') is not None:
+                error_text = doc.find('.//{http://rewards.sears.com/schemas/}ErrorText').text
+                if not error_text == "Offer update only allowed in DRAFT status":
+                    logging.error("Create offer failed:: Telluride call returned with error."
+                                  " Status:: %s, Status Text:: %s and Error Text:: %s", status_code,
+                                  doc.find('.//{http://rewards.sears.com/schemas/}StatusText').text, error_text)
+                    response_dict['message'] = "Offer activation has failed!!!"
+                else:
+                    response_dict['message'] = "Offer has been created successfully, but could not activate."
             else:
                 response_dict['message'] = "Offer has been created successfully, but could not activate."
         response_dict['data'] = str(result)
