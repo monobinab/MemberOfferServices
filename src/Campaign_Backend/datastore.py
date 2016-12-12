@@ -2,7 +2,9 @@ from models import CampaignData, OfferData, MemberOfferData, MemberData, ndb
 import logging
 from datetime import datetime, timedelta
 from google.appengine.api import datastore_errors
-from telluride_service import TellurideService
+from utilities import make_request
+import time
+
 
 class OfferDataService(CampaignData):
     @classmethod
@@ -53,8 +55,10 @@ class OfferDataService(CampaignData):
 
         try:
             offer_key = offer.put()
-            logging.info('Offer created in datastore with key:: %s', offer_key)
-            TellurideService.create_offer(offer)
+            # time.sleep(10)
+            logging.info("OfferNumber:: %s", offer.OfferNumber)
+            logging.info("Offer created:: %s", OfferData.get_by_id(id=offer.OfferNumber, use_datastore=True, use_memcache=False, use_cache=False))
+            # logging.info('Offer created in datastore with key:: %s', offer_key)
             response_dict['message'] = 'success'
             return response_dict
         except datastore_errors.Timeout:

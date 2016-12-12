@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Copyright 2016 Google Inc. All Rights Reserved. Licensed under the Apache
-	License, Version 2.0 (the "License"); you may not use this file except in
-	compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
-	Unless required by applicable law or agreed to in writing, software distributed
-	under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
-	OR CONDITIONS OF ANY KIND, either express or implied. See the License for
+<!-- Copyright 2016 Google Inc. All Rights Reserved. Licensed under the Apache 
+	License, Version 2.0 (the "License"); you may not use this file except in 
+	compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 
+	Unless required by applicable law or agreed to in writing, software distributed 
+	under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES 
+	OR CONDITIONS OF ANY KIND, either express or implied. See the License for 
 	the specific language governing permissions and limitations under the License. -->
 <!-- [START pom] -->
 <project>                               <!-- REQUIRED -->
@@ -12,7 +12,7 @@
 	<packaging>war</packaging>            <!-- REQUIRED -->
 
 	<groupId>com.syw.mmdataflow</groupId>
-	<artifactId>Flexible</artifactId> <!-- Name of your project -->
+	<artifactId>Flexible1</artifactId> <!-- Name of your project -->
 	<version>0.0.1-SNAPSHOT</version>       <!-- xx.xx.xx -SNAPSHOT means development -->
 
 	<properties>
@@ -58,7 +58,7 @@
 			<artifactId>google-api-client</artifactId>
 			<version>1.22.0</version>
 			<exclusions>
-				<!-- Exclude an old version of guava that is being pulled in by a transitive
+				<!-- Exclude an old version of guava that is being pulled in by a transitive 
 					dependency of google-api-client -->
 				<exclusion>
 					<groupId>com.google.guava</groupId>
@@ -67,14 +67,14 @@
 			</exclusions>
 		</dependency>
 
-		<!-- Dependencies below this line are specific dependencies needed by the
+		<!-- Dependencies below this line are specific dependencies needed by the 
 			examples code. -->
 		<dependency>
 			<groupId>com.google.apis</groupId>
 			<artifactId>google-api-services-bigquery</artifactId>
 			<version>v2-rev295-1.22.0</version>
 			<exclusions>
-				<!-- Exclude an old version of guava that is being pulled in by a transitive
+				<!-- Exclude an old version of guava that is being pulled in by a transitive 
 					dependency of google-api-client -->
 				<exclusion>
 					<groupId>com.google.guava</groupId>
@@ -94,7 +94,7 @@
 			<artifactId>google-http-client</artifactId>
 			<version>1.22.0</version>
 			<exclusions>
-				<!-- Exclude an old version of guava that is being pulled in by a transitive
+				<!-- Exclude an old version of guava that is being pulled in by a transitive 
 					dependency of google-api-client -->
 				<exclusion>
 					<groupId>com.google.guava</groupId>
@@ -108,7 +108,7 @@
 			<artifactId>google-api-services-pubsub</artifactId>
 			<version>v1-rev10-1.22.0</version>
 			<exclusions>
-				<!-- Exclude an old version of guava that is being pulled in by a transitive
+				<!-- Exclude an old version of guava that is being pulled in by a transitive 
 					dependency of google-api-client -->
 				<exclusion>
 					<groupId>com.google.guava</groupId>
@@ -144,7 +144,7 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<!-- Hamcrest and JUnit are required dependencies of DataflowAssert, which
+		<!-- Hamcrest and JUnit are required dependencies of DataflowAssert, which 
 			is used in the main code of DebuggingWordCount example. -->
 		<dependency>
 			<groupId>org.hamcrest</groupId>
@@ -175,12 +175,10 @@
 			<version>1.10</version>
 		</dependency>
 
-		<!-- <dependency> <groupId>com.google.appengine</groupId> <artifactId>appengine-maven-plugin</artifactId>
-			<version>${appengine.maven.plugin}</version> </dependency> -->
 	</dependencies>
 
 	<build>
-		<!-- For hot reload of the web application when using an IDE Eclipse /
+		<!-- For hot reload of the web application when using an IDE Eclipse / 
 			IDEA -->
 		<outputDirectory>${project.build.directory}/${project.build.finalName}/WEB-INF/classes</outputDirectory>
 
@@ -204,9 +202,15 @@
 				<artifactId>maven-jxr-plugin</artifactId>
 				<version>2.3</version>
 			</plugin>
+
 		</plugins>
 
 		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+
 			<resource>
 				<directory>src/main/appengine</directory>
 				<excludes>
