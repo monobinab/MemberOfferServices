@@ -52,7 +52,7 @@ def get_url_configuration():
 # Function to read PubSub configurations
 def get_pubsub_configuration():
     data_map = dict()
-    data_key = ndb.Key('ConfigData', 'PubSubConfig', namespace=config_namespace)
+    data_key = ndb.Key('ConfigData', 'PubSubConfig')
     data_entity = data_key.get()
     data_map['SERVICE_TOPIC'] = data_entity.SERVICE_TOPIC
     data_map['PUBLISH_TOKEN'] = data_entity.PUBLISH_TOKEN
