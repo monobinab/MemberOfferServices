@@ -116,7 +116,11 @@ class ModelDataSendEmailHandler(webapp2.RequestHandler):
                         response_dict['message'] = "Member ID " + member_id + " not found in datastore"
                         return response_dict
                     else:
-                        send_mail(member_entity=member, offer_entity=offer)
+                        campaign_entity = offer.campaign.get()
+                        send_mail(member_entity=member, offer_entity=offer,
+                                  campaign_entity=campaign_entity)
+
+                        # send_mail(member_entity=member, offer_entity=offer)
                         member_offer_data_key = MemberOfferDataService.create(offer, member, channel)
 
                         logging.info('member_offer_key:: %s', member_offer_data_key)
