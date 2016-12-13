@@ -164,12 +164,15 @@ class ActivateOfferHandler(webapp2.RequestHandler):
                 if member_offer_obj is not None:
 
                     host = "telluride-service-" + os.environ.get('NAMESPACE') + "-dot-syw-offers.appspot.com/"
-                    relative_url = "registerMember?offer_id=%s&&member_id=%s", offer_id, member_id
+                    relative_url = str("registerMember?offer_id="+offer_id+"&&member_id="+member_id)
                     result = make_request(host=host, relative_url=relative_url, request_type="GET", payload='')
+
+                    logging.info(json.loads(result))
                     result = json.loads(result).get('data')
+                    logging.info(result)
                     doc = ET.fromstring(result)
                     if doc is not None:
-                        status_code = doc.find('.//{http://www.epsilon.com/webservices/}Status').text
+                        status_code = int(doc.find('.//{http://www.epsilon.com/webservices/}Status').text)
                         logging.info("Status code:: %d" % status_code)
                         if status_code == 0:
                                 member_offer_obj.status = True
@@ -442,7 +445,8 @@ class UploadStoreIDHandler(webapp2.RequestHandler):
                     location_number = row[location_number_index]
                     location_name = row[location_name_index]
                     location_id = str(location_number) + "-" + location_name
-                except:
+                except Exception as e:
+                    logging.info(e)
                     logging.info("Location name or number missing")
                     pass
 
