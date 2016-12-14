@@ -6,7 +6,7 @@ import httplib
 import webapp2
 import pubsub_utils
 import csv
-from models import CampaignData, MemberData, MemberOfferData, ndb, StoreData
+from models import CampaignData, MemberData, MemberOfferData, ndb, StoreData, BUData
 from datastore import CampaignDataService, MemberOfferDataService, OfferDataService
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -214,6 +214,9 @@ class UIListItemsHandler(webapp2.RequestHandler):
         sears_entity = ndb.Key('StoreData', 'SEARS FORMAT').get()
         kmart_entity = ndb.Key('StoreData', 'KMART FORMAT').get()
 
+        sears_bu_list = ndb.Key('BUData', 'sears').get()
+        kmart_bu_list = ndb.Key('BUData', 'kmart').get()
+
         result_dict = dict()
         result_dict['categories'] = list(result.Categories)
         result_dict['offer_type'] = list(result.Offer_Type)
@@ -225,8 +228,12 @@ class UIListItemsHandler(webapp2.RequestHandler):
         store_dict = dict()
         store_dict['kmart'] = list(kmart_entity.Locations)
         store_dict['sears'] = list(sears_entity.Locations)
-
         result_dict['store_locations'] = store_dict
+
+        bu_dict = dict()
+        bu_dict['sears'] = sears_bu_list.Business_Units
+        bu_dict['kmart'] = kmart_bu_list.Business_Units
+        result_dict['business_units'] = bu_dict
 
         logging.info(result_dict)
         self.response.headers['Content-Type'] = 'application/json'
@@ -465,6 +472,79 @@ class UploadStoreIDHandler(webapp2.RequestHandler):
             store_data.put()
 
 
+class SoarBuHandler(webapp2.RequestHandler):
+    def get(self):
+        credentials = GoogleCredentials.get_application_default()
+        bigquery_service = build('bigquery', 'v2', credentials=credentials)
+
+        query_request = bigquery_service.jobs()
+        KMART_BU_QUERY = (
+            'SELECT SOAR_NO, SOAR_NM '
+            'FROM [syw-analytics-repo-prod:cbr_mart_tbls.sywr_kmt_soar_bu]'
+        )
+
+        SEARS_BU_QUERY = (
+            'SELECT SOAR_NO, SOAR_NM '
+            'FROM [syw-analytics-repo-prod:cbr_mart_tbls.sywr_srs_soar_bu]'
+        )
+
+        logging.info("Kmart Query :: %s", KMART_BU_QUERY)
+        logging.info("Sears Query :: %s", SEARS_BU_QUERY)
+
+        kmart_bu_names = set()
+        sears_bu_names = set()
+        bu_names = dict()
+
+        # query_data = {
+        #     'query': KMART_BU_QUERY
+        # }
+        #
+        # query_response = query_request.query(
+        #     projectId='syw-offers',
+        #     body=query_data).execute()
+        #
+        # logging.info("Kmart Query response :: %s", query_response)
+        #
+        # for row in query_response['rows']:
+        #     kmart_bu_names.add(row['f'][0]['v'] + " - " + row['f'][1]['v'])
+        #
+        # kmart_bu_names = sorted(kmart_bu_names)
+        # logging.info("List of kmart BU's :: %s", kmart_bu_names)
+        #
+        # bu_names.update({"kmart": kmart_bu_names})
+        #
+        # query_data = {
+        #     'query': SEARS_BU_QUERY
+        # }
+        #
+        # query_response = query_request.query(
+        #     projectId='syw-offers',
+        #     body=query_data).execute()
+        #
+        # logging.info("Sears Query response :: %s", query_response)
+        #
+        # for row in query_response['rows']:
+        #     sears_bu_names.add(row['f'][0]['v'] + " - " + row['f'][1]['v'])
+        #
+        # sears_bu_names = sorted(sears_bu_names)
+        # logging.info("List of sears BU's :: %s", sears_bu_names)
+        #
+        # bu_names.update({"sears": sears_bu_names})
+        # logging.info("BU names dictionary :: %s", bu_names)
+
+        bu_names = {
+                    "sears": ["101 - APPAREL - ACCESSORIES", "102 - APPAREL - CHILDRENS / KIDS", "103 - APPAREL - INTIMATE APPAREL", "104 - APPAREL - MEN'S APPAREL", "105 - APPAREL - RTW / WOMENS", "106 - APPLIANCES", "107 - AUTO", "108 - DRUG STORE", "109 - ELECTRONICS", "110 - GROCERY & HOUSEHOLD", "111 - FOOTWEAR", "112 - SUPPORT UNITS - OTHER INCOME INITIATIVES", "113 - HOME", "114 - MATTRESS / HOME BIG TICKET", "115 - SUPPORT UNITS - PROTECTION AGREEMENT SALE", "116 - JEWELRY", "117 - LANDSEND", "118 - LICENSED BUSINESS", "119 - OTHER", "120 - OUTDOOR LIVING", "122 - LAWN & GARDEN", "123 - SEASONAL", "124 - SPORTING GOODS", "125 - TOOLS & PAINT", "126 - TOYS", "130 - SUPPORT UNITS - AUTOMOTIVE SERVICES", "131 - SUPPORT UNITS - HOME IMPROVEMT PROD/SERV", "132 - SUPPORT UNITS", "133 - STRATEGIC MERCHANDISING"],
+                    "kmart": ["201 - APPAREL - ACCESSORIES", "202 - APPAREL - CHILDRENS / KIDS", "203 - APPAREL - INTIMATE APPAREL", "204 - APPAREL - MEN'S APPAREL", "205 - APPAREL - RTW / WOMENS", "206 - APPLIANCES", "207 - AUTO", "208 - DRUG STORE", "209 - ELECTRONICS", "210 - GROCERY & HOUSEHOLD", "211 - FOOTWEAR", "213 - HOME", "214 - MATTRESS / HOME BIG TICKET", "216 - JEWELRY", "219 - OTHER", "220 - OUTDOOR LIVING", "221 - PHARMACY", "222 - LAWN & GARDEN", "223 - SEASONAL", "224 - SPORTING GOODS", "225 - TOOLS & PAINT", "226 - TOYS", "227 - SYW BRANDS", "232 - SUPPORT UNITS", "233 - STRATEGIC MERCHANDISING"]
+                   }
+
+        for format, business_units in bu_names.items():
+            bu_data = BUData(Format=format, Business_Units=business_units)
+            bu_data.key = ndb.Key('BUData', format)
+            bu_data.put()
+
+        self.response.write("BU data uploaded to datastore kind BUData.")
+
+
 class MigrateNamespaceData(webapp2.RequestHandler):
     @staticmethod
     def migrate_config_data(from_ns, to_ns):
@@ -517,6 +597,7 @@ app = webapp2.WSGIApplication([
     ('/getMetrics', MetricsHandler),
     ('/batchJob', BatchJobHandler),
     ('/uploadStoreIDs', UploadStoreIDHandler),
+    ('/buNames', SoarBuHandler),
     ('/migrateEntities', MigrateNamespaceData)
 ], debug=True)
 

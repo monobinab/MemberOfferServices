@@ -117,3 +117,7 @@ class FrontEndData(ndb.Model):
 class StoreData(ndb.Model):
     Format_Level = ndb.StringProperty(indexed=True)
     Locations = ndb.StringProperty(indexed=False, repeated=True)
+
+class BUData(ndb.Model):
+    Format = ndb.StringProperty(indexed=True)
+    Business_Units = ndb.StringProperty(indexed=True, repeated=True)
