@@ -6,7 +6,7 @@ import httplib
 import webapp2
 import pubsub_utils
 import csv
-from models import CampaignData, MemberData, MemberOfferData, ndb, StoreData, BUData
+from models import CampaignData, MemberData, MemberOfferData, ndb, StoreData, BUData, OfferData
 from datastore import CampaignDataService, MemberOfferDataService, OfferDataService
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -141,26 +141,26 @@ class ActivateOfferHandler(webapp2.RequestHandler):
             offer_id = self.request.get('offer_id')
             logging.info("Request offer_id: " + offer_id)
             if offer_id is None or not offer_id:
-                # response_html = "<html><head><title>Sears Offer Activation</title></head><body><h3> " \
-                #                  + "Please provide offer_id and member_id with the request</h3></body></html>"
-                # self.response.write(response_html)
-                message = "Please provide offer_id and member_id with the request"
-                message_dict = {'message': message}
-                rendered_template = template.render(message_dict)
-                self.response.write(rendered_template)
+                response_html = "<html><head><title>Sears Offer Activation</title></head><body><h3> " \
+                                 + "Please provide offer_id and member_id with the request</h3></body></html>"
+                self.response.write(response_html)
+                # message = "Please provide offer_id and member_id with the request"
+                # message_dict = {'message': message}
+                # rendered_template = template.render(message_dict)
+                # self.response.write(rendered_template)
                 return
 
             member_id = self.request.get('member_id')
             logging.info("Request member_id: " + member_id)
 
             if member_id is None or not member_id:
-                message = "Please provide offer_id and member_id with the request"
-                message_dict = {'message': message}
-                rendered_template = template.render(message_dict)
-                self.response.write(rendered_template)
-                # response_html = "<html><head><title>Sears Offer Activation</title></head><body><h3> " \
-                #                  + "Please provide offer_id and member_id with the request</h3></body></html>"
-                # self.response.write(response_html)
+                # message = "Please provide offer_id and member_id with the request"
+                # message_dict = {'message': message}
+                # rendered_template = template.render(message_dict)
+                # self.response.write(rendered_template)
+                response_html = "<html><head><title>Sears Offer Activation</title></head><body><h3> " \
+                                 + "Please provide offer_id and member_id with the request</h3></body></html>"
+                self.response.write(response_html)
                 return
 
             offer_key = ndb.Key('OfferData', offer_id)
@@ -168,7 +168,32 @@ class ActivateOfferHandler(webapp2.RequestHandler):
             self.response.headers['Access-Control-Allow-Origin'] = '*'
             logging.info("fetched offer_key and member key ")
             offer = offer_key.get()
+            logging.info("THE OFFER FETCHED :: %s", offer)
             member = member_key.get()
+
+            campaign_key = offer_id.split('_')[0] + '_' + offer_id.split('_')[1]
+            campaign_key = ndb.Key('CampaignData', campaign_key)
+            logging.info("fetched campaign key :: %s", campaign_key)
+            # offer_data = OfferData.query(OfferData.campaign == campaign_key).get()
+            offer_data = OfferData.get_by_id(offer_id)
+
+            campaign_id = campaign_key.get()
+            logging.info("campaign id ::", campaign_id)
+            campaign_data = CampaignData.get_by_id(campaign_id)
+            logging.info("Campaign data :: %s", campaign_data)
+            logging.info(
+                "OFFER DATA :: %s, %s, %s, %s", offer_data.OfferDescription,
+                offer_data.OfferStartDate,
+                offer_data.OfferEndDate,
+                offer_data.OfferBUProgram_BUProgram_BUProgramName,
+
+            )
+
+            start_date = offer_data.OfferStartDate
+            end_date = offer_data.OfferEndDate
+            offer_category = offer_data.OfferBUProgram_BUProgram_BUProgramName
+
+
             if offer is not None and member is not None:
                 logging.info("offer is not None")
                 member_offer_obj = MemberOfferData.query(MemberOfferData.member == member_key,
@@ -221,7 +246,11 @@ class ActivateOfferHandler(webapp2.RequestHandler):
             response_dict['message'] = "Sorry, could not fetch offer details because of the request time out."
             message = "Sorry, could not fetch offer details because of the request time out."
 
-        message_dict = {'message': message}
+        message_dict = {'message': message,
+                        'offer_start_date': start_date,
+                        'offer_end_date': end_date,
+                        'offer_category': offer_category
+                        }
         rendered_template = template.render(message_dict)
         self.response.write(rendered_template)
         # response_html = "<html><head><title>Sears Offer Activation</title></head><body><h3> " \

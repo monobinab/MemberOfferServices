@@ -1,8 +1,7 @@
 <html><head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
-    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
     <title>Shop Your Way</title>
   </head>
   <body>
@@ -25,9 +24,9 @@
     <div class="row" style="text-align:center">
 
       <h1>Congratulations!</h1>
-  <span class="title" style="color:orange;font-size: 33px;font-weight: bold;">{{ message }}</span>
-      <p style="font-size:16px;">
-        Valid on any purchase in Apparel at Sears from 15-Dec-2016 to 25-Dec-2016.
+        <span class="title" style="color:orange;font-size: 33px;font-weight: bold;">{{ message }}</span>
+        <p style="font-size:16px;">
+        Valid on any purchase in {{ offer_category }} at Sears from {{ offer_start_date }} to {{offer_end_date }}.
       </p>
     </div>
 
