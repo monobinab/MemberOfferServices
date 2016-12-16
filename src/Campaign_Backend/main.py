@@ -12,7 +12,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from google.appengine.api import urlfetch
 from oauth2client.client import GoogleCredentials
-from utilities import create_pubsub_message, make_request
+from utilities import create_pubsub_message, make_request, get_jinja_environment
 from datetime import datetime
 import xml.etree.ElementTree as ET
 import os
@@ -134,22 +134,33 @@ class GetAllMembersHandler(webapp2.RequestHandler):
 class ActivateOfferHandler(webapp2.RequestHandler):
     def get(self):
         response_dict = dict()
+        jinja_environment = get_jinja_environment()
+        template = jinja_environment.get_template('activate-offer.html')
+
         try:
             offer_id = self.request.get('offer_id')
             logging.info("Request offer_id: " + offer_id)
             if offer_id is None or not offer_id:
-                response_html = "<html><head><title>Sears Offer Activation</title></head><body><h3> " \
-                                 + "Please provide offer_id and member_id with the request</h3></body></html>"
-                self.response.write(response_html)
+                # response_html = "<html><head><title>Sears Offer Activation</title></head><body><h3> " \
+                #                  + "Please provide offer_id and member_id with the request</h3></body></html>"
+                # self.response.write(response_html)
+                message = "Please provide offer_id and member_id with the request"
+                message_dict = {'message': message}
+                rendered_template = template.render(message_dict)
+                self.response.write(rendered_template)
                 return
 
             member_id = self.request.get('member_id')
             logging.info("Request member_id: " + member_id)
 
             if member_id is None or not member_id:
-                response_html = "<html><head><title>Sears Offer Activation</title></head><body><h3> " \
-                                 + "Please provide offer_id and member_id with the request</h3></body></html>"
-                self.response.write(response_html)
+                message = "Please provide offer_id and member_id with the request"
+                message_dict = {'message': message}
+                rendered_template = template.render(message_dict)
+                self.response.write(rendered_template)
+                # response_html = "<html><head><title>Sears Offer Activation</title></head><body><h3> " \
+                #                  + "Please provide offer_id and member_id with the request</h3></body></html>"
+                # self.response.write(response_html)
                 return
 
             offer_key = ndb.Key('OfferData', offer_id)
@@ -162,8 +173,8 @@ class ActivateOfferHandler(webapp2.RequestHandler):
                 logging.info("offer is not None")
                 member_offer_obj = MemberOfferData.query(MemberOfferData.member == member_key,
                                                          MemberOfferData.offer == offer_key).get()
-                if member_offer_obj is not None:
 
+                if member_offer_obj is not None:
                     host = "telluride-service-" + os.environ.get('NAMESPACE') + "-dot-syw-offers.appspot.com/"
                     relative_url = str("registerMember?offer_id="+offer_id+"&&member_id="+member_id)
                     result = make_request(host=host, relative_url=relative_url, request_type="GET", payload='')
@@ -180,31 +191,42 @@ class ActivateOfferHandler(webapp2.RequestHandler):
                                 member_offer_obj.activated_at = datetime.now()
                                 member_offer_obj.put()
                                 response_dict['message'] = "Offer has been activated successfully"
+                                message = "Offer has been activated successfully"
                         elif status_code == 1 or status_code == 99:
                             member_offer_obj.status = True
                             member_offer_obj.put()
                             response_dict['message'] = "Member already registered for this offer"
+                            message = "Member already registered for this offer"
                         else:
                             logging.error("Telluride call failed.")
                             response_dict['message'] = "Sorry, Offer could not be activated"
+                            message = "Sorry, Offer could not be activated"
                     else:
                         logging.error("Telluride call failed.")
                         response_dict['message'] = "Sorry, Offer could not be activated"
+                        message = "Sorry, Offer could not be activated"
                 else:
                     logging.error("Member Offer Object not found for offer key :: %s and member key:: %s",
                                   offer_key, member_key)
 
                     logging.info("Activated offer %s for member %s", str(offer_key), str(member_key))
                     response_dict['message'] = "Sorry, Offer could not be activated. Member Offer Object not found."
+                    message = "Sorry, Offer could not be activated. Member Offer Object not found."
             else:
                 logging.error("could not fetch offer or member details for key:: %s", offer_key)
-                response_dict['message'] = "Sorry could not fetch member offer details."
+                response_dict['message'] = "Sorry, could not fetch member offer details."
+                message = "Sorry, could not fetch member offer details."
         except httplib.HTTPException as exc:
             logging.error(exc)
-            response_dict['message'] = "Sorry could not fetch offer details because of the request time out."
-        response_html = "<html><head><title>Sears Offer Activation</title></head><body><h3> " \
-                        + response_dict['message'] + "</h3></body></html>"
-        self.response.write(response_html)
+            response_dict['message'] = "Sorry, could not fetch offer details because of the request time out."
+            message = "Sorry, could not fetch offer details because of the request time out."
+
+        message_dict = {'message': message}
+        rendered_template = template.render(message_dict)
+        self.response.write(rendered_template)
+        # response_html = "<html><head><title>Sears Offer Activation</title></head><body><h3> " \
+        #                 + response_dict['message'] + "</h3></body></html>"
+        # self.response.write(response_html)
 
 
 class UIListItemsHandler(webapp2.RequestHandler):
@@ -545,6 +567,12 @@ class SoarBuHandler(webapp2.RequestHandler):
         self.response.write("BU data uploaded to datastore kind BUData.")
 
 
+class SendGridEvents(webapp2.RequestHandler):
+    def post(self):
+        logging.info(self.request.body)
+        self.response.write(json.dumps({'data': str(self.request.body)}))
+
+
 class MigrateNamespaceData(webapp2.RequestHandler):
     @staticmethod
     def migrate_config_data(from_ns, to_ns):
@@ -598,6 +626,7 @@ app = webapp2.WSGIApplication([
     ('/batchJob', BatchJobHandler),
     ('/uploadStoreIDs', UploadStoreIDHandler),
     ('/buNames', SoarBuHandler),
+    ('/sendgridEvents', SendGridEvents),
     ('/migrateEntities', MigrateNamespaceData)
 ], debug=True)
 
