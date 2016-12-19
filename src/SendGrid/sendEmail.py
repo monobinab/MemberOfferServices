@@ -1,6 +1,6 @@
 from sendgrid import sendgrid
 from sendgrid.helpers import mail
-import Utilities
+import utilities
 import logging
 import os
 
@@ -33,7 +33,7 @@ def send_mail(member_entity, offer_entity, campaign_entity):
 
 
 def send_template_message(member_dict, offer_dict):
-    config_dict = Utilities.get_sendgrid_configuration()
+    config_dict = utilities.get_sendgrid_configuration()
 
     sg = sendgrid.SendGridAPIClient(apikey=config_dict['SENDGRID_API_KEY'])
     to_email = mail.Email(member_dict['email'].encode("utf-8"))
@@ -46,8 +46,10 @@ def send_template_message(member_dict, offer_dict):
     personalization = mail.Personalization()
     personalization.add_to(to_email)
     # https://syw-offers-services-qa-dot-syw-offers.appspot.com/
-    activation_url = "https://" + os.environ['CURRENT_VERSION_ID'].split('.')[0] + "-dot-syw-offers.appspot.com/" \
-                     "activateOffer?offer_id=" + offer_dict['offer_id'].encode("utf-8") + "&&member_id=" + member_dict['memberid'].encode("utf-8")
+    # activation_url = "https://syw-offers-services-" + os.environ['NAMESPACE'] + "-dot-syw-offers.appspot.com/" \
+    #                  "activateOffer?offer_id=" + offer_dict['offer_id'].encode("utf-8") + "&&member_id=" + member_dict['memberid'].encode("utf-8")
+    activation_url = "https://sukrittest-dot-syw-offers.appspot.com/" \
+                        "activateOffer?offer_id=" + offer_dict['offer_id'].encode("utf-8") + "&&member_id=" + member_dict['memberid'].encode("utf-8")
     logging.info("Activation URL included in email::" + activation_url)
 
     substitution = mail.Substitution(key="%name%", value=member_dict['name'].encode("utf-8"))

@@ -48,11 +48,11 @@ class SaveCampaignHandler(webapp2.RequestHandler):
         except httplib.HTTPException as exc:
             logging.error(exc)
             self.response.set_status(408)
-            self.response.write("Request has timed out. Please try again.")
+            self.response.write(json.dumps({'data': "Request has timed out. Please try again."}))
         except Exception as e:
             logging.error(e)
             self.response.set_status(500)
-            self.response.write("Internal Server Error")
+            self.response.write(json.dumps({'data': "Internal Server Error"}))
 
 
 class CreateOfferHandler(webapp2.RequestHandler):
@@ -68,11 +68,11 @@ class CreateOfferHandler(webapp2.RequestHandler):
         except httplib.HTTPException as exc:
             logging.error(exc)
             self.response.set_status(408)
-            self.response.write("Request has timed out. Please try again.")
+            self.response.write(json.dumps({'data': "Request has timed out. Please try again."}))
         except Exception as e:
             logging.error(e)
             self.response.set_status(500)
-            self.response.write("Internal Server Error")
+            self.response.write(json.dumps({'data': "Internal Server Error"}))
 
 
 class ActivateOfferHandler(webapp2.RequestHandler):
@@ -110,11 +110,11 @@ class BalanceHandler(webapp2.RequestHandler):
         except httplib.HTTPException as exc:
             logging.error(exc)
             self.response.set_status(408)
-            self.response.write("Request has timed out. Please try again.")
+            self.response.write(json.dumps({'data': "Request has timed out. Please try again."}))
         except Exception as e:
             logging.error(e)
             self.response.set_status(500)
-            self.response.write("Internal Server Error")
+            self.response.write(json.dumps({'data': "Internal Server Error"}))
 
 
 class RedeemOfferHandler(webapp2.RequestHandler):
@@ -127,11 +127,11 @@ class RedeemOfferHandler(webapp2.RequestHandler):
         except httplib.HTTPException as exc:
             logging.error(exc)
             self.response.set_status(408)
-            self.response.write("Request has timed out. Please try again.")
+            self.response.write(json.dumps({'data': "Request has timed out. Please try again."}))
         except Exception as e:
             logging.error(e)
             self.response.set_status(500)
-            self.response.write("Internal Server Error")
+            self.response.write(json.dumps({'data': "Internal Server Error"}))
 
 
 # [START app]

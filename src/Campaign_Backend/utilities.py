@@ -4,7 +4,8 @@ import json
 from models import ConfigData
 from google.appengine.api import urlfetch
 from google.appengine.api import app_identity
-
+import jinja2
+import os
 
 # Function to read sendgrid configurations
 def get_sendgrid_configuration():
@@ -66,7 +67,7 @@ def create_pubsub_message(json_data):
     config_dict = get_pubsub_configuration()
 
     campaign_data = dict()
-    campaign_data['message'] = {}
+    campaign_data['message'] = dict()
     campaign_data['message']["token"] = config_dict['PUBLISH_TOKEN']
 
     campaign_data['message']["campaign_name"] = campaign_dict['name']
@@ -100,15 +101,24 @@ def make_request(host, relative_url, request_type, payload):
             logging.info('Response status_code: %s', result.status_code)
             # logging.info('Response status_message: %s', status_message)
             # logging.info('Response header: %s', header)
-            logging.info('Response result: %s', result)
+            logging.info('Response result: %s', str(result))
+            logging.info('Response result content: %s', str(result.content))
+
         else:
             status_code = result.status_code
             logging.info('Response status_code: %s', status_code)
-        return result
+        return result.content
     except urlfetch.Error:
         logging.exception('Caught exception fetching url')
     except Exception as e:
         logging.error(e)
 
 
+def get_jinja_environment():
+    templates_dir = os.path.join(os.path.dirname(__file__), 'templates')
+    logging.info("Templates directory :: %s", templates_dir)
 
+    jinja_environment = jinja2.Environment(
+        loader=jinja2.FileSystemLoader(templates_dir)
+    )
+    return jinja_environment
