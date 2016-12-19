@@ -172,6 +172,7 @@ class ActivateOfferHandler(webapp2.RequestHandler):
 
             logging.info("fetched offer_key and member key ")
             offer = offer_key.get()
+            logging.info("THE OFFER FETCHED :: %s", offer)
             member = member_key.get()
 
             logging.info("THE OFFER FETCHED :: %s", offer)
@@ -216,22 +217,26 @@ class ActivateOfferHandler(webapp2.RequestHandler):
                                 response_dict['message'] = "Offer has been activated successfully"
                                 message = "Offer has been activated successfully"
                                 offer_success = 1
+
                         elif status_code == 1 or status_code == 99:
                             member_offer_obj.status = True
                             member_offer_obj.put()
                             response_dict['message'] = "Member already registered for this offer"
                             message = "Member already registered for this offer"
                             offer_success = 0
+
                         else:
                             logging.error("Telluride call failed.")
                             response_dict['message'] = "Sorry, Offer could not be activated"
                             message = "Sorry, Offer could not be activated"
                             offer_success = 0
+
                     else:
                         logging.error("Telluride call failed.")
                         response_dict['message'] = "Sorry, Offer could not be activated"
                         message = "Sorry, Offer could not be activated"
                         offer_success = 0
+
                 else:
                     logging.error("Member Offer Object not found for offer key :: %s and member key:: %s",
                                   offer_key, member_key)
@@ -240,11 +245,13 @@ class ActivateOfferHandler(webapp2.RequestHandler):
                     response_dict['message'] = "Sorry, Offer could not be activated. Member Offer Object not found."
                     message = "Sorry, Offer could not be activated. Member Offer Object not found."
                     offer_success = 0
+
             else:
                 logging.error("could not fetch offer or member details for key:: %s", offer_key)
                 response_dict['message'] = "Sorry, could not fetch member offer details."
                 message = "Sorry, could not fetch member offer details."
                 offer_success = 0
+
         except httplib.HTTPException as exc:
             logging.error(exc)
             response_dict['message'] = "Sorry, could not fetch offer details because of the request time out."
