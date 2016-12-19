@@ -528,6 +528,7 @@ class SoarBuHandler(webapp2.RequestHandler):
     def get(self):
         credentials = GoogleCredentials.get_application_default()
         bigquery_service = build('bigquery', 'v2', credentials=credentials)
+
         query_request = bigquery_service.jobs()
         urlfetch.set_default_fetch_deadline(60)
 
