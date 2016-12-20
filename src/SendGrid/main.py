@@ -15,18 +15,7 @@ class IndexPageHandler(webapp2.RequestHandler):
         self.response.write("sendgrid-email-service")
 
 
-class BaseHandler(webapp2.RequestHandler):
-    def handle_exception(self, exception, debug):
-        self.response.write('An error occurred.')
-        logging.exception(self, exception, debug)
-
-        if isinstance(exception, webapp2.HTTPException):
-            self.response.set_status(exception.code)
-        else:
-            self.response.set_status(500)
-
-
-class EmailOfferMembersHandler(BaseHandler):
+class EmailOfferMembersHandler(webapp2.RequestHandler):
     def get(self):
         try:
             logging.info("Member id:: %s", self.request.get('member_id'))
@@ -53,8 +42,8 @@ class EmailOfferMembersHandler(BaseHandler):
             self.response.write(json.dumps(response_dict))
 
 
+# TODO : this is implemented in memberoffer microservice, all datastore operations should be removed from here
 class ModelDataSendEmailHandler(webapp2.RequestHandler):
-
     def get(self):
         if self.request.get('member_id') is None or not self.request.get('member_id') or self.request.get('offer_value') is None or not self.request.get('offer_value') or self.request.get('campaign_name') is None or not self.request.get('campaign_name') :
             response_html = "<html><head><title>Batch Job Execution</title></head><body><h3> Please provide " \
@@ -120,7 +109,6 @@ class ModelDataSendEmailHandler(webapp2.RequestHandler):
                         send_mail(member_entity=member, offer_entity=offer,
                                   campaign_entity=campaign_entity)
 
-                        # send_mail(member_entity=member, offer_entity=offer)
                         member_offer_data_key = MemberOfferDataService.create(offer, member, channel)
 
                         logging.info('member_offer_key:: %s', member_offer_data_key)
@@ -137,10 +125,53 @@ class ModelDataSendEmailHandler(webapp2.RequestHandler):
         return response_dict
 
 
+class OfferDetailsHandler(webapp2.RequestHandler):
+    def get(self):
+        offer_value = self.request.get('offer')
+        member_id = self.request.get('member')
+        campaign_name = self.request.get('campaign')
+        logging.info("Request parameters - offer, member, campaign received.")
+
+        campaign_key = ndb.Key('CampaignData', campaign_name)
+        logging.info("fetched campaign_key for: %s", campaign_name)
+        campaign = campaign_key.get()
+        if campaign is None:
+            logging.info("campaign is None")
+        logging.info("OfferDetailsHandler campaign :: %s", campaign)
+
+        offer_name = "{}_{}".format(str(campaign.name), str(offer_value))
+        offer_key = ndb.Key('OfferData', offer_name)
+        logging.info("fetched offer_key")
+        offer_entry = offer_key.get()
+        if offer_entry is None:
+            logging.info("OfferDetailsHandler - Offer is None")
+        logging.info("OfferDetailsHandler offer :: %s", offer_entry)
+        offer_entity = OfferDataService.create_offer_obj(campaign, offer_value)
+
+        # HACK: Need to remove later. Only for testing purpose. <>
+        member_id = '7081327663412819'
+        member_key = ndb.Key('MemberData', member_id)
+        logging.info("Fetched member_key for member: %s", member_id)
+        member_entity = member_key.get()
+        if member_entity is None:
+            logging.info("member is None")
+        logging.info("OfferDetailsHandler member :: %s", member_entity)
+
+        campaign_entity = offer_entity.campaign.get()
+        logging.info("OfferDetailsHandler camaign_entity :: %s", campaign_entity)
+
+        send_mail(member_entity=member_entity, offer_entity=offer_entity, campaign_entity=campaign_entity)
+        logging.info("Mail sent. ")
+
+        result = {"data": "Mail sent successfully."}
+        self.response.write(json.dumps(result))
+
+
 app = webapp2.WSGIApplication([
     ('/', IndexPageHandler),
     ('/sendEmailJob', ModelDataSendEmailHandler),
     ('/emailMembers', EmailOfferMembersHandler),
+    ('/offerDetails', OfferDetailsHandler)
 ], debug=True)
 
 

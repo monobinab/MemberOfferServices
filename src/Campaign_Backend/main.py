@@ -124,7 +124,7 @@ class GetAllMembersHandler(webapp2.RequestHandler):
         member_list = query.fetch(10)
         result = []
         for member in member_list:
-            result.append(member.to_dict)
+            result.append(member.to_dict())
         self.response.headers['Content-Type'] = 'application/json'
         self.response.headers['Access-Control-Allow-Origin'] = '*'
         self.response.write(json.dumps({'data': result}))

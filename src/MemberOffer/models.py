@@ -114,6 +114,30 @@ class FrontEndData(ndb.Model):
     Maximum_Surprise_Points = ndb.IntegerProperty(indexed=True)
     Format_Level = ndb.StringProperty(indexed=True, repeated=True)
 
+
 class StoreData(ndb.Model):
     Format_Level = ndb.StringProperty(indexed=True)
     Locations = ndb.StringProperty(indexed=False, repeated=True)
+
+
+class MemberDataMS(ndb.Model):
+    member_id = ndb.StringProperty(indexed=True)
+    email = ndb.StringProperty(indexed=True)
+    address = ndb.StringProperty(indexed=False)
+    first_name = ndb.StringProperty(indexed=False)
+    last_name = ndb.StringProperty(indexed=False)
+    email_opted_in = ndb.BooleanProperty(default=False)
+
+
+class MemberOfferDataMS(ndb.Model):
+    offer = ndb.KeyProperty(kind="OfferData")
+    member = ndb.KeyProperty(kind="MemberDataMS")
+    issuance_date = ndb.DateTimeProperty(auto_now_add=True, indexed=True)
+    issuance_channel = ndb.StringProperty(indexed=True)
+    activated_channel = ndb.StringProperty(indexed=True)
+    activated_date = ndb.DateTimeProperty(indexed=True)
+    redeemed = ndb.BooleanProperty(default=False)
+    redeemed_date = ndb.DateTimeProperty(indexed=True)
+    validity_start_date = ndb.DateTimeProperty(indexed=False)
+    validity_end_date = ndb.DateTimeProperty(indexed=True)
+    status = ndb.BooleanProperty(default=False)

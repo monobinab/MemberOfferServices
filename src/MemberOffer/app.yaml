@@ -6,7 +6,7 @@ handlers:
 - url: .*
   script: main.app
 
-module: member-service-dev
+module: member-service
 
 automatic_scaling:
   min_idle_instances: 1
