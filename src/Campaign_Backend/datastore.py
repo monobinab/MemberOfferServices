@@ -18,11 +18,16 @@ class OfferDataService(CampaignData):
 
         offer_name = "%s_%s" % (str(campaign.name), str(offer_value))
         rules_condition = ""
+
+        #TODO: remove hardcoded category when BU- Product Heirarchy mapping is done
         if campaign.format_level == 'Sears':
             rules_condition = "SEARSLEGACY~803~~~~~~" if campaign.category == "Apparel" else \
                 "SEARSLEGACY~803~615~~~~~~"
         elif campaign.format_level == 'Kmart':
             rules_condition = "KMARTSHC~1~35~~~~~~"
+        # category_list = campaign.category.split('-')
+        # category = ''.join(category_list[2:])
+        # logging.info("Category:: %s", category)
         offer_obj = OfferData(surprise_points=int(offer_value), threshold=10, OfferNumber=offer_name,
                               OfferPointsDollarName=offer_name, OfferDescription=offer_name,
                               OfferType="Xtreme Redeem", OfferSubType="Item", OfferStartDate=start_date,
@@ -89,7 +94,10 @@ class CampaignDataService(CampaignData):
 
         campaign_name = campaign_dict['name']
         campaign_budget = int(campaign_dict['money'])
-        campaign_category = campaign_dict['category']
+
+        #TODO: Remove hardcoded category
+        # campaign_category = campaign_dict['category']
+        campaign_category = 'Apparel'
         campaign_format_level = campaign_dict['format_level'] if campaign_dict['format_level'] is not None else ""
         campaign_convratio = int(campaign_dict['conversion_ratio'])
 

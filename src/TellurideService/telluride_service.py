@@ -16,7 +16,7 @@ class TellurideService:
         response_dict = dict()
         logging.info("Offer:: %s", offer)
         post_data = get_create_offer_xml(offer).rstrip('\n')
-        # logging.info("post_data: %s", post_data)
+        logging.info("post_data: %s", post_data)
         config_data = get_url_configuration()
         logging.info("Config Data:: %s" % config_data)
 
@@ -49,7 +49,7 @@ class TellurideService:
                                   doc.find('.//{http://rewards.sears.com/schemas/}StatusText').text, error_text)
                     response_dict['message'] = "Offer activation has failed!!!"
                 else:
-                    response_dict['message'] = "Offer has been created successfully, but could not activate."
+                    response_dict['message'] = "Offer could not be created."
             else:
                 response_dict['message'] = "Offer has been created successfully, but could not activate."
         response_dict['data'] = str(result)

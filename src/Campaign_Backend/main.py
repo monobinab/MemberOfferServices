@@ -56,7 +56,7 @@ class SaveCampaignHandler(webapp2.RequestHandler):
 
         host = "telluride-service-" + os.environ.get('NAMESPACE') + "-dot-syw-offers.appspot.com/"
         relative_url = "createCampaign?campaign_id=" + campaign_name
-        make_request(host=host, relative_url=relative_url, request_type="GET", payload='')
+        result = make_request(host=host, relative_url=relative_url, request_type="GET", payload='')
         logging.info('Creating pubsub publish message')
         campaign_json_data = create_pubsub_message(json_data)
         logging.info('Created pubsub publish message')
@@ -76,8 +76,7 @@ class SaveCampaignHandler(webapp2.RequestHandler):
 
         self.response.headers['Content-Type'] = 'application/json'
         self.response.headers['Access-Control-Allow-Origin'] = '*'
-        self.response.write(json.dumps({'message': 'Campaign is saved successfully!!!',
-                                        'status': 'success'}))
+        self.response.write(result)
 
 
 class GetAllCampaignsHandler(webapp2.RequestHandler):
