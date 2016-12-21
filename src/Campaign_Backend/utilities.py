@@ -4,8 +4,7 @@ import json
 from models import ConfigData
 from google.appengine.api import urlfetch
 from google.appengine.api import app_identity
-import jinja2
-import os
+
 
 # Function to read sendgrid configurations
 def get_sendgrid_configuration():
@@ -114,11 +113,4 @@ def make_request(host, relative_url, request_type, payload):
         logging.error(e)
 
 
-def get_jinja_environment():
-    templates_dir = os.path.join(os.path.dirname(__file__), 'templates')
-    logging.info("Templates directory :: %s", templates_dir)
 
-    jinja_environment = jinja2.Environment(
-        loader=jinja2.FileSystemLoader(templates_dir)
-    )
-    return jinja_environment
