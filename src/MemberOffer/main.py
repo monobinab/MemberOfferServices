@@ -29,8 +29,7 @@ class IndexPageHandler(webapp2.RequestHandler):
         self.response.write("member-offer-service")
 
 
-class GetAllMembersHandler(webapp2.RequestHandler):
-
+class AllMemberOffersHandler(webapp2.RequestHandler):
     def get(self):
         query = MemberData.query()
         member_list = query.fetch()
@@ -38,57 +37,74 @@ class GetAllMembersHandler(webapp2.RequestHandler):
 
         for member in member_list:
             logging.info("Member :: %s", member.member_id)
-            logging.info("Member key :: %s", member.key)
-            each_dict = dict()
-            each_dict['member_details'] = member.to_dict()
-            each_dict['offer_details'] = dict()
+            member_dict = dict()
+            member_dict['member_details'] = member.to_dict()
+            member_dict['offer_details'] = dict()
 
             query = MemberOfferData.query(MemberOfferData.member == member.key)
 
             created_at_query = query.order(-MemberOfferData.created_at)
             latest_offer_created = created_at_query.fetch(1)
             if not latest_offer_created:
-                each_dict['offer_details']['latest_offer_created'] = list()
+                member_dict['offer_details']['latest_offer_created'] = list()
                 logging.info("No offer data associated with this member.")
             else:
                 logging.info("latest offer created :: %s", latest_offer_created)
-                each_dict['offer_details']['latest_offer_created'] = latest_offer_created[0].to_dict()
+                member_dict['offer_details']['latest_offer_created'] = latest_offer_created[0].to_dict()
                 logging.info("Added latest offer created information for the member.")
 
             updated_at_query = query.order(-MemberOfferData.updated_at)
             latest_offer_updated = updated_at_query.fetch(1)
             if not latest_offer_updated:
-                each_dict['offer_details']['latest_offer_updated'] = list()
+                member_dict['offer_details']['latest_offer_updated'] = list()
                 logging.info("No offer data associated with this member.")
             else:
                 logging.info("latest offer updated :: %s", latest_offer_updated)
-                each_dict['offer_details']['latest_offer_updated'] = latest_offer_updated[0].to_dict()
+                member_dict['offer_details']['latest_offer_updated'] = latest_offer_updated[0].to_dict()
                 logging.info("Added latest offer updated information for the member.")
 
-            result.append(each_dict)
+            result.append(member_dict)
 
         self.response.headers['Content-Type'] = 'application/json'
         self.response.headers['Access-Control-Allow-Origin'] = '*'
         self.response.write(result)
 
 
-class MemberDetailsHandler(webapp2.RequestHandler):
+class SingleMemberOfferHandler(webapp2.RequestHandler):
     def get(self):
-        # TODO : handle multiple members. Use a list of members
         member_id = self.request.get('member_id')
         member = MemberData.get_by_id(member_id)
         logging.info("Member object :: %s", member)
-        self.response.write(list(member.to_dict()))
+        result = list()
+        member_dict = dict()
+        member_dict['member_details'] = member.to_dict()
+        member_dict['offer_details'] = dict()
 
-        # Member.IsMember()(deprioritized)
-        # Member.IsIssued()
-        # Member.IsEmailOptedIn()
-        # Member.HasOfferFromModel()
-        # Member.HasTransactionInBUPast3Days(BU_Name)(deprioritized)
-        # Member.HasCurrentTransactionInBU(BU_Name)(deprioritized)
-        # Offer.IsExpired()
-        # Offer.Activated()
-        # Offer.IsExpiringIn3Days()
+        query = MemberOfferData.query(MemberOfferData.member == member.key)
+
+        created_at_query = query.order(-MemberOfferData.created_at)
+        latest_offer_created = created_at_query.fetch(1)
+        if not latest_offer_created:
+            member_dict['offer_details']['latest_offer_created'] = list()
+            logging.info("No offer data associated with this member.")
+        else:
+            logging.info("latest offer created :: %s", latest_offer_created)
+            member_dict['offer_details']['latest_offer_created'] = latest_offer_created[0].to_dict()
+            logging.info("Added latest offer created information for the member.")
+
+        updated_at_query = query.order(-MemberOfferData.updated_at)
+        latest_offer_updated = updated_at_query.fetch(1)
+        if not latest_offer_updated:
+            member_dict['offer_details']['latest_offer_updated'] = list()
+            logging.info("No offer data associated with this member.")
+        else:
+            logging.info("latest offer updated :: %s", latest_offer_updated)
+            member_dict['offer_details']['latest_offer_updated'] = latest_offer_updated[0].to_dict()
+            logging.info("Added latest offer updated information for the member.")
+
+
+        result.append(member_dict)
+        self.response.write(result)
 
 
 class ActivateOfferHandler(webapp2.RequestHandler):
@@ -256,21 +272,3 @@ class SendOfferToMemberHandler:
 
         logging.info('response_dict[message]: %s', response_dict['message'])
         return response_dict
-
-
-# [START app]
-app = webapp2.WSGIApplication([
-    ('/', IndexPageHandler),
-    ('/members', GetAllMembersHandler),
-    ('/getMember', MemberDetailsHandler),
-    ('/activateOffer', ActivateOfferHandler),
-    ('/sendOffer', SendOfferToMemberHandler),
-], debug=True)
-
-
-def main():
-    app.run()
-
-
-if __name__ == '__main__':
-    main()
