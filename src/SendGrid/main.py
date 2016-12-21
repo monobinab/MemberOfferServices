@@ -63,7 +63,6 @@ class ModelDataSendEmailHandler(webapp2.RequestHandler):
 
     def process_data(self, member_id, offer_value, campaign_name, channel):
         response_dict = dict()
-        response_offer = dict()
         campaign_key = ndb.Key('CampaignData', campaign_name)
         logging.info("fetched campaign_key for: %s", campaign_name)
 

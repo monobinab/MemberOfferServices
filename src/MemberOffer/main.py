@@ -38,7 +38,10 @@ class GetAllMembersHandler(webapp2.RequestHandler):
 
         for member in member_list:
             logging.info("Member :: %s", member.member_id)
-            result.append(member.to_dict())
+            each_dict = dict()
+            each_dict['member_details'] = member.to_dict()
+            each_dict['offer_details'] = dict()
+            result.append(each_dict)
 
         self.response.headers['Content-Type'] = 'application/json'
         self.response.headers['Access-Control-Allow-Origin'] = '*'
@@ -47,10 +50,21 @@ class GetAllMembersHandler(webapp2.RequestHandler):
 
 class MemberDetailsHandler(webapp2.RequestHandler):
     def get(self):
+        # TODO : handle multiple members. Use a list of members
         member_id = self.request.get('member_id')
         member = MemberData.get_by_id(member_id)
         logging.info("Member object :: %s", member)
-        self.response.write(member.to_dict())
+        self.response.write(list(member.to_dict()))
+
+        # Member.IsMember()(deprioritized)
+        # Member.IsIssued()
+        # Member.IsEmailOptedIn()
+        # Member.HasOfferFromModel()
+        # Member.HasTransactionInBUPast3Days(BU_Name)(deprioritized)
+        # Member.HasCurrentTransactionInBU(BU_Name)(deprioritized)
+        # Offer.IsExpired()
+        # Offer.Activated()
+        # Offer.IsExpiringIn3Days()
 
 
 class ActivateOfferHandler(webapp2.RequestHandler):
@@ -131,6 +145,7 @@ class ActivateOfferHandler(webapp2.RequestHandler):
 
 
 class SendOfferToMemberHandler:
+    # TODO: Make response consitent with other api's as well
     def get(self):
         self.response.headers['Content-Type'] = 'application/json'
         self.response.headers['Access-Control-Allow-Origin'] = '*'
@@ -144,10 +159,10 @@ class SendOfferToMemberHandler:
                             member_id, offer_value and campaign_name with the request</h3></body></html>"""
 
             self.response.write(response_html)
-            return
 
-        response = self.process_data(member_id, offer_value, campaign_name, channel)
-        self.response.write(response['message'])
+        else:
+            response = self.process_data(member_id, offer_value, campaign_name, channel)
+            self.response.write(json.dumps(response))
 
     def process_data(self, member_id, offer_value, campaign_name, channel):
         response_dict = dict()
@@ -223,8 +238,8 @@ class SendOfferToMemberHandler:
 app = webapp2.WSGIApplication([
     ('/', IndexPageHandler),
     ('/members', GetAllMembersHandler),
-    ('/activateOffer', ActivateOfferHandler),
     ('/getMember', MemberDetailsHandler),
+    ('/activateOffer', ActivateOfferHandler),
     ('/sendOffer', SendOfferToMemberHandler),
 ], debug=True)
 
