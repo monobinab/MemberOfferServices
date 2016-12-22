@@ -6,13 +6,12 @@ import httplib
 import webapp2
 import pubsub_utils
 import csv
-from models import CampaignData, MemberData, MemberOfferData, ndb, StoreData, BUData, OfferData
+from models import CampaignData, MemberData, MemberOfferData, ndb, StoreData
 from datastore import CampaignDataService, MemberOfferDataService, OfferDataService
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from google.appengine.api import urlfetch
 from oauth2client.client import GoogleCredentials
-from utilities import create_pubsub_message, make_request, get_jinja_environment
+from utilities import create_pubsub_message, make_request
 from datetime import datetime
 import xml.etree.ElementTree as ET
 import os
@@ -133,9 +132,6 @@ class GetAllMembersHandler(webapp2.RequestHandler):
 class ActivateOfferHandler(webapp2.RequestHandler):
     def get(self):
         response_dict = dict()
-        jinja_environment = get_jinja_environment()
-        template = jinja_environment.get_template('activate-offer.html')
-
         try:
             offer_id = self.request.get('offer_id')
             logging.info("Request offer_id: " + offer_id)
@@ -143,61 +139,29 @@ class ActivateOfferHandler(webapp2.RequestHandler):
                 response_html = "<html><head><title>Sears Offer Activation</title></head><body><h3> " \
                                  + "Please provide offer_id and member_id with the request</h3></body></html>"
                 self.response.write(response_html)
-                # message = "Please provide offer_id and member_id with the request"
-                # message_dict = {'message': message}
-                # rendered_template = template.render(message_dict)
-                # self.response.write(rendered_template)
-
-                offer_success = 0
                 return
 
             member_id = self.request.get('member_id')
             logging.info("Request member_id: " + member_id)
 
             if member_id is None or not member_id:
-                # message = "Please provide offer_id and member_id with the request"
-                # message_dict = {'message': message}
-                # rendered_template = template.render(message_dict)
-                # self.response.write(rendered_template)
                 response_html = "<html><head><title>Sears Offer Activation</title></head><body><h3> " \
                                  + "Please provide offer_id and member_id with the request</h3></body></html>"
                 self.response.write(response_html)
-                offer_success = 0
                 return
 
             offer_key = ndb.Key('OfferData', offer_id)
             member_key = ndb.Key('MemberData', member_id)
             self.response.headers['Access-Control-Allow-Origin'] = '*'
-
             logging.info("fetched offer_key and member key ")
             offer = offer_key.get()
-            logging.info("THE OFFER FETCHED :: %s", offer)
             member = member_key.get()
-
-            logging.info("THE OFFER FETCHED :: %s", offer)
-
-            # offer_data = OfferData.query(OfferData.campaign == campaign_key).get()
-            offer_data = OfferData.get_by_id(offer_id)
-            campaign_data = offer_data.campaign.get()
-            logging.info(
-                "OFFER DATA :: %s, %s, %s", offer_data.OfferDescription,
-                offer_data.OfferStartDate,
-                offer_data.OfferEndDate
-            )
-            logging.info("Campaign data :: %s, %s", campaign_data.category, campaign_data.format_level)
-
-            start_date = offer_data.OfferStartDate
-            end_date = offer_data.OfferEndDate
-            offer_category = campaign_data.category
-            offer_format = campaign_data.format_level
-
-
             if offer is not None and member is not None:
                 logging.info("offer is not None")
                 member_offer_obj = MemberOfferData.query(MemberOfferData.member == member_key,
                                                          MemberOfferData.offer == offer_key).get()
-
                 if member_offer_obj is not None:
+
                     host = "telluride-service-" + os.environ.get('NAMESPACE') + "-dot-syw-offers.appspot.com/"
                     relative_url = str("registerMember?offer_id="+offer_id+"&&member_id="+member_id)
                     result = make_request(host=host, relative_url=relative_url, request_type="GET", payload='')
@@ -214,58 +178,31 @@ class ActivateOfferHandler(webapp2.RequestHandler):
                                 member_offer_obj.activated_at = datetime.now()
                                 member_offer_obj.put()
                                 response_dict['message'] = "Offer has been activated successfully"
-                                message = "Offer has been activated successfully"
-                                offer_success = 1
-
                         elif status_code == 1 or status_code == 99:
                             member_offer_obj.status = True
                             member_offer_obj.put()
                             response_dict['message'] = "Member already registered for this offer"
-                            message = "Member already registered for this offer"
-                            offer_success = 0
-
                         else:
                             logging.error("Telluride call failed.")
                             response_dict['message'] = "Sorry, Offer could not be activated"
-                            message = "Sorry, Offer could not be activated"
-                            offer_success = 0
-
                     else:
                         logging.error("Telluride call failed.")
                         response_dict['message'] = "Sorry, Offer could not be activated"
-                        message = "Sorry, Offer could not be activated"
-                        offer_success = 0
-
                 else:
                     logging.error("Member Offer Object not found for offer key :: %s and member key:: %s",
                                   offer_key, member_key)
 
                     logging.info("Activated offer %s for member %s", str(offer_key), str(member_key))
                     response_dict['message'] = "Sorry, Offer could not be activated. Member Offer Object not found."
-                    message = "Sorry, Offer could not be activated. Member Offer Object not found."
-                    offer_success = 0
-
             else:
                 logging.error("could not fetch offer or member details for key:: %s", offer_key)
-                response_dict['message'] = "Sorry, could not fetch member offer details."
-                message = "Sorry, could not fetch member offer details."
-                offer_success = 0
-
+                response_dict['message'] = "Sorry could not fetch member offer details."
         except httplib.HTTPException as exc:
             logging.error(exc)
-            response_dict['message'] = "Sorry, could not fetch offer details because of the request time out."
-            message = "Sorry, could not fetch offer details because of the request time out."
-            offer_success = 0
-
-        message_dict = {'message': message,
-                        'offer_start_date': start_date,
-                        'offer_end_date': end_date,
-                        'offer_category': offer_category,
-                        'offer_format': offer_format,
-                        'offer_success': offer_success,
-                       }
-        rendered_template = template.render(message_dict)
-        self.response.write(rendered_template)
+            response_dict['message'] = "Sorry could not fetch offer details because of the request time out."
+        response_html = "<html><head><title>Sears Offer Activation</title></head><body><h3> " \
+                        + response_dict['message'] + "</h3></body></html>"
+        self.response.write(response_html)
 
 
 class UIListItemsHandler(webapp2.RequestHandler):
@@ -276,11 +213,8 @@ class UIListItemsHandler(webapp2.RequestHandler):
         sears_entity = ndb.Key('StoreData', 'SEARS FORMAT').get()
         kmart_entity = ndb.Key('StoreData', 'KMART FORMAT').get()
 
-        sears_bu_list = ndb.Key('BUData', 'sears').get()
-        kmart_bu_list = ndb.Key('BUData', 'kmart').get()
-
         result_dict = dict()
-        # result_dict['categories'] = list(result.Categories)
+        result_dict['categories'] = list(result.Categories)
         result_dict['offer_type'] = list(result.Offer_Type)
         result_dict['conversion_ratio'] = list(result.Conversion_Ratio)
         result_dict['minimum_surprise_points'] = result.Minimum_Surprise_Points
@@ -290,12 +224,8 @@ class UIListItemsHandler(webapp2.RequestHandler):
         store_dict = dict()
         store_dict['kmart'] = list(kmart_entity.Locations)
         store_dict['sears'] = list(sears_entity.Locations)
-        result_dict['store_locations'] = store_dict
 
-        bu_dict = dict()
-        bu_dict['sears'] = sears_bu_list.Business_Units
-        bu_dict['kmart'] = kmart_bu_list.Business_Units
-        result_dict['categories'] = bu_dict
+        result_dict['store_locations'] = store_dict
 
         logging.info(result_dict)
         self.response.headers['Content-Type'] = 'application/json'
@@ -534,85 +464,6 @@ class UploadStoreIDHandler(webapp2.RequestHandler):
             store_data.put()
 
 
-class SoarBuHandler(webapp2.RequestHandler):
-    def get(self):
-        credentials = GoogleCredentials.get_application_default()
-        bigquery_service = build('bigquery', 'v2', credentials=credentials)
-
-        query_request = bigquery_service.jobs()
-        urlfetch.set_default_fetch_deadline(60)
-
-        KMART_BU_QUERY = (
-            """SELECT SOAR_NO, SOAR_NM
-            FROM [syw-analytics-repo-prod:cbr_mart_tbls.sywr_kmt_soar_bu]
-            group by
-            SOAR_NO, SOAR_NM"""
-        )
-
-        SEARS_BU_QUERY = (
-            """SELECT SOAR_NO, SOAR_NM
-            FROM [syw-analytics-repo-prod:cbr_mart_tbls.sywr_srs_soar_bu]
-            group by
-            SOAR_NO, SOAR_NM"""
-        )
-
-        logging.info("Kmart Query :: %s", KMART_BU_QUERY)
-        logging.info("Sears Query :: %s", SEARS_BU_QUERY)
-
-        kmart_bu_names = set()
-        sears_bu_names = set()
-        bu_names = dict()
-
-        query_data = {
-            'query': KMART_BU_QUERY
-        }
-
-        query_response = query_request.query(
-            projectId='syw-offers',
-            body=query_data).execute()
-
-        logging.info("Kmart Query response :: %s", query_response)
-
-        for row in query_response['rows']:
-            kmart_bu_names.add(row['f'][0]['v'] + " - " + row['f'][1]['v'])
-
-        kmart_bu_names = sorted(kmart_bu_names)
-        logging.info("List of kmart BU's :: %s", kmart_bu_names)
-        bu_names.update({"kmart": kmart_bu_names})
-
-        query_data = {
-            'query': SEARS_BU_QUERY
-        }
-
-        query_response = query_request.query(
-            projectId='syw-offers',
-            body=query_data).execute()
-
-        logging.info("Sears Query response :: %s", query_response)
-
-        for row in query_response['rows']:
-            sears_bu_names.add(row['f'][0]['v'] + "-" + row['f'][1]['v'])
-
-        sears_bu_names = sorted(sears_bu_names)
-        logging.info("List of sears BU's :: %s", sears_bu_names)
-
-        bu_names.update({"sears": sears_bu_names})
-        logging.info("BU names dictionary :: %s", bu_names)
-
-        for format, business_units in bu_names.items():
-            bu_data = BUData(Format=format, Business_Units=business_units)
-            bu_data.key = ndb.Key('BUData', format)
-            bu_data.put()
-
-        self.response.write("BU data uploaded to datastore kind BUData.")
-
-
-class SendGridEvents(webapp2.RequestHandler):
-    def post(self):
-        logging.info(self.request.body)
-        self.response.write(json.dumps({'data': str(self.request.body)}))
-
-
 class MigrateNamespaceData(webapp2.RequestHandler):
     @staticmethod
     def migrate_config_data(from_ns, to_ns):
@@ -665,8 +516,6 @@ app = webapp2.WSGIApplication([
     ('/getMetrics', MetricsHandler),
     ('/batchJob', BatchJobHandler),
     ('/uploadStoreIDs', UploadStoreIDHandler),
-    ('/buNames', SoarBuHandler),
-    ('/sendgridEvents', SendGridEvents),
     ('/migrateEntities', MigrateNamespaceData)
 ], debug=True)
 
