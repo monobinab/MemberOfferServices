@@ -76,6 +76,7 @@ class AllMemberOffersHandler(webapp2.RequestHandler):
                                  "Offer details dict :: %s", created_offer)
                     member_dict["offer_details"]["latest_offer_created"] = created_offer
 
+
             updated_at_query = query.order(-MemberOfferData.updated_at)
             latest_offer_updated = updated_at_query.fetch(1)
             if not latest_offer_updated:
@@ -123,6 +124,7 @@ class SingleMemberOfferHandler(webapp2.RequestHandler):
         logging.info("Member object :: %s", member)
         result = list()
         member_dict = dict()
+
         member_dict["member_details"] = member.to_dict()
         member_dict["offer_details"] = dict()
 
@@ -198,7 +200,6 @@ class SingleMemberOfferHandler(webapp2.RequestHandler):
         self.response.headers['Content-Type'] = 'application/json'
         self.response.headers['Access-Control-Allow-Origin'] = '*'
         self.response.write(json.dumps({"data": result}))
-
 
 
 class ActivateOfferHandler(webapp2.RequestHandler):

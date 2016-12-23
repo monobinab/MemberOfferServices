@@ -80,6 +80,7 @@ class MemberOfferData(ndb.Model):
     status = ndb.IntegerProperty(default=0)
 
 
+
 class SendgridData(ndb.Model):
     SENDGRID_API_KEY = ndb.StringProperty(indexed=True)
     SENDGRID_SENDER = ndb.StringProperty(indexed=True)
