@@ -3,7 +3,6 @@ import logging
 from datetime import datetime, timedelta
 from google.appengine.api import datastore_errors
 from utilities import make_request
-import time
 
 
 class OfferDataService(CampaignData):
