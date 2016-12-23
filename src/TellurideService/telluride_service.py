@@ -19,7 +19,7 @@ class TellurideService:
         response_dict = dict()
         logging.info("Offer:: %s", offer)
         post_data = get_create_offer_xml(offer).rstrip('\n')
-        logging.info("post_data: %s", post_data)
+        # logging.info("post_data: %s", post_data)
         config_data = get_url_configuration()
         logging.info("Config Data:: %s" % config_data)
 
@@ -64,11 +64,8 @@ class TellurideService:
 
                 else:
                     response_dict['message'] = "Offer could not be created."
-<<<<<<< Updated upstream
-=======
                     response_dict['status_code'] = status_code
                     response_dict['error_message'] = error_text
->>>>>>> Stashed changes
             else:
                 response_dict['message'] = "Offer has been created successfully, but could not activate."
                 response_dict['status_code'] = status_code
@@ -88,14 +85,14 @@ class TellurideService:
                                                is_token_required=False)
         logging.info("Result:: %s", result)
         doc = ET.fromstring(result)
-        status_code = int(doc.find('.//{' + STATUS_NS + '}Status').text)
+        status_code = int(doc.find('.//{http://www.epsilon.com/webservices/}Status').text)
         response_dict = dict()
         if status_code == 0:
             response_dict['message'] = "Member has been registered to the offer successfully."
             response_dict['status_code'] = status_code
         else:
             response_dict['message'] = "Member registration to the offer has failed."
-            response_dict['error_message'] = doc.find('.//{' + ERROR_NS + '}ErrorText').text
+            response_dict['error_message'] = doc.find('.//{http://www.epsilon.com/webservices/}StatusText').text
             response_dict['status_code'] = status_code
         return response_dict
 

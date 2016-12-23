@@ -43,6 +43,7 @@ class SaveCampaignHandler(webapp2.RequestHandler):
                 result = TellurideService.create_offer(offer=offer)
                 result['offer_id'] = offer.OfferNumber
                 result_list.append(result)
+                logging.info("Result List:: %s", result_list)
             self.response.write(json.dumps({'data': result_list}))
         except httplib.HTTPException as exc:
             logging.error(exc)

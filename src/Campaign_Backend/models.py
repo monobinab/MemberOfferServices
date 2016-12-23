@@ -123,3 +123,10 @@ class StoreData(ndb.Model):
 class BUData(ndb.Model):
     Format = ndb.StringProperty(indexed=True)
     Business_Units = ndb.StringProperty(indexed=True, repeated=True)
+
+
+class ServiceEndPointData(ndb.Model):
+    backend = ndb.StringProperty(indexed=True)
+    email = ndb.StringProperty(indexed=True)
+    telluride = ndb.StringProperty(indexed=True)
+

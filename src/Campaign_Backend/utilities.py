@@ -1,5 +1,5 @@
 import logging
-from models import ndb
+from models import ndb, ServiceEndPointData
 import json
 from models import ConfigData
 from google.appengine.api import urlfetch
@@ -96,13 +96,13 @@ def make_request(host, relative_url, request_type, payload):
         app_id = app_identity.get_application_id()
         urlfetch.set_default_fetch_deadline(60)
         logging.info("App id:: %s", app_id)
-        result = urlfetch.fetch("https://"+host + relative_url, headers={"X-Appengine-Inbound-Appid": app_id})
+        result = urlfetch.fetch(host + relative_url, headers={"X-Appengine-Inbound-Appid": app_id})
         if result.status_code == 200:
             logging.info('Response status_code: %s', result.status_code)
             # logging.info('Response status_message: %s', status_message)
             # logging.info('Response header: %s', header)
             logging.info('Response result: %s', str(result))
-            logging.info('Response result content: %s', str(json.loads(result.content)))
+            logging.info('Response result content: %s', str(result.content))
 
         else:
             status_code = result.status_code
@@ -122,3 +122,15 @@ def get_jinja_environment():
         loader=jinja2.FileSystemLoader(templates_dir)
     )
     return jinja_environment
+
+
+def get_telluride_host():
+    data_key = ndb.Key('ServiceEndPointData', 'endpoints')
+    data_entity = data_key.get()
+    return data_entity.telluride
+
+
+def get_email_host():
+    data_key = ndb.Key('ServiceEndPointData', 'endpoints')
+    data_entity = data_key.get()
+    return data_entity.email

@@ -12,10 +12,11 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from google.appengine.api import urlfetch
 from oauth2client.client import GoogleCredentials
-from utilities import create_pubsub_message, make_request, get_jinja_environment
+from utilities import create_pubsub_message, make_request, get_jinja_environment, get_email_host, get_telluride_host
 from datetime import datetime
 import xml.etree.ElementTree as ET
 import os
+
 
 
 class BaseHandler(webapp2.RequestHandler):
@@ -54,7 +55,7 @@ class SaveCampaignHandler(webapp2.RequestHandler):
 
         logging.info('Campaign: %s saved in datastore', campaign_name)
 
-        host = "telluride-service-" + os.environ.get('NAMESPACE') + "-dot-syw-offers.appspot.com/"
+        host = get_telluride_host()
         relative_url = "createCampaign?campaign_id=" + campaign_name
         result = make_request(host=host, relative_url=relative_url, request_type="GET", payload='')
         logging.info('Creating pubsub publish message')
@@ -172,7 +173,7 @@ class ActivateOfferHandler(webapp2.RequestHandler):
             offer = offer_key.get()
             logging.info("THE OFFER FETCHED :: %s", offer)
             member = member_key.get()
-            logging.info("THE OFFER FETCHED :: %s", offer)
+            logging.info("THE Member FETCHED :: %s", member)
 
             # offer_data = OfferData.query(OfferData.campaign == campaign_key).get()
             offer_data = OfferData.get_by_id(offer_id)
@@ -195,7 +196,7 @@ class ActivateOfferHandler(webapp2.RequestHandler):
                                                          MemberOfferData.offer == offer_key).get()
 
                 if member_offer_obj is not None:
-                    host = "telluride-service-" + os.environ.get('NAMESPACE') + "-dot-syw-offers.appspot.com/"
+                    host = get_telluride_host()
                     relative_url = str("registerMember?offer_id="+offer_id+"&&member_id="+member_id)
                     result = make_request(host=host, relative_url=relative_url, request_type="GET", payload='')
 
@@ -401,7 +402,7 @@ class BatchJobHandler(webapp2.RequestHandler):
                             logging.info('Offer %s already created and activated', offer_name)
                         else:
                             # response_telluride = TellurideService.create_offer(offer)
-                            host = "telluride-service-" + os.environ.get('NAMESPACE') + "-dot-syw-offers.appspot.com/"
+                            host = get_telluride_host()
                             relative_url = "createOffer?offer_id=" + offer.OfferNumber
                             response_telluride = make_request(host=host, relative_url=relative_url, request_type="GET", payload='')
                             if response_telluride['message'] == success_msg:
@@ -421,10 +422,7 @@ class BatchJobHandler(webapp2.RequestHandler):
                                     response_dict['message'] = "Member ID "+member_id+" not found in datastore"
                                     return response_dict
                                 else:
-                                    #TODO: remove hardcoded urls
-                                    # send_mail(member_entity=member, offer_entity=offer,
-                                    #           campaign_entity=offer.campaign.get())
-                                    host = "email-service-"+os.environ.get('NAMESPACE')+"-dot-syw-offers.appspot.com/"
+                                    host = get_email_host()
                                     relative_url = "emailMembers?offer_id=%s&&member_id=%s", offer.OfferNumber, member_id
                                     result = make_request(host=host, relative_url=relative_url, request_type="GET",
                                                           payload='')
