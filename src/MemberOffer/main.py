@@ -29,8 +29,7 @@ class IndexPageHandler(webapp2.RequestHandler):
         self.response.write("member-offer-service")
 
 
-class GetAllMembersHandler(webapp2.RequestHandler):
-
+class AllMemberOffersHandler(webapp2.RequestHandler):
     def get(self):
         query = MemberData.query()
         member_list = query.fetch()
@@ -38,33 +37,168 @@ class GetAllMembersHandler(webapp2.RequestHandler):
 
         for member in member_list:
             logging.info("Member :: %s", member.member_id)
-            each_dict = dict()
-            each_dict['member_details'] = member.to_dict()
-            each_dict['offer_details'] = dict()
-            result.append(each_dict)
+            member_dict = dict()
+            member_dict['member_details'] = member.to_dict()
+            member_dict['offer_details'] = dict()
+
+            query = MemberOfferData.query(MemberOfferData.member == member.key)
+
+            created_at_query = query.order(-MemberOfferData.created_at)
+            latest_offer_created = created_at_query.fetch(1)
+            if not latest_offer_created:
+                member_dict["offer_details"]["latest_offer_created"] = list()
+                logging.info("No offer data associated with this member.")
+            else:
+                logging.info("latest offer created :: %s", latest_offer_created)
+                for item in latest_offer_created:
+                    created_offer = dict()
+                    created_offer["member"] = item.member.id()
+                    created_offer["status"] = item.status
+                    created_offer["offer"] = item.offer.id()
+                    created_offer["email_sent_at"] = str(item.email_sent_at)
+                    created_offer["activated_at"] = str(item.activated_at)
+                    created_offer["updated_at"] = str(item.updated_at)
+                    created_offer["validity_end_date"] = str(item.validity_end_date)
+                    created_offer["redeemed_date"] = str(item.redeemed_date)
+                    created_offer["redeemed"] = item.redeemed
+                    created_offer["validity_start_date"] = str(item.validity_start_date)
+                    created_offer["activated_channel"] = item.channel
+                    created_offer["created_at"] = str(item.created_at)
+                    created_offer["channel"] = str(item.channel)
+
+                    offer = item.offer.get()
+                    campaign = offer.campaign.get()
+                    logging.info("Campaign :: %s ", campaign.to_dict())
+                    created_offer["offer_value"] = offer.surprise_points
+                    created_offer["category"] = campaign.category
+
+                    logging.info("Added latest offer created information for the member."
+                                 "Offer details dict :: %s", created_offer)
+                    member_dict["offer_details"]["latest_offer_created"] = created_offer
+
+            updated_at_query = query.order(-MemberOfferData.updated_at)
+            latest_offer_updated = updated_at_query.fetch(1)
+            if not latest_offer_updated:
+                member_dict["offer_details"]["latest_offer_updated"] = list()
+                logging.info("No offer data associated with this member.")
+            else:
+                logging.info("latest offer updated :: %s", latest_offer_updated)
+                for item in latest_offer_updated:
+                    updated_offer = dict()
+                    updated_offer["member"] = item.member.id()
+                    updated_offer["status"] = item.status
+                    updated_offer["offer"] = item.offer.id()
+                    updated_offer["email_sent_at"] = str(item.email_sent_at)
+                    updated_offer["activated_at"] = str(item.activated_at)
+                    updated_offer["updated_at"] = str(item.updated_at)
+                    updated_offer["validity_end_date"] = str(item.validity_end_date)
+                    updated_offer["redeemed_date"] = str(item.redeemed_date)
+                    updated_offer["redeemed"] = item.redeemed
+                    updated_offer["validity_start_date"] = str(item.validity_start_date)
+                    updated_offer["activated_channel"] = item.channel
+                    updated_offer["created_at"] = str(item.created_at)
+                    updated_offer["channel"] = str(item.channel)
+
+                    offer = item.offer.get()
+                    campaign = offer.campaign.get()
+                    logging.info("Campaign :: %s ", campaign.to_dict())
+                    created_offer["offer_value"] = offer.surprise_points
+                    created_offer["category"] = campaign.category
+
+                    logging.info("Added latest offer created information for the member."
+                                 "Offer details dict :: %s", updated_offer)
+                    member_dict["offer_details"]["latest_offer_updated"] = updated_offer
+
+            result.append(member_dict)
 
         self.response.headers['Content-Type'] = 'application/json'
         self.response.headers['Access-Control-Allow-Origin'] = '*'
-        self.response.write(result)
+        self.response.write(json.dumps({"data": result}))
 
 
-class MemberDetailsHandler(webapp2.RequestHandler):
+class SingleMemberOfferHandler(webapp2.RequestHandler):
     def get(self):
-        # TODO : handle multiple members. Use a list of members
         member_id = self.request.get('member_id')
         member = MemberData.get_by_id(member_id)
         logging.info("Member object :: %s", member)
-        self.response.write(list(member.to_dict()))
+        result = list()
+        member_dict = dict()
+        member_dict["member_details"] = member.to_dict()
+        member_dict["offer_details"] = dict()
 
-        # Member.IsMember()(deprioritized)
-        # Member.IsIssued()
-        # Member.IsEmailOptedIn()
-        # Member.HasOfferFromModel()
-        # Member.HasTransactionInBUPast3Days(BU_Name)(deprioritized)
-        # Member.HasCurrentTransactionInBU(BU_Name)(deprioritized)
-        # Offer.IsExpired()
-        # Offer.Activated()
-        # Offer.IsExpiringIn3Days()
+        query = MemberOfferData.query(MemberOfferData.member == member.key)
+
+        created_at_query = query.order(-MemberOfferData.created_at)
+        latest_offer_created = created_at_query.fetch(1)
+        if not latest_offer_created:
+            member_dict["offer_details"]["latest_offer_created"] = list()
+            logging.info("No offer data associated with this member.")
+        else:
+            logging.info("latest offer created :: %s", latest_offer_created)
+            for item in latest_offer_created:
+                created_offer = dict()
+                created_offer["member"] = item.member.id()
+                created_offer["status"] = item.status
+                created_offer["offer"] = item.offer.id()
+                created_offer["email_sent_at"] = str(item.email_sent_at)
+                created_offer["activated_at"] = str(item.activated_at)
+                created_offer["updated_at"] = str(item.updated_at)
+                created_offer["validity_end_date"] = str(item.validity_end_date)
+                created_offer["redeemed_date"] = str(item.redeemed_date)
+                created_offer["redeemed"] = item.redeemed
+                created_offer["validity_start_date"] = str(item.validity_start_date)
+                created_offer["activated_channel"] = item.channel
+                created_offer["created_at"] = str(item.created_at)
+                created_offer["channel"] = str(item.channel)
+
+                offer = item.offer.get()
+                campaign = offer.campaign.get()
+                logging.info("Campaign :: %s ", campaign.to_dict())
+                created_offer["offer_value"] = offer.surprise_points
+                created_offer["category"] = campaign.category
+
+                logging.info("Added latest offer created information for the member."
+                             "Offer details dict :: %s", created_offer)
+                member_dict["offer_details"]["latest_offer_created"] = created_offer
+
+        updated_at_query = query.order(-MemberOfferData.updated_at)
+        latest_offer_updated = updated_at_query.fetch(1)
+        if not latest_offer_updated:
+            member_dict["offer_details"]["latest_offer_updated"] = list()
+            logging.info("No offer data associated with this member.")
+        else:
+            logging.info("latest offer updated :: %s", latest_offer_updated)
+            for item in latest_offer_updated:
+                updated_offer = dict()
+                updated_offer["member"] = item.member.id()
+                updated_offer["status"] = item.status
+                updated_offer["offer"] = item.offer.id()
+                updated_offer["email_sent_at"] = str(item.email_sent_at)
+                updated_offer["activated_at"] = str(item.activated_at)
+                updated_offer["updated_at"] = str(item.updated_at)
+                updated_offer["validity_end_date"] = str(item.validity_end_date)
+                updated_offer["redeemed_date"] = str(item.redeemed_date)
+                updated_offer["redeemed"] = item.redeemed
+                updated_offer["validity_start_date"] = str(item.validity_start_date)
+                updated_offer["activated_channel"] = item.channel
+                updated_offer["created_at"] = str(item.created_at)
+                updated_offer["channel"] = str(item.channel)
+
+                offer = item.offer.get()
+                campaign = offer.campaign.get()
+                logging.info("Campaign :: %s ", campaign.to_dict())
+                created_offer["offer_value"] = offer.surprise_points
+                created_offer["category"] = campaign.category
+
+                logging.info("Added latest offer created information for the member."
+                             "Offer details dict :: %s", updated_offer)
+                member_dict["offer_details"]["latest_offer_updated"] = updated_offer
+
+        result.append(member_dict)
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.headers['Access-Control-Allow-Origin'] = '*'
+        self.response.write(json.dumps({"data": result}))
+
 
 
 class ActivateOfferHandler(webapp2.RequestHandler):
@@ -113,7 +247,7 @@ class ActivateOfferHandler(webapp2.RequestHandler):
                         status_code = int(doc.find('.//{http://www.epsilon.com/webservices/}Status').text)
                         logging.info("Status code:: %d" % status_code)
                         if status_code == 0:
-                            member_offer_obj.status = True
+                            member_offer_obj.status = 1
                             member_offer_obj.activated_at = datetime.now()
                             member_offer_obj.put()
                             response_dict['message'] = "Offer has been activated successfully"
@@ -145,7 +279,7 @@ class ActivateOfferHandler(webapp2.RequestHandler):
 
 
 class SendOfferToMemberHandler:
-    # TODO: Make response consitent with other api's as well
+    # TODO: Make response consistent with other api's as well
     def get(self):
         self.response.headers['Content-Type'] = 'application/json'
         self.response.headers['Access-Control-Allow-Origin'] = '*'
@@ -232,21 +366,3 @@ class SendOfferToMemberHandler:
 
         logging.info('response_dict[message]: %s', response_dict['message'])
         return response_dict
-
-
-# [START app]
-app = webapp2.WSGIApplication([
-    ('/', IndexPageHandler),
-    ('/members', GetAllMembersHandler),
-    ('/getMember', MemberDetailsHandler),
-    ('/activateOffer', ActivateOfferHandler),
-    ('/sendOffer', SendOfferToMemberHandler),
-], debug=True)
-
-
-def main():
-    app.run()
-
-
-if __name__ == '__main__':
-    main()

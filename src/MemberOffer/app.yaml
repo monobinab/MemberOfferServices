@@ -4,9 +4,9 @@ threadsafe: false
 
 handlers:
 - url: .*
-  script: main.app
+  script: router.app
 
-module: member-service
+module: member
 
 automatic_scaling:
   min_idle_instances: 1
