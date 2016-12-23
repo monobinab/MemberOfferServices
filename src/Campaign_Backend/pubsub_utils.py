@@ -36,9 +36,11 @@ def get_client_from_credentials(credentials):
     credentials = GoogleCredentials.get_application_default()
     return discovery.build('pubsub', 'v1', credentials=credentials)
 
+
 def get_full_topic_name():
     return 'projects/{}/topics/{}'.format(
         get_project_id(), get_app_topic_name())
+
 
 def post_pubsub(message):
     """Publishes the message via the Pub/Sub API."""

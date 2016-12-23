@@ -102,7 +102,7 @@ def make_request(host, relative_url, request_type, payload):
             # logging.info('Response status_message: %s', status_message)
             # logging.info('Response header: %s', header)
             logging.info('Response result: %s', str(result))
-            logging.info('Response result content: %s', str(result.content))
+            logging.info('Response result content: %s', str(json.loads(result.content)))
 
         else:
             status_code = result.status_code

@@ -6,6 +6,9 @@ from getXml import get_create_offer_xml, get_update_offer_xml, get_register_offe
 import xml.etree.ElementTree as ET
 from utilities import get_url_configuration
 
+ERROR_NS = 'http://rewards.sears.com/schemas/offer/'
+STATUS_NS = 'http://rewards.sears.com/schemas/'
+
 
 class TellurideService:
     def __init__(self):
@@ -25,8 +28,9 @@ class TellurideService:
                                                request_type="POST", data=post_data, config_data=config_data,
                                                is_token_required=True)
         doc = ET.fromstring(result)
-        status_code = doc.find('.//{http://rewards.sears.com/schemas/}Status').text
-        if int(status_code) == 0:
+        status_code = int(doc.find('.//{'+STATUS_NS+'}Status').text)
+        logging.info("Status code:: %s", status_code)
+        if status_code == 0:
             update_offer_xml = get_update_offer_xml(offer_entity=offer).rstrip('\n')
             update_offer_result = TellurideService.make_request(url=config_data['ACTIVATE_OFFER_URL'],
                                                                 put_request=config_data['ACTIVATE_OFFER_REQUEST'],
@@ -34,25 +38,42 @@ class TellurideService:
                                                                 config_data=config_data, is_token_required=True)
             if update_offer_result is not None:
                 doc = ET.fromstring(update_offer_result)
-                status_code = doc.find('.//{http://rewards.sears.com/schemas/}Status').text
-                if int(status_code) == 0:
+                status_code = int(doc.find('.//{'+STATUS_NS+'}Status').text)
+                if status_code == 0:
                     logging.info("Activated offer")
                     response_dict['message'] = "Offer has been created and activated successfully"
+                    response_dict['status_code'] = status_code
+
             else:
                 response_dict['message'] = "Offer has been created successfully, but could not activate."
+                response_dict['error_message'] = doc.find('.//{' + ERROR_NS + '}ErrorText').text
+                response_dict['status_code'] = status_code
         else:
-            if doc.find('.//{http://rewards.sears.com/schemas/}ErrorText') is not None:
-                error_text = doc.find('.//{http://rewards.sears.com/schemas/}ErrorText').text
+            error_code = doc.find('.//{'+ERROR_NS+'}ErrorCode').text
+            error_text = doc.find('.//{'+ERROR_NS+'}ErrorText').text
+            logging.info("Error code:: %s", error_code)
+            logging.info("Error text:: %s", error_text)
+
+            if error_code is not None:
+                # error_text = doc.find('.//{http://rewards.sears.com/schemas/}ErrorText').text
                 if not error_text == "Offer update only allowed in DRAFT status":
                     logging.error("Create offer failed:: Telluride call returned with error."
                                   " Status:: %s, Status Text:: %s and Error Text:: %s", status_code,
-                                  doc.find('.//{http://rewards.sears.com/schemas/}StatusText').text, error_text)
+                                  doc.find('.//{'+STATUS_NS+'}StatusText').text, error_text)
                     response_dict['message'] = "Offer activation has failed!!!"
+
                 else:
                     response_dict['message'] = "Offer could not be created."
+<<<<<<< Updated upstream
+=======
+                    response_dict['status_code'] = status_code
+                    response_dict['error_message'] = error_text
+>>>>>>> Stashed changes
             else:
                 response_dict['message'] = "Offer has been created successfully, but could not activate."
-        response_dict['data'] = str(result)
+                response_dict['status_code'] = status_code
+
+        # response_dict['data'] = str(result)
         return response_dict
 
     @classmethod
@@ -66,7 +87,17 @@ class TellurideService:
                                                request_type="POST", data=post_data, config_data=config_data,
                                                is_token_required=False)
         logging.info("Result:: %s", result)
-        return result
+        doc = ET.fromstring(result)
+        status_code = int(doc.find('.//{' + STATUS_NS + '}Status').text)
+        response_dict = dict()
+        if status_code == 0:
+            response_dict['message'] = "Member has been registered to the offer successfully."
+            response_dict['status_code'] = status_code
+        else:
+            response_dict['message'] = "Member registration to the offer has failed."
+            response_dict['error_message'] = doc.find('.//{' + ERROR_NS + '}ErrorText').text
+            response_dict['status_code'] = status_code
+        return response_dict
 
     @classmethod
     def get_balance(cls):

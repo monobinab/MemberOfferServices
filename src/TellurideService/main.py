@@ -40,10 +40,9 @@ class SaveCampaignHandler(webapp2.RequestHandler):
             logging.info("Number of Offers fetched from datastore :: %d", len(offer_list))
             result_list = list()
             for offer in offer_list:
-                result_dict = dict()
                 result = TellurideService.create_offer(offer=offer)
-                result_dict[offer.OfferNumber] = result
-                result_list.append(result_dict)
+                result['offer_id'] = offer.OfferNumber
+                result_list.append(result)
             self.response.write(json.dumps({'data': result_list}))
         except httplib.HTTPException as exc:
             logging.error(exc)
