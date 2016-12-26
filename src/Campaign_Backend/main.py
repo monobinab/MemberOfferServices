@@ -551,6 +551,12 @@ class MigrateNamespaceData(webapp2.RequestHandler):
         entity.key = ndb.Key('SendgridData', '1', namespace=to_ns)
         entity.put()
 
+    @staticmethod
+    def migrate_endpoints_data(from_ns, to_ns):
+        entity = ndb.Key('ServiceEndPointData', 'endpoints', namespace=from_ns).get()
+        entity.key = ndb.Key('ServiceEndPointData', 'endpoints', namespace=to_ns)
+        entity.put()
+
     def get(self):
         from_ns = self.request.get('from_ns')
         to_ns = self.request.get('to_ns')
@@ -558,6 +564,7 @@ class MigrateNamespaceData(webapp2.RequestHandler):
         self.migrate_frontend_data(from_ns=from_ns, to_ns=to_ns)
         self.migrate_member_data(from_ns=from_ns, to_ns=to_ns)
         self.migrate_sendgrid_data(from_ns=from_ns, to_ns=to_ns)
+        self.migrate_endpoints_data(from_ns=from_ns, to_ns=to_ns)
         self.response.write("Data migrated successfully!!!")
 
 
