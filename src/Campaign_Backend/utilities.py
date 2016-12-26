@@ -112,5 +112,13 @@ def make_request(host, relative_url, request_type, payload):
     except Exception as e:
         logging.error(e)
 
+def get_telluride_host():
+    data_key = ndb.Key('ServiceEndPointData', 'endpoints')
+    data_entity = data_key.get()
+    return data_entity.telluride
 
 
+def get_email_host():
+    data_key = ndb.Key('ServiceEndPointData', 'endpoints')
+    data_entity = data_key.get()
+    return data_entity.email
