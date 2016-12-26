@@ -204,6 +204,8 @@ class SingleMemberOfferHandler(webapp2.RequestHandler):
 
 class ActivateOfferHandler(webapp2.RequestHandler):
     def get(self):
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.headers['Access-Control-Allow-Origin'] = '*'
         response_dict = dict()
         try:
             offer_id = self.request.get('offer_id')
@@ -212,14 +214,12 @@ class ActivateOfferHandler(webapp2.RequestHandler):
             logging.info("Request member_id: " + member_id)
 
             if not offer_id or not member_id:
-                response_html = """<html><head><title>Sears Offer Activation</title></head><body><h3>
-                                Please provide offer_id and member_id with the request</h3></body></html>"""
-                self.response.write(response_html)
+                response_dict['message'] = "Please provide offer_id, member_id, start date and end date with the request"
+                self.response.write(json.dumps(response_dict))
                 return
 
             offer_key = ndb.Key('OfferData', offer_id)
             member_key = ndb.Key('MemberData', member_id)
-            self.response.headers['Access-Control-Allow-Origin'] = '*'
             logging.info("fetched offer_key and member key ")
 
             offer = offer_key.get()
@@ -268,13 +268,14 @@ class ActivateOfferHandler(webapp2.RequestHandler):
         except httplib.HTTPException as exc:
             logging.error(exc)
             response_dict['message'] = "Sorry could not fetch offer details because of the request time out."
-        response_html = "<html><head><title>Sears Offer Activation</title></head><body><h3> " \
-                        + response_dict['message'] + "</h3></body></html>"
-        self.response.write(response_html)
+
+        self.response.write(json.dumps(response_dict))
 
 
 class KPOSOfferHandler(webapp2.RequestHandler):
     def get(self):
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.headers['Access-Control-Allow-Origin'] = '*'
         response_dict = dict()
         try:
             offer_id = self.request.get('offer_id')
@@ -289,15 +290,12 @@ class KPOSOfferHandler(webapp2.RequestHandler):
             channel = "KPOS"
 
             if not offer_id or not member_id or not start_date or not end_date:
-                response_html = """<html><head><title>Sears Offer Activation</title></head><body><h3>
-                                Please provide offer_id, member_id, start date and end date with the
-                                request</h3></body></html>"""
-                self.response.write(response_html)
+                response_dict['message'] = "Please provide offer_id, member_id, start date and end date with the request"
+                self.response.write(json.dumps(response_dict))
                 return
 
             offer_key = ndb.Key('OfferData', offer_id)
             member_key = ndb.Key('MemberData', member_id)
-            self.response.headers['Access-Control-Allow-Origin'] = '*'
             logging.info("fetched offer_key and member key ")
 
             offer = offer_key.get()
@@ -353,9 +351,8 @@ class KPOSOfferHandler(webapp2.RequestHandler):
         except httplib.HTTPException as exc:
             logging.error(exc)
             response_dict['message'] = "Sorry could not fetch offer details because of the request time out."
-        response_html = "<html><head><title>Sears Offer Activation</title></head><body><h3> " \
-                        + response_dict['message'] + "</h3></body></html>"
-        self.response.write(response_html)
+
+        self.response.write(json.dumps(response_dict))
 
 
 class SendOfferToMemberHandler:
@@ -369,10 +366,9 @@ class SendOfferToMemberHandler:
         channel = "EMAIL"
 
         if not member_id or not offer_value or not campaign_name:
-            response_html = """<html><head><title>Batch Job Execution</title></head><body><h3> Please provide
-                            member_id, offer_value and campaign_name with the request</h3></body></html>"""
+            response_dict = {"message": "Please provide member_id, offer_value and campaign_name with the request"}
 
-            self.response.write(response_html)
+            self.response.write(json.dumps(response_dict))
 
         else:
             response = self.process_data(member_id, offer_value, campaign_name, channel)
