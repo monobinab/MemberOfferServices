@@ -3,7 +3,6 @@ import logging
 from datetime import datetime, timedelta
 from google.appengine.api import datastore_errors
 from utilities import make_request
-import time
 
 
 class OfferDataService(CampaignData):
@@ -19,11 +18,15 @@ class OfferDataService(CampaignData):
 
         offer_name = "%s_%s" % (str(campaign.name), str(offer_value))
         rules_condition = ""
+
         if campaign.format_level == 'Sears':
             rules_condition = "SEARSLEGACY~803~~~~~~" if campaign.category == "Apparel" else \
                 "SEARSLEGACY~803~615~~~~~~"
         elif campaign.format_level == 'Kmart':
             rules_condition = "KMARTSHC~1~35~~~~~~"
+        # category_list = campaign.category.split('-')
+        # category = ''.join(category_list[2:])
+        # logging.info("Category:: %s", category)
         offer_obj = OfferData(surprise_points=int(offer_value), threshold=10, OfferNumber=offer_name,
                               OfferPointsDollarName=offer_name, OfferDescription=offer_name,
                               OfferType="Xtreme Redeem", OfferSubType="Item", OfferStartDate=start_date,
@@ -90,6 +93,7 @@ class CampaignDataService(CampaignData):
 
         campaign_name = campaign_dict['name']
         campaign_budget = int(campaign_dict['money'])
+
         campaign_category = campaign_dict['category']
         campaign_format_level = campaign_dict['format_level'] if campaign_dict['format_level'] is not None else ""
         campaign_convratio = int(campaign_dict['conversion_ratio'])

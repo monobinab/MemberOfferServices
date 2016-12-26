@@ -1,0 +1,44 @@
+<html><head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <title>Shop Your Way</title>
+  </head>
+  <body>
+    <div class="navbar navbar-default navbar-static-top">
+      <div class="container">
+          <ul class="nav navbar-nav">
+            <li><a href="www.shopyourway.com"><img src="https://h2savecom.files.wordpress.com/2015/02/shop-your-way.jpg" data-orig-src="https://s3.sywcdn.net/user/df47_23905672.jpg" alt="Shop Your Way" style="height:40px"></a></li>
+
+          </ul>
+        </div>
+      </div>
+
+    <div class="container">
+      <div class="row" style="margin-bottom:20px">
+        <img alt="SHOP YOUR WAY®" border="0" class="Logo" height="40" src="https://static.cdn.responsys.net/i2/responsysimages/sywr/contentlibrary/!2016/!templates/images/SYWLOGO2016_black.jpg" style="width: 340px; height: 40px;" width="340">
+      </div>
+      <div class="row" style="background:#384047;height: 10px;">
+
+    </div>
+    <div class="row" style="text-align:center">
+
+     {% if offer_success %}
+      <h1>Congratulations!</h1>
+     {% endif %}
+
+        <span class="title" style="color:orange;font-size: 33px;font-weight: bold;">{{ message }}</span>
+
+     {% if offer_success %}
+       <p style="font-size:16px;">
+         Valid on any purchase in {{ offer_category }} at {{ offer_format }} from {{ offer_start_date }} to {{offer_end_date }}.
+       </p>
+     {% endif %}
+    </div>
+
+    </div>
+
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+</body></html>

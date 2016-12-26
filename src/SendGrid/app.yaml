@@ -6,7 +6,6 @@ handlers:
 - url: .*
   script: main.app
 
-module: dev-email-service
 
 automatic_scaling:
   min_idle_instances: 1
