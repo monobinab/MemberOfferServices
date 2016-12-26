@@ -1,5 +1,6 @@
 import logging
-from models import ConfigData, ndb
+from models import ConfigData, ndb, ServiceEndPointData
+
 
 def get_sendgrid_configuration():
     data_map = dict()
@@ -12,3 +13,21 @@ def get_sendgrid_configuration():
         logging.error(e)
     finally:
         return data_map
+
+
+def get_telluride_host():
+    data_key = ndb.Key('ServiceEndPointData', 'endpoints')
+    data_entity = data_key.get()
+    return data_entity.telluride
+
+
+def get_email_host():
+    data_key = ndb.Key('ServiceEndPointData', 'endpoints')
+    data_entity = data_key.get()
+    return data_entity.email
+
+
+def get_backend_host():
+    data_key = ndb.Key('ServiceEndPointData', 'endpoints')
+    data_entity = data_key.get()
+    return data_entity.backend

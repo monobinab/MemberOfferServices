@@ -78,7 +78,8 @@ class MemberOfferData(ndb.Model):
     validity_start_date = ndb.DateTimeProperty(indexed=False)
     validity_end_date = ndb.DateTimeProperty(indexed=True)
     status = ndb.IntegerProperty(default=0)
-
+    kpos_start_date = ndb.DateTimeProperty(indexed=True)
+    kpos_end_date = ndb.DateTimeProperty(indexed=True)
 
 
 class SendgridData(ndb.Model):

@@ -98,7 +98,7 @@ class ModelDataSendEmailHandler(webapp2.RequestHandler):
                     member_key = ndb.Key('MemberData', member_id)
                     logging.info("Fetched member_key for member: %s", member_id)
 
-                    member = member_key.get()
+                    member = member_key.get(use_datastore=True, use_memcache=False, use_cache=False)
                     if member is None:
                         logging.info("member is None")
                         response_dict['message'] = "Member ID " + member_id + " not found in datastore"

@@ -1,10 +1,11 @@
 import logging
-from models import ndb
+from models import ndb, ServiceEndPointData
 import json
 from models import ConfigData
 from google.appengine.api import urlfetch
 from google.appengine.api import app_identity
-
+import jinja2
+import os
 
 # Function to read sendgrid configurations
 def get_sendgrid_configuration():
@@ -95,7 +96,7 @@ def make_request(host, relative_url, request_type, payload):
         app_id = app_identity.get_application_id()
         urlfetch.set_default_fetch_deadline(60)
         logging.info("App id:: %s", app_id)
-        result = urlfetch.fetch("https://"+host + relative_url, headers={"X-Appengine-Inbound-Appid": app_id})
+        result = urlfetch.fetch(host + relative_url, headers={"X-Appengine-Inbound-Appid": app_id})
         if result.status_code == 200:
             logging.info('Response status_code: %s', result.status_code)
             # logging.info('Response status_message: %s', status_message)
@@ -111,6 +112,21 @@ def make_request(host, relative_url, request_type, payload):
         logging.exception('Caught exception fetching url')
     except Exception as e:
         logging.error(e)
+
+def get_telluride_host():
+    data_key = ndb.Key('ServiceEndPointData', 'endpoints')
+    data_entity = data_key.get()
+    return data_entity.telluride
+
+def get_jinja_environment():
+    templates_dir = os.path.join(os.path.dirname(__file__), 'templates')
+    logging.info("Templates directory :: %s", templates_dir)
+
+    jinja_environment = jinja2.Environment(
+        loader=jinja2.FileSystemLoader(templates_dir)
+    )
+    return jinja_environment
+
 
 def get_telluride_host():
     data_key = ndb.Key('ServiceEndPointData', 'endpoints')

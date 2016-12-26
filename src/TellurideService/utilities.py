@@ -6,8 +6,6 @@ from models import ConfigData
 def get_url_configuration():
     data_map = dict()
     try:
-        # namespace_manager.set_namespace(config_namespace)
-        # logging.info("Namespace set::" + config_namespace)
         data_entity = ConfigData.get_by_id('URLConfig')
         data_map['GENERATE_TOKEN_HOST'] = data_entity.GENERATE_TOKEN_HOST
         data_map['GENERATE_TOKEN_URL'] = data_entity.GENERATE_TOKEN_URL

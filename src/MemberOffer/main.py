@@ -208,16 +208,10 @@ class ActivateOfferHandler(webapp2.RequestHandler):
         try:
             offer_id = self.request.get('offer_id')
             logging.info("Request offer_id: " + offer_id)
-            if offer_id is None:
-                response_html = """<html><head><title>Sears Offer Activation</title></head><body><h3>
-                                Please provide offer_id and member_id with the request</h3></body></html>"""
-                self.response.write(response_html)
-                return
-
             member_id = self.request.get('member_id')
             logging.info("Request member_id: " + member_id)
 
-            if member_id is None:
+            if not offer_id or not member_id:
                 response_html = """<html><head><title>Sears Offer Activation</title></head><body><h3>
                                 Please provide offer_id and member_id with the request</h3></body></html>"""
                 self.response.write(response_html)
@@ -294,9 +288,9 @@ class KPOSOfferHandler(webapp2.RequestHandler):
 
             channel = "KPOS"
 
-            if offer_id is None or member_id is None or start_date is None or end_date is None:
+            if not offer_id or not member_id or not start_date or not end_date:
                 response_html = """<html><head><title>Sears Offer Activation</title></head><body><h3>
-                                Please provide offer_id, member_id start date and end date with the
+                                Please provide offer_id, member_id, start date and end date with the
                                 request</h3></body></html>"""
                 self.response.write(response_html)
                 return
@@ -332,8 +326,8 @@ class KPOSOfferHandler(webapp2.RequestHandler):
                         if status_code == 0:
                             member_offer_obj.status = 1
                             member_offer_obj.activated_at = datetime.now()
-                            member_offer_obj.start_date = start_date
-                            member_offer_obj.end_date = end_date
+                            member_offer_obj.kpos_start_date = start_date
+                            member_offer_obj.kpos_end_date = end_date
                             member_offer_obj.channel = channel
                             member_offer_obj.put()
                             response_dict['message'] = "Offer has been activated successfully"
@@ -365,7 +359,7 @@ class KPOSOfferHandler(webapp2.RequestHandler):
 
 
 class SendOfferToMemberHandler:
-    # TODO: Make response consistent with other api's as well
+    # TODO: Make response consistent with other APIs as well
     def get(self):
         self.response.headers['Content-Type'] = 'application/json'
         self.response.headers['Access-Control-Allow-Origin'] = '*'
@@ -374,7 +368,7 @@ class SendOfferToMemberHandler:
         campaign_name = self.request.get('campaign_name')
         channel = "EMAIL"
 
-        if member_id is None or offer_value is None or campaign_name is None:
+        if not member_id or not offer_value or not campaign_name:
             response_html = """<html><head><title>Batch Job Execution</title></head><body><h3> Please provide
                             member_id, offer_value and campaign_name with the request</h3></body></html>"""
 
