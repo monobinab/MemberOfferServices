@@ -43,8 +43,8 @@ class AllMemberOffersHandler(webapp2.RequestHandler):
 
             query = MemberOfferData.query(MemberOfferData.member == member.key)
 
-            created_at_query = query.order(-MemberOfferData.created_at)
-            latest_offer_issued = created_at_query.fetch(1)
+            issuance_date_query = query.order(-MemberOfferData.issuance_date)
+            latest_offer_issued = issuance_date_query.fetch(1)
             if not latest_offer_issued:
                 member_dict["offer_details"]["latest_offer_issued"] = list()
                 logging.info("No offer data associated with this member.")
@@ -55,14 +55,14 @@ class AllMemberOffersHandler(webapp2.RequestHandler):
                     issued_offer["member"] = item.member.id()
                     # issued_offer["status"] = item.status if item.status is not None else 0
                     issued_offer["offer"] = item.offer.id()
-                    issued_offer["email_sent_at"] = item.email_sent_at.strftime('%Y-%m-%d %H:%m') if \
-                        item.email_sent_at is not None else None
+                    issued_offer["issuance_date"] = item.issuance_date.strftime('%Y-%m-%d %H:%m') if \
+                        item.issuance_date is not None else None
 
-                    issued_offer["activated_at"] = item.activated_at.strftime('%Y-%m-%d %H:%m') if \
-                        item.activated_at is not None else None
+                    issued_offer["activation_date"] = item.activation_date.strftime('%Y-%m-%d %H:%m') if \
+                        item.activation_date is not None else None
 
-                    issued_offer["updated_at"] = item.updated_at.strftime('%Y-%m-%d %H:%m') if \
-                        item.updated_at is not None else None
+                    issued_offer["user_action_date"] = item.user_action_date.strftime('%Y-%m-%d %H:%m') if \
+                        item.user_action_date is not None else None
 
                     issued_offer["validity_end_date"] = item.validity_end_date.strftime('%Y-%m-%d %H:%m') if \
                         item.validity_end_date is not None else None
@@ -75,9 +75,9 @@ class AllMemberOffersHandler(webapp2.RequestHandler):
                         item.validity_start_date is not None else None
 
                     issued_offer["activated_channel"] = item.activated_channel
-                    issued_offer["created_at"] = item.created_at.strftime('%Y-%m-%d %H:%m') if \
-                        item.created_at is not None else None
-                    issued_offer["issue_channel"] = str(item.channel)
+                    issued_offer["issuance_date"] = item.issuance_date.strftime('%Y-%m-%d %H:%m') if \
+                        item.issuance_date is not None else None
+                    issued_offer["issuance_channel"] = str(item.issuance_channel)
 
                     offer = item.offer.get()
                     campaign = offer.campaign.get()
@@ -90,8 +90,8 @@ class AllMemberOffersHandler(webapp2.RequestHandler):
                     member_dict["offer_details"]["latest_offer_issued"] = issued_offer
 
 
-            updated_at_query = query.order(-MemberOfferData.updated_at)
-            latest_offer_updated = updated_at_query.fetch(1)
+            user_action_query = query.order(-MemberOfferData.user_action_date)
+            latest_offer_updated = user_action_query.fetch(1)
             if not latest_offer_updated:
                 member_dict["offer_details"]["latest_offer_updated"] = list()
                 logging.info("No offer data associated with this member.")
@@ -102,14 +102,14 @@ class AllMemberOffersHandler(webapp2.RequestHandler):
                     updated_offer["member"] = item.member.id()
                     updated_offer["status"] = item.status
                     updated_offer["offer"] = item.offer.id()
-                    updated_offer["email_sent_at"] = item.email_sent_at.strftime('%Y-%m-%d %H:%m') if \
-                        item.email_sent_at is not None else None
+                    updated_offer["issuance_date"] = item.issuance_date.strftime('%Y-%m-%d %H:%m') if \
+                        item.issuance_date is not None else None
 
-                    updated_offer["activated_at"] = item.activated_at.strftime('%Y-%m-%d %H:%m') if \
-                        item.activated_at is not None else None
+                    updated_offer["activation_date"] = item.activation_date.strftime('%Y-%m-%d %H:%m') if \
+                        item.activation_date is not None else None
 
-                    updated_offer["updated_at"] = item.updated_at.strftime('%Y-%m-%d %H:%m') if \
-                        item.updated_at is not None else None
+                    updated_offer["user_action_date"] = item.user_action_date.strftime('%Y-%m-%d %H:%m') if \
+                        item.user_action_date is not None else None
 
                     updated_offer["validity_end_date"] = item.validity_end_date.strftime('%Y-%m-%d %H:%m') if \
                         item.validity_end_date is not None else None
@@ -122,9 +122,9 @@ class AllMemberOffersHandler(webapp2.RequestHandler):
                         item.validity_start_date is not None else None
 
                     updated_offer["activated_channel"] = item.activated_channel
-                    updated_offer["created_at"] = item.created_at.strftime('%Y-%m-%d %H:%m') if \
-                        item.created_at is not None else None
-                    updated_offer["issue_channel"] = str(item.channel)
+                    updated_offer["issuance_date"] = item.issuance_date.strftime('%Y-%m-%d %H:%m') if \
+                        item.issuance_date is not None else None
+                    updated_offer["issuance_channel"] = str(item.issuance_channel)
 
                     offer = item.offer.get()
                     campaign = offer.campaign.get()
@@ -162,8 +162,8 @@ class SingleMemberOfferHandler(webapp2.RequestHandler):
 
         query = MemberOfferData.query(MemberOfferData.member == member.key)
 
-        created_at_query = query.order(-MemberOfferData.created_at)
-        latest_offer_issued = created_at_query.fetch(1)
+        issuance_date_query = query.order(-MemberOfferData.issuance_date)
+        latest_offer_issued = issuance_date_query.fetch(1)
         if not latest_offer_issued:
             member_dict["offer_details"]["latest_offer_issued"] = list()
             logging.info("No offer data associated with this member.")
@@ -174,14 +174,14 @@ class SingleMemberOfferHandler(webapp2.RequestHandler):
                 issued_offer["member"] = item.member.id()
                 issued_offer["status"] = item.status
                 issued_offer["offer"] = item.offer.id()
-                issued_offer["email_sent_at"] = item.email_sent_at.strftime('%Y-%m-%d %H:%m') if \
-                    item.email_sent_at is not None else None
+                issued_offer["issuance_date"] = item.issuance_date.strftime('%Y-%m-%d %H:%m') if \
+                    item.issuance_date is not None else None
 
-                issued_offer["activated_at"] = item.activated_at.strftime('%Y-%m-%d %H:%m') if \
-                    item.activated_at is not None else None
+                issued_offer["activation_date"] = item.activation_date.strftime('%Y-%m-%d %H:%m') if \
+                    item.activation_date is not None else None
 
-                issued_offer["updated_at"] = item.updated_at.strftime('%Y-%m-%d %H:%m') if \
-                    item.updated_at is not None else None
+                issued_offer["user_action_date"] = item.user_action_date.strftime('%Y-%m-%d %H:%m') if \
+                    item.user_action_date is not None else None
 
                 issued_offer["validity_end_date"] = item.validity_end_date.strftime('%Y-%m-%d %H:%m') if \
                     item.validity_end_date is not None else None
@@ -194,9 +194,9 @@ class SingleMemberOfferHandler(webapp2.RequestHandler):
                     item.validity_start_date is not None else None
 
                 issued_offer["activated_channel"] = item.activated_channel
-                issued_offer["created_at"] = item.created_at.strftime('%Y-%m-%d %H:%m') if \
-                    item.created_at is not None else None
-                issued_offer["issue_channel"] = str(item.channel)
+                issued_offer["issuance_date"] = item.issuance_date.strftime('%Y-%m-%d %H:%m') if \
+                    item.issuance_date is not None else None
+                issued_offer["issuance_channel"] = str(item.issuance_channel)
 
                 offer = item.offer.get()
                 campaign = offer.campaign.get()
@@ -208,8 +208,8 @@ class SingleMemberOfferHandler(webapp2.RequestHandler):
                              "Offer details dict :: %s", issued_offer)
                 member_dict["offer_details"]["latest_offer_issued"] = issued_offer
 
-        updated_at_query = query.order(-MemberOfferData.updated_at)
-        latest_offer_updated = updated_at_query.fetch(1)
+        user_action_query = query.order(-MemberOfferData.user_action_date)
+        latest_offer_updated = user_action_query.fetch(1)
         if not latest_offer_updated:
             member_dict["offer_details"]["latest_offer_updated"] = list()
             logging.info("No offer data associated with this member.")
@@ -220,14 +220,14 @@ class SingleMemberOfferHandler(webapp2.RequestHandler):
                 updated_offer["member"] = item.member.id()
                 updated_offer["status"] = item.status
                 updated_offer["offer"] = item.offer.id()
-                updated_offer["email_sent_at"] = item.email_sent_at.strftime('%Y-%m-%d %H:%m') if \
-                    item.email_sent_at is not None else None
+                updated_offer["issuance_date"] = item.issuance_date.strftime('%Y-%m-%d %H:%m') if \
+                    item.issuance_date is not None else None
 
-                updated_offer["activated_at"] = item.activated_at.strftime('%Y-%m-%d %H:%m') if \
-                    item.activated_at is not None else None
+                updated_offer["activation_date"] = item.activation_date.strftime('%Y-%m-%d %H:%m') if \
+                    item.activation_date is not None else None
 
-                updated_offer["updated_at"] = item.updated_at.strftime('%Y-%m-%d %H:%m') if \
-                    item.updated_at is not None else None
+                updated_offer["user_action_date"] = item.user_action_date.strftime('%Y-%m-%d %H:%m') if \
+                    item.user_action_date is not None else None
 
                 updated_offer["validity_end_date"] = item.validity_end_date.strftime('%Y-%m-%d %H:%m') if \
                     item.validity_end_date is not None else None
@@ -240,9 +240,9 @@ class SingleMemberOfferHandler(webapp2.RequestHandler):
                     item.validity_start_date is not None else None
 
                 updated_offer["activated_channel"] = item.activated_channel
-                updated_offer["created_at"] = item.created_at.strftime('%Y-%m-%d %H:%m') if \
-                    item.created_at is not None else None
-                updated_offer["issue_channel"] = str(item.channel)
+                updated_offer["issuance_date"] = item.issuance_date.strftime('%Y-%m-%d %H:%m') if \
+                    item.issuance_date is not None else None
+                updated_offer["issuance_channel"] = str(item.issuance_channel)
 
                 offer = item.offer.get()
                 campaign = offer.campaign.get()
@@ -311,7 +311,7 @@ class ActivateOfferHandler(webapp2.RequestHandler):
                         logging.info("Status code:: %d" % status_code)
                         if status_code == 0:
                             member_offer_obj.status = 1
-                            member_offer_obj.activated_at = datetime.now()
+                            member_offer_obj.activation_date = datetime.now()
                             member_offer_obj.put()
                             response_dict['message'] = "Offer has been activated successfully"
                         elif status_code == 1 or status_code == 99:
@@ -354,7 +354,7 @@ class KPOSOfferHandler(webapp2.RequestHandler):
             end_date = self.request.get('end_date')
             logging.info("Request end_date: " + end_date)
 
-            channel = "KPOS"
+            issuance_channel = "KPOS"
 
             if not offer_id or not member_id or not start_date or not end_date:
                 response_dict['message'] = "Please provide offer_id, member_id, start date and end date with the request"
@@ -401,16 +401,16 @@ class KPOSOfferHandler(webapp2.RequestHandler):
                         logging.info("Status code:: %d" % status_code)
                         if status_code == 0:
                             member_offer_obj.status = 1
-                            member_offer_obj.activated_at = datetime.now()
+                            member_offer_obj.activation_date = datetime.now()
                             member_offer_obj.validity_start_date = start_date
                             member_offer_obj.validity_end_date = end_date
-                            member_offer_obj.channel = channel
+                            member_offer_obj.issuance_channel = issuance_channel
                             member_offer_obj.put()
                             response_dict['message'] = "Offer has been activated successfully"
                         elif status_code == 1 or status_code == 99:
                             # TODO : check response from telluride when user is trying to activate an expired offer.
                             member_offer_obj.status = 1
-                            member_offer_obj.channel = channel
+                            member_offer_obj.issuance_channel = issuance_channel
                             member_offer_obj.put()
                             response_dict['message'] = "Member already registered for this offer"
                         else:
@@ -441,16 +441,16 @@ class SendOfferToMemberHandler(webapp2.RequestHandler):
         member_id = self.request.get('member_id')
         offer_value = self.request.get('offer_value')
         campaign_name = self.request.get('campaign_name')
-        channel = "EMAIL"
+        issuance_channel = "EMAIL"
 
         if not member_id or not offer_value or not campaign_name:
             response_dict = {"message": "Please provide member_id, offer_value and campaign_name with the request"}
             self.response.write(json.dumps(response_dict))
         else:
-            response = self.process_data(member_id, offer_value, campaign_name, channel)
+            response = self.process_data(member_id, offer_value, campaign_name, issuance_channel)
             self.response.write(json.dumps(response))
 
-    def process_data(self, member_id, offer_value, campaign_name, channel):
+    def process_data(self, member_id, offer_value, campaign_name, issuance_channel):
         response_dict = dict()
         campaign_key = ndb.Key('CampaignData', campaign_name)
         logging.info("fetched campaign_key for: %s", campaign_name)
@@ -506,7 +506,7 @@ class SendOfferToMemberHandler(webapp2.RequestHandler):
 
                         logging.info("email service call result :: %s", result)
 
-                        member_offer_data_key = MemberOfferDataService.create(offer, member, channel)
+                        member_offer_data_key = MemberOfferDataService.create(offer, member, issuance_channel)
 
                         logging.info('member_offer_key:: %s', member_offer_data_key)
                         logging.info('Offer %s email has been sent to:: %s', offer.OfferNumber, member.email)

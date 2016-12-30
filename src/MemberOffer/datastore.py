@@ -40,7 +40,7 @@ class OfferDataService(CampaignData):
                               Actions_ActionProperty_PropertyType="Tier",
                               Actions_ActionProperty_Property_Name="MIN",
                               Actions_ActionProperty_Property_Values_Value="0.01",
-                              created_at=datetime.now())
+                              issuance_date=datetime.now())
         offer_obj.key = ndb.Key('OfferData', offer_name)
         offer_obj.campaign = campaign_key
 
@@ -120,8 +120,12 @@ class CampaignDataService(CampaignData):
 
 class MemberOfferDataService(MemberOfferData):
     @classmethod
-    def create(cls, offer_entity, member_entity, channel):
-        member_offer_data = MemberOfferData(offer=offer_entity.key, member=member_entity.key, status=False, email_sent_at=datetime.now(), channel = channel)
+    def create(cls, offer_entity, member_entity, issuance_channel):
+        member_offer_data = MemberOfferData(offer=offer_entity.key,
+                                            member=member_entity.key,
+                                            status=0,
+                                            issuance_date=datetime.now(),
+                                            issuance_channel = issuance_channel)
         member_offer_data_key = member_offer_data.put()
         return member_offer_data_key
 
