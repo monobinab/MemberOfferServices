@@ -12,7 +12,8 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from google.appengine.api import urlfetch
 from oauth2client.client import GoogleCredentials
-from utilities import create_pubsub_message, make_request, get_jinja_environment, get_email_host, get_telluride_host
+from utilities import create_pubsub_message, make_request, get_jinja_environment, \
+    get_email_host, get_telluride_host
 from datetime import datetime
 import xml.etree.ElementTree as ET
 import os
@@ -117,57 +118,30 @@ class GetAllCampaignsHandler(webapp2.RequestHandler):
         self.response.write(json.dumps({'data': result}))
 
 
-class GetAllMembersHandler(webapp2.RequestHandler):
-
-    def get(self):
-        query = MemberData.query()
-        member_list = query.fetch(10)
-        result = []
-        for member in member_list:
-            result.append(member.to_dict)
-        self.response.headers['Content-Type'] = 'application/json'
-        self.response.headers['Access-Control-Allow-Origin'] = '*'
-        self.response.write(json.dumps({'data': result}))
-
-
 class ActivateOfferHandler(webapp2.RequestHandler):
     def get(self):
         response_dict = dict()
         jinja_environment = get_jinja_environment()
         template = jinja_environment.get_template('activate-offer.html')
+        self.response.headers['Access-Control-Allow-Origin'] = '*'
 
         try:
             offer_id = self.request.get('offer_id')
-            logging.info("Request offer_id: " + offer_id)
-            if offer_id is None or not offer_id:
-                response_html = "<html><head><title>Sears Offer Activation</title></head><body><h3> " \
-                                 + "Please provide offer_id and member_id with the request</h3></body></html>"
-                self.response.write(response_html)
-                # message = "Please provide offer_id and member_id with the request"
-                # message_dict = {'message': message}
-                # rendered_template = template.render(message_dict)
-                # self.response.write(rendered_template)
-
-                offer_success = 0
-                return
-
             member_id = self.request.get('member_id')
+            logging.info("Request offer_id: " + offer_id)
             logging.info("Request member_id: " + member_id)
 
-            if member_id is None or not member_id:
-                # message = "Please provide offer_id and member_id with the request"
-                # message_dict = {'message': message}
-                # rendered_template = template.render(message_dict)
-                # self.response.write(rendered_template)
-                response_html = "<html><head><title>Sears Offer Activation</title></head><body><h3> " \
-                                 + "Please provide offer_id and member_id with the request</h3></body></html>"
-                self.response.write(response_html)
-                offer_success = 0
+            if not offer_id or not member_id:
+                message = "Please provide offer_id and member_id with the request"
+                message_dict = {'message': message,
+                                'offer_success': 0
+                                }
+                rendered_template = template.render(message_dict)
+                self.response.write(rendered_template)
                 return
 
             offer_key = ndb.Key('OfferData', offer_id)
             member_key = ndb.Key('MemberData', member_id)
-            self.response.headers['Access-Control-Allow-Origin'] = '*'
 
             logging.info("fetched offer_key and member key ")
             offer = offer_key.get()
@@ -573,7 +547,6 @@ app = webapp2.WSGIApplication([
     ('/', IndexPageHandler),
     ('/saveCampaign', SaveCampaignHandler),
     ('/campaigns', GetAllCampaignsHandler),
-    ('/members', GetAllMembersHandler),
     ('/activateOffer', ActivateOfferHandler),
     ('/getListItems', UIListItemsHandler),
     ('/getMetrics', MetricsHandler),
