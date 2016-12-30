@@ -6,6 +6,5 @@ handlers:
 - url: .*
   script: main.app
 
-
 automatic_scaling:
   min_idle_instances: 1
