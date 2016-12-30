@@ -3,7 +3,6 @@ import logging
 from datetime import datetime, timedelta
 from google.appengine.api import datastore_errors
 from utilities import make_request
-import time
 
 
 class OfferDataService(CampaignData):
@@ -145,7 +144,7 @@ class MemberOfferDataService(MemberOfferData):
                         logging.info("Total member-offers found for the offer %s are %d" % (each_offer.key, len(result)))
 
                         for each_entity in result:
-                            if each_entity.status:
+                            if each_entity.status > 0:
                                 redeem_count += 1
                             else:
                                 non_redeem_count += 1

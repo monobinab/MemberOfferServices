@@ -2,6 +2,8 @@ from models import CampaignData, OfferData, MemberOfferData, MemberData, ndb
 import logging
 from datetime import datetime, timedelta
 from google.appengine.api import datastore_errors
+from utilities import make_request
+import time
 
 
 class OfferDataService(CampaignData):
@@ -38,7 +40,7 @@ class OfferDataService(CampaignData):
                               Actions_ActionProperty_PropertyType="Tier",
                               Actions_ActionProperty_Property_Name="MIN",
                               Actions_ActionProperty_Property_Values_Value="0.01",
-                              created_at=datetime.now())
+                              issuance_date=datetime.now())
         offer_obj.key = ndb.Key('OfferData', offer_name)
         offer_obj.campaign = campaign_key
 
@@ -53,8 +55,10 @@ class OfferDataService(CampaignData):
 
         try:
             offer_key = offer.put()
-            logging.info('Offer created in datastore with key:: %s', offer_key)
-            # TellurideService.create_offer(offer)
+            # time.sleep(10)
+            logging.info("OfferNumber:: %s", offer.OfferNumber)
+            logging.info("Offer created:: %s", OfferData.get_by_id(id=offer.OfferNumber, use_datastore=True, use_memcache=False, use_cache=False))
+            # logging.info('Offer created in datastore with key:: %s', offer_key)
             response_dict['message'] = 'success'
             return response_dict
         except datastore_errors.Timeout:
@@ -71,10 +75,57 @@ class OfferDataService(CampaignData):
             return response_dict
 
 
+class CampaignDataService(CampaignData):
+    DEFAULT_CAMPAIGN_NAME = 'default_campaign'
+
+    @classmethod
+    def get_campaign_key(cls, campaign_name=DEFAULT_CAMPAIGN_NAME):
+        return ndb.Key('CampaignData', campaign_name)
+
+    @classmethod
+    @ndb.transactional(xg=True)
+    def save_campaign(cls, json_data, created_time):
+        campaign_dict = json_data['campaign_details']
+        offer_dict = json_data['offer_details']
+
+        campaign_name = campaign_dict['name']
+        campaign_budget = int(campaign_dict['money'])
+        campaign_category = campaign_dict['category']
+        campaign_format_level = campaign_dict['format_level'] if campaign_dict['format_level'] is not None else ""
+        campaign_convratio = int(campaign_dict['conversion_ratio'])
+
+        store_location = campaign_dict['store_location'] if campaign_dict['store_location'] is not None else ""
+        campaign_period = campaign_dict['period']
+        start_date = campaign_dict['start_date']
+
+        offer_type = offer_dict['offer_type']
+        offer_min_val = int(offer_dict['min_value'])
+        offer_max_val = int(offer_dict['max_value'])
+        offer_valid_till = offer_dict['valid_till']
+        offer_mbr_issuance = offer_dict['member_issuance']
+        campaign = CampaignData(name=campaign_name, money=campaign_budget, category=campaign_category,
+                                format_level=campaign_format_level, conversion_ratio=campaign_convratio,
+                                period=campaign_period, offer_type=offer_type,
+                                max_per_member_issuance_frequency=offer_mbr_issuance, max_value=offer_max_val,
+                                min_value=offer_min_val, store_location=store_location, valid_till=offer_valid_till, start_date=start_date)
+
+        campaign.key = CampaignDataService.get_campaign_key(campaign_name)
+        campaign_key = campaign.put()
+        logging.info('campaign_key:: %s', campaign_key)
+
+        # Creating offers from min values to max values
+        for surprise_point in range(offer_min_val, offer_max_val+1):
+            OfferDataService.save_offer(campaign, surprise_point)
+
+
 class MemberOfferDataService(MemberOfferData):
     @classmethod
-    def create(cls, offer_entity, member_entity, channel):
-        member_offer_data = MemberOfferData(offer=offer_entity.key, member=member_entity.key, status=False, email_sent_at=datetime.now(), channel = channel)
+    def create(cls, offer_entity, member_entity, issuance_channel):
+        member_offer_data = MemberOfferData(offer=offer_entity.key,
+                                            member=member_entity.key,
+                                            status=0,
+                                            issuance_date=datetime.now(),
+                                            issuance_channel = issuance_channel)
         member_offer_data_key = member_offer_data.put()
         return member_offer_data_key
 

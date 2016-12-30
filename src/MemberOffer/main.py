@@ -53,7 +53,7 @@ class AllMemberOffersHandler(webapp2.RequestHandler):
                 for item in latest_offer_issued:
                     issued_offer = dict()
                     issued_offer["member"] = item.member.id()
-                    # issued_offer["status"] = item.status if item.status is not None else 0
+                    issued_offer["status"] = item.status if item.status is not None else 0
                     issued_offer["offer"] = item.offer.id()
                     issued_offer["issuance_date"] = item.issuance_date.strftime('%Y-%m-%d %H:%m') if \
                         item.issuance_date is not None else None
@@ -100,7 +100,7 @@ class AllMemberOffersHandler(webapp2.RequestHandler):
                 for item in latest_offer_updated:
                     updated_offer = dict()
                     updated_offer["member"] = item.member.id()
-                    updated_offer["status"] = item.status
+                    updated_offer["status"] = item.status if item.status is not None else 0
                     updated_offer["offer"] = item.offer.id()
                     updated_offer["issuance_date"] = item.issuance_date.strftime('%Y-%m-%d %H:%m') if \
                         item.issuance_date is not None else None
@@ -172,7 +172,7 @@ class SingleMemberOfferHandler(webapp2.RequestHandler):
             for item in latest_offer_issued:
                 issued_offer = dict()
                 issued_offer["member"] = item.member.id()
-                issued_offer["status"] = item.status
+                issued_offer["status"] = item.status if item.status is not None else 0
                 issued_offer["offer"] = item.offer.id()
                 issued_offer["issuance_date"] = item.issuance_date.strftime('%Y-%m-%d %H:%m') if \
                     item.issuance_date is not None else None
@@ -218,7 +218,7 @@ class SingleMemberOfferHandler(webapp2.RequestHandler):
             for item in latest_offer_updated:
                 updated_offer = dict()
                 updated_offer["member"] = item.member.id()
-                updated_offer["status"] = item.status
+                updated_offer["status"] = item.status if item.status is not None else 0
                 updated_offer["offer"] = item.offer.id()
                 updated_offer["issuance_date"] = item.issuance_date.strftime('%Y-%m-%d %H:%m') if \
                     item.issuance_date is not None else None
@@ -316,7 +316,7 @@ class ActivateOfferHandler(webapp2.RequestHandler):
                             response_dict['message'] = "Offer has been activated successfully"
                         elif status_code == 1 or status_code == 99:
                             # TODO : check response from telluride when user is trying to activate an expired offer.
-                            member_offer_obj.status = 1
+                            member_offer_obj.status = 1  # TODO: 1 or 0?
                             member_offer_obj.put()
                             response_dict['message'] = "Member already registered for this offer"
                         else:
@@ -409,7 +409,7 @@ class KPOSOfferHandler(webapp2.RequestHandler):
                             response_dict['message'] = "Offer has been activated successfully"
                         elif status_code == 1 or status_code == 99:
                             # TODO : check response from telluride when user is trying to activate an expired offer.
-                            member_offer_obj.status = 1
+                            member_offer_obj.status = 1  # TODO: 1 or 0?
                             member_offer_obj.issuance_channel = issuance_channel
                             member_offer_obj.put()
                             response_dict['message'] = "Member already registered for this offer"

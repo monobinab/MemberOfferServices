@@ -181,8 +181,8 @@ class ActivateOfferHandler(webapp2.RequestHandler):
                     status_code = int(result['status_code'])
                     logging.info("Status code:: %d" % status_code)
                     if status_code == 0:
-                            member_offer_obj.status = True
-                            member_offer_obj.activated_at = datetime.now()
+                            member_offer_obj.status = 1
+                            member_offer_obj.activation_date = datetime.now()
                             member_offer_obj.put()
 
                             response_dict['message'] = "Offer has been activated successfully"
@@ -190,7 +190,7 @@ class ActivateOfferHandler(webapp2.RequestHandler):
                             offer_success = 1
 
                     elif status_code == 1 or status_code == 99:
-                        member_offer_obj.status = True
+                        member_offer_obj.status = 1 # TODO: status 1 or 0? check telluride respone vals
                         member_offer_obj.put()
                         response_dict['message'] = "Member already registered for this offer"
                         message = "Member already registered for this offer"
