@@ -58,10 +58,7 @@ class OfferDataService(CampaignData):
 
         try:
             offer_key = offer.put()
-            # time.sleep(10)
             logging.info("OfferNumber:: %s", offer.OfferNumber)
-            logging.info("Offer created:: %s", OfferData.get_by_id(id=offer.OfferNumber, use_datastore=True, use_memcache=False, use_cache=False))
-            # logging.info('Offer created in datastore with key:: %s', offer_key)
             response_dict['message'] = 'success'
             return response_dict
         except datastore_errors.Timeout:

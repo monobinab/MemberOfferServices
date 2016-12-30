@@ -6,18 +6,14 @@ import httplib
 import webapp2
 import pubsub_utils
 import csv
-from models import CampaignData, MemberData, MemberOfferData, ndb, StoreData, OfferData
+from models import CampaignData, MemberOfferData, ndb, StoreData, OfferData
 from datastore import CampaignDataService, MemberOfferDataService, OfferDataService
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from google.appengine.api import urlfetch
 from oauth2client.client import GoogleCredentials
 from utilities import create_pubsub_message, make_request, get_jinja_environment, \
     get_email_host, get_telluride_host
 from datetime import datetime
-import xml.etree.ElementTree as ET
-import os
-
 
 
 class BaseHandler(webapp2.RequestHandler):

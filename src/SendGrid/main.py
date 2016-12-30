@@ -4,10 +4,9 @@ import logging
 import webapp2
 
 import json
-from models import CampaignData, MemberData, MemberOfferData, ndb, OfferData
-from datastore import MemberOfferDataService, OfferDataService
+from models import ndb
+from datastore import OfferDataService
 from sendEmail import send_mail
-from googleapiclient.errors import HttpError
 
 
 class IndexPageHandler(webapp2.RequestHandler):
