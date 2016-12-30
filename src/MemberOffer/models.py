@@ -78,8 +78,6 @@ class MemberOfferData(ndb.Model):
     validity_start_date = ndb.DateTimeProperty(indexed=False)
     validity_end_date = ndb.DateTimeProperty(indexed=True)
     status = ndb.IntegerProperty(default=0)
-    kpos_start_date = ndb.DateTimeProperty(indexed=True)
-    kpos_end_date = ndb.DateTimeProperty(indexed=True)
 
 
 class SendgridData(ndb.Model):
@@ -132,3 +130,12 @@ class ServiceEndPointData(ndb.Model):
     backend = ndb.StringProperty(indexed=True)
     email = ndb.StringProperty(indexed=True)
     telluride = ndb.StringProperty(indexed=True)
+
+
+class ModelData(ndb.Model):
+    SOAR = ndb.StringProperty(indexed=True)
+    SOAR_name = ndb.StringProperty(indexed=True)
+    amount = ndb.StringProperty(indexed=True)
+    created_at = ndb.StringProperty(indexed=False)
+    member = ndb.StringProperty(indexed=True)
+    store = ndb.StringProperty(indexed=True)

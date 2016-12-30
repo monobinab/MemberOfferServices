@@ -95,7 +95,7 @@ def make_request(host, relative_url, request_type, payload):
         app_id = app_identity.get_application_id()
         urlfetch.set_default_fetch_deadline(60)
         logging.info("App id:: %s", app_id)
-        result = urlfetch.fetch("https://"+host + relative_url, headers={"X-Appengine-Inbound-Appid": app_id})
+        result = urlfetch.fetch(host + relative_url, headers={"X-Appengine-Inbound-Appid": app_id})
         if result.status_code == 200:
             logging.info('Response status_code: %s', result.status_code)
             # logging.info('Response status_message: %s', status_message)

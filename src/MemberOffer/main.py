@@ -44,37 +44,50 @@ class AllMemberOffersHandler(webapp2.RequestHandler):
             query = MemberOfferData.query(MemberOfferData.member == member.key)
 
             created_at_query = query.order(-MemberOfferData.created_at)
-            latest_offer_created = created_at_query.fetch(1)
-            if not latest_offer_created:
-                member_dict["offer_details"]["latest_offer_created"] = list()
+            latest_offer_issued = created_at_query.fetch(1)
+            if not latest_offer_issued:
+                member_dict["offer_details"]["latest_offer_issued"] = list()
                 logging.info("No offer data associated with this member.")
             else:
-                logging.info("latest offer created :: %s", latest_offer_created)
-                for item in latest_offer_created:
-                    created_offer = dict()
-                    created_offer["member"] = item.member.id()
-                    created_offer["status"] = item.status
-                    created_offer["offer"] = item.offer.id()
-                    created_offer["email_sent_at"] = str(item.email_sent_at)
-                    created_offer["activated_at"] = str(item.activated_at)
-                    created_offer["updated_at"] = str(item.updated_at)
-                    created_offer["validity_end_date"] = str(item.validity_end_date)
-                    created_offer["redeemed_date"] = str(item.redeemed_date)
-                    created_offer["redeemed"] = item.redeemed
-                    created_offer["validity_start_date"] = str(item.validity_start_date)
-                    created_offer["activated_channel"] = item.channel
-                    created_offer["created_at"] = str(item.created_at)
-                    created_offer["channel"] = str(item.channel)
+                logging.info("latest offer issued :: %s", latest_offer_issued)
+                for item in latest_offer_issued:
+                    issued_offer = dict()
+                    issued_offer["member"] = item.member.id()
+                    # issued_offer["status"] = item.status if item.status is not None else 0
+                    issued_offer["offer"] = item.offer.id()
+                    issued_offer["email_sent_at"] = item.email_sent_at.strftime('%Y-%m-%d %H:%m') if \
+                        item.email_sent_at is not None else None
+
+                    issued_offer["activated_at"] = item.activated_at.strftime('%Y-%m-%d %H:%m') if \
+                        item.activated_at is not None else None
+
+                    issued_offer["updated_at"] = item.updated_at.strftime('%Y-%m-%d %H:%m') if \
+                        item.updated_at is not None else None
+
+                    issued_offer["validity_end_date"] = item.validity_end_date.strftime('%Y-%m-%d %H:%m') if \
+                        item.validity_end_date is not None else None
+
+                    issued_offer["redeemed_date"] = item.redeemed_date.strftime('%Y-%m-%d %H:%m') if \
+                        item.redeemed_date is not None else None
+
+                    issued_offer["redeemed"] = item.redeemed
+                    issued_offer["validity_start_date"] = item.validity_start_date.strftime('%Y-%m-%d %H:%m') if \
+                        item.validity_start_date is not None else None
+
+                    issued_offer["activated_channel"] = item.activated_channel
+                    issued_offer["created_at"] = item.created_at.strftime('%Y-%m-%d %H:%m') if \
+                        item.created_at is not None else None
+                    issued_offer["issue_channel"] = str(item.channel)
 
                     offer = item.offer.get()
                     campaign = offer.campaign.get()
                     logging.info("Campaign :: %s ", campaign.to_dict())
-                    created_offer["offer_value"] = offer.surprise_points
-                    created_offer["category"] = campaign.category
+                    issued_offer["offer_value"] = offer.surprise_points
+                    issued_offer["category"] = campaign.category
 
-                    logging.info("Added latest offer created information for the member."
-                                 "Offer details dict :: %s", created_offer)
-                    member_dict["offer_details"]["latest_offer_created"] = created_offer
+                    logging.info("Added latest offer issued information for the member."
+                                 "Offer details dict :: %s", issued_offer)
+                    member_dict["offer_details"]["latest_offer_issued"] = issued_offer
 
 
             updated_at_query = query.order(-MemberOfferData.updated_at)
@@ -89,24 +102,37 @@ class AllMemberOffersHandler(webapp2.RequestHandler):
                     updated_offer["member"] = item.member.id()
                     updated_offer["status"] = item.status
                     updated_offer["offer"] = item.offer.id()
-                    updated_offer["email_sent_at"] = str(item.email_sent_at)
-                    updated_offer["activated_at"] = str(item.activated_at)
-                    updated_offer["updated_at"] = str(item.updated_at)
-                    updated_offer["validity_end_date"] = str(item.validity_end_date)
-                    updated_offer["redeemed_date"] = str(item.redeemed_date)
+                    updated_offer["email_sent_at"] = item.email_sent_at.strftime('%Y-%m-%d %H:%m') if \
+                        item.email_sent_at is not None else None
+
+                    updated_offer["activated_at"] = item.activated_at.strftime('%Y-%m-%d %H:%m') if \
+                        item.activated_at is not None else None
+
+                    updated_offer["updated_at"] = item.updated_at.strftime('%Y-%m-%d %H:%m') if \
+                        item.updated_at is not None else None
+
+                    updated_offer["validity_end_date"] = item.validity_end_date.strftime('%Y-%m-%d %H:%m') if \
+                        item.validity_end_date is not None else None
+
+                    updated_offer["redeemed_date"] = item.redeemed_date.strftime('%Y-%m-%d %H:%m') if \
+                        item.redeemed_date is not None else None
+
                     updated_offer["redeemed"] = item.redeemed
-                    updated_offer["validity_start_date"] = str(item.validity_start_date)
-                    updated_offer["activated_channel"] = item.channel
-                    updated_offer["created_at"] = str(item.created_at)
-                    updated_offer["channel"] = str(item.channel)
+                    updated_offer["validity_start_date"] = item.validity_start_date.strftime('%Y-%m-%d %H:%m') if \
+                        item.validity_start_date is not None else None
+
+                    updated_offer["activated_channel"] = item.activated_channel
+                    updated_offer["created_at"] = item.created_at.strftime('%Y-%m-%d %H:%m') if \
+                        item.created_at is not None else None
+                    updated_offer["issue_channel"] = str(item.channel)
 
                     offer = item.offer.get()
                     campaign = offer.campaign.get()
                     logging.info("Campaign :: %s ", campaign.to_dict())
-                    created_offer["offer_value"] = offer.surprise_points
-                    created_offer["category"] = campaign.category
+                    issued_offer["offer_value"] = offer.surprise_points
+                    issued_offer["category"] = campaign.category
 
-                    logging.info("Added latest offer created information for the member."
+                    logging.info("Added latest offer issued information for the member."
                                  "Offer details dict :: %s", updated_offer)
                     member_dict["offer_details"]["latest_offer_updated"] = updated_offer
 
@@ -121,6 +147,12 @@ class SingleMemberOfferHandler(webapp2.RequestHandler):
     def get(self):
         member_id = self.request.get('member_id')
         member = MemberData.get_by_id(member_id)
+
+        if member is None:
+            result = {"data": "That member does not exist!"}
+            self.response.write(json.dumps(result))
+            return
+
         logging.info("Member object :: %s", member)
         result = list()
         member_dict = dict()
@@ -131,37 +163,50 @@ class SingleMemberOfferHandler(webapp2.RequestHandler):
         query = MemberOfferData.query(MemberOfferData.member == member.key)
 
         created_at_query = query.order(-MemberOfferData.created_at)
-        latest_offer_created = created_at_query.fetch(1)
-        if not latest_offer_created:
-            member_dict["offer_details"]["latest_offer_created"] = list()
+        latest_offer_issued = created_at_query.fetch(1)
+        if not latest_offer_issued:
+            member_dict["offer_details"]["latest_offer_issued"] = list()
             logging.info("No offer data associated with this member.")
         else:
-            logging.info("latest offer created :: %s", latest_offer_created)
-            for item in latest_offer_created:
-                created_offer = dict()
-                created_offer["member"] = item.member.id()
-                created_offer["status"] = item.status
-                created_offer["offer"] = item.offer.id()
-                created_offer["email_sent_at"] = str(item.email_sent_at)
-                created_offer["activated_at"] = str(item.activated_at)
-                created_offer["updated_at"] = str(item.updated_at)
-                created_offer["validity_end_date"] = str(item.validity_end_date)
-                created_offer["redeemed_date"] = str(item.redeemed_date)
-                created_offer["redeemed"] = item.redeemed
-                created_offer["validity_start_date"] = str(item.validity_start_date)
-                created_offer["activated_channel"] = item.channel
-                created_offer["created_at"] = str(item.created_at)
-                created_offer["channel"] = str(item.channel)
+            logging.info("latest offer issued :: %s", latest_offer_issued)
+            for item in latest_offer_issued:
+                issued_offer = dict()
+                issued_offer["member"] = item.member.id()
+                issued_offer["status"] = item.status
+                issued_offer["offer"] = item.offer.id()
+                issued_offer["email_sent_at"] = item.email_sent_at.strftime('%Y-%m-%d %H:%m') if \
+                    item.email_sent_at is not None else None
+
+                issued_offer["activated_at"] = item.activated_at.strftime('%Y-%m-%d %H:%m') if \
+                    item.activated_at is not None else None
+
+                issued_offer["updated_at"] = item.updated_at.strftime('%Y-%m-%d %H:%m') if \
+                    item.updated_at is not None else None
+
+                issued_offer["validity_end_date"] = item.validity_end_date.strftime('%Y-%m-%d %H:%m') if \
+                    item.validity_end_date is not None else None
+
+                issued_offer["redeemed_date"] = item.redeemed_date.strftime('%Y-%m-%d %H:%m') if \
+                    item.redeemed_date is not None else None
+
+                issued_offer["redeemed"] = item.redeemed
+                issued_offer["validity_start_date"] = item.validity_start_date.strftime('%Y-%m-%d %H:%m') if \
+                    item.validity_start_date is not None else None
+
+                issued_offer["activated_channel"] = item.activated_channel
+                issued_offer["created_at"] = item.created_at.strftime('%Y-%m-%d %H:%m') if \
+                    item.created_at is not None else None
+                issued_offer["issue_channel"] = str(item.channel)
 
                 offer = item.offer.get()
                 campaign = offer.campaign.get()
                 logging.info("Campaign :: %s ", campaign.to_dict())
-                created_offer["offer_value"] = offer.surprise_points
-                created_offer["category"] = campaign.category
+                issued_offer["offer_value"] = offer.surprise_points
+                issued_offer["category"] = campaign.category
 
-                logging.info("Added latest offer created information for the member."
-                             "Offer details dict :: %s", created_offer)
-                member_dict["offer_details"]["latest_offer_created"] = created_offer
+                logging.info("Added latest offer issued information for the member."
+                             "Offer details dict :: %s", issued_offer)
+                member_dict["offer_details"]["latest_offer_issued"] = issued_offer
 
         updated_at_query = query.order(-MemberOfferData.updated_at)
         latest_offer_updated = updated_at_query.fetch(1)
@@ -175,24 +220,37 @@ class SingleMemberOfferHandler(webapp2.RequestHandler):
                 updated_offer["member"] = item.member.id()
                 updated_offer["status"] = item.status
                 updated_offer["offer"] = item.offer.id()
-                updated_offer["email_sent_at"] = str(item.email_sent_at)
-                updated_offer["activated_at"] = str(item.activated_at)
-                updated_offer["updated_at"] = str(item.updated_at)
-                updated_offer["validity_end_date"] = str(item.validity_end_date)
-                updated_offer["redeemed_date"] = str(item.redeemed_date)
+                updated_offer["email_sent_at"] = item.email_sent_at.strftime('%Y-%m-%d %H:%m') if \
+                    item.email_sent_at is not None else None
+
+                updated_offer["activated_at"] = item.activated_at.strftime('%Y-%m-%d %H:%m') if \
+                    item.activated_at is not None else None
+
+                updated_offer["updated_at"] = item.updated_at.strftime('%Y-%m-%d %H:%m') if \
+                    item.updated_at is not None else None
+
+                updated_offer["validity_end_date"] = item.validity_end_date.strftime('%Y-%m-%d %H:%m') if \
+                    item.validity_end_date is not None else None
+
+                updated_offer["redeemed_date"] = item.redeemed_date.strftime('%Y-%m-%d %H:%m') if \
+                    item.redeemed_date is not None else None
+
                 updated_offer["redeemed"] = item.redeemed
-                updated_offer["validity_start_date"] = str(item.validity_start_date)
-                updated_offer["activated_channel"] = item.channel
-                updated_offer["created_at"] = str(item.created_at)
-                updated_offer["channel"] = str(item.channel)
+                updated_offer["validity_start_date"] = item.validity_start_date.strftime('%Y-%m-%d %H:%m') if \
+                    item.validity_start_date is not None else None
+
+                updated_offer["activated_channel"] = item.activated_channel
+                updated_offer["created_at"] = item.created_at.strftime('%Y-%m-%d %H:%m') if \
+                    item.created_at is not None else None
+                updated_offer["issue_channel"] = str(item.channel)
 
                 offer = item.offer.get()
                 campaign = offer.campaign.get()
                 logging.info("Campaign :: %s ", campaign.to_dict())
-                created_offer["offer_value"] = offer.surprise_points
-                created_offer["category"] = campaign.category
+                updated_offer["offer_value"] = offer.surprise_points
+                updated_offer["category"] = campaign.category
 
-                logging.info("Added latest offer created information for the member."
+                logging.info("Added latest offer issued information for the member."
                              "Offer details dict :: %s", updated_offer)
                 member_dict["offer_details"]["latest_offer_updated"] = updated_offer
 
@@ -220,6 +278,15 @@ class ActivateOfferHandler(webapp2.RequestHandler):
 
             offer_key = ndb.Key('OfferData', offer_id)
             member_key = ndb.Key('MemberData', member_id)
+            if offer_key is None:
+                result = {"data": "Invalid offer!"}
+                self.response.write(json.dumps(result))
+                return
+            if member_key is None:
+                result = {"data": "That member does not exist!"}
+                self.response.write(json.dumps(result))
+                return
+
             logging.info("fetched offer_key and member key ")
 
             offer = offer_key.get()
@@ -296,6 +363,17 @@ class KPOSOfferHandler(webapp2.RequestHandler):
 
             offer_key = ndb.Key('OfferData', offer_id)
             member_key = ndb.Key('MemberData', member_id)
+
+            if offer_key is None:
+                result = {"data": "Invalid offer!"}
+                self.response.write(json.dumps(result))
+                return
+
+            if member_key is None:
+                result = {"data": "That member does not exist!"}
+                self.response.write(json.dumps(result))
+                return
+
             logging.info("fetched offer_key and member key ")
 
             offer = offer_key.get()
@@ -307,7 +385,7 @@ class KPOSOfferHandler(webapp2.RequestHandler):
 
                 if member_offer_obj is not None:
                     host = get_telluride_host()
-                    relative_url = str("registerMember?offer_id=" + offer_id +
+                    relative_url = str("kposOffer?offer_id=" + offer_id +
                                        "&&member_id=" + member_id +
                                        "&&start_date=" + start_date +
                                        "&&end_date=" + end_date)
@@ -324,8 +402,8 @@ class KPOSOfferHandler(webapp2.RequestHandler):
                         if status_code == 0:
                             member_offer_obj.status = 1
                             member_offer_obj.activated_at = datetime.now()
-                            member_offer_obj.kpos_start_date = start_date
-                            member_offer_obj.kpos_end_date = end_date
+                            member_offer_obj.validity_start_date = start_date
+                            member_offer_obj.validity_end_date = end_date
                             member_offer_obj.channel = channel
                             member_offer_obj.put()
                             response_dict['message'] = "Offer has been activated successfully"
@@ -355,7 +433,7 @@ class KPOSOfferHandler(webapp2.RequestHandler):
         self.response.write(json.dumps(response_dict))
 
 
-class SendOfferToMemberHandler:
+class SendOfferToMemberHandler(webapp2.RequestHandler):
     # TODO: Make response consistent with other APIs as well
     def get(self):
         self.response.headers['Content-Type'] = 'application/json'
@@ -367,9 +445,7 @@ class SendOfferToMemberHandler:
 
         if not member_id or not offer_value or not campaign_name:
             response_dict = {"message": "Please provide member_id, offer_value and campaign_name with the request"}
-
             self.response.write(json.dumps(response_dict))
-
         else:
             response = self.process_data(member_id, offer_value, campaign_name, channel)
             self.response.write(json.dumps(response))
@@ -411,10 +487,10 @@ class SendOfferToMemberHandler:
                     member_key = ndb.Key('MemberData', member_id)
                     logging.info("Fetched member_key for member: %s", member_id)
 
-                    member = member_key.get()
+                    member = member_key.get(use_datastore=True, use_memcache=False, use_cache=False)
                     if member is None:
                         logging.info("member is None")
-                        response_dict['message'] = "Member ID " + member_id + " not found in datastore"
+                        response_dict['message'] = "Member ID " + member_id + " not found in database."
                         return response_dict
                     else:
                         host = get_email_host()
