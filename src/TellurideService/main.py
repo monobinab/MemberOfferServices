@@ -134,6 +134,10 @@ class RedeemOfferHandler(webapp2.RequestHandler):
             self.response.write(json.dumps({'data': "Internal Server Error"}))
 
 
+class UpdateKPOSOffer(webapp2.RequestHandler):
+    pass
+
+
 # [START app]
 app = webapp2.WSGIApplication([
     ('/', IndexPageHandler),
@@ -141,7 +145,8 @@ app = webapp2.WSGIApplication([
     ('/registerMember', ActivateOfferHandler),
     ('/getBalance', BalanceHandler),
     ('/redeemOffer', RedeemOfferHandler),
-    ('/createOffer', CreateOfferHandler)
+    ('/createOffer', CreateOfferHandler),
+    ('/kposOffer', UpdateKPOSOffer),
 ], debug=True)
 
 # [END app]
