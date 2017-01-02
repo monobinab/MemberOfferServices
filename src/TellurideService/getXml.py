@@ -247,6 +247,35 @@ def get_update_offer_xml(offer_entity):
     return xml_string
 
 
+def get_update_offer_date_xml(offer_entity, offer_status):
+    xml_string = """<S:Envelope xmlns:S="http://www.w3.org/2003/05/soap-envelope">
+                   <S:Body>
+                      <ns2:UpdateOfferStatus xmlns="http://rewards.sears.com/schemas/" xmlns:ns2="http://rewards.sears.com/schemas/offer/">
+                         <MessageVersion>01</MessageVersion>
+                         <RequestorID>OFRP</RequestorID>
+                         <Source>TI</Source>
+                         <ns2:ModifiedTS>"""+datetime.now().strftime("%Y-%m-%d %H:%M:%S")+"""</ns2:ModifiedTS>
+                         <ns2:ModifiedBy>xoff</ns2:ModifiedBy>
+                         <ns2:OffersInfo>
+                            <ns2:OfferInfo>
+                               <ns2:OfferNumber>"""+offer_entity.OfferNumber+"""</ns2:OfferNumber>
+                               <ns2:OfferStatus>"""+offer_status+"""</ns2:OfferStatus>
+                            </ns2:OfferInfo>
+                         </ns2:OffersInfo>
+                         <ns2:AdditionalAttributes>
+                            <ns2:AdditionalAttribute>
+                               <ns2:Name>RealTimeFlag</ns2:Name>
+                               <ns2:Values>
+                                  <ns2:Value>Y</ns2:Value>
+                               </ns2:Values>
+                            </ns2:AdditionalAttribute>
+                         </ns2:AdditionalAttributes>
+                      </ns2:UpdateOfferStatus>
+                   </S:Body>
+                </S:Envelope>"""
+    return xml_string
+
+
 def get_register_offer_xml(offer_entity, member_entity):
     end_date = offer_entity.OfferEndDate+"T"+offer_entity.OfferEndTime
     xml_string = """<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:web="http://www.epsilon.com/webservices/">
