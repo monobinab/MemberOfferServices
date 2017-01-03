@@ -93,11 +93,11 @@ class ActivateOfferHandler(webapp2.RequestHandler):
         except httplib.HTTPException as exc:
             logging.error(exc)
             self.response.set_status(408)
-            self.response.write("Request has timed out. Please try again.")
+            self.response.write(json.dumps({'data': "Request has timed out. Please try again."}))
         except Exception as e:
             logging.error(e)
             self.response.set_status(500)
-            self.response.write("Internal Server Error")
+            self.response.write(json.dumps({'data': "Internal Server Error"}))
 
 
 class BalanceHandler(webapp2.RequestHandler):
@@ -135,7 +135,37 @@ class RedeemOfferHandler(webapp2.RequestHandler):
 
 
 class UpdateKPOSOffer(webapp2.RequestHandler):
-    pass
+    def get(self):
+        self.response.headers['Access-Control-Allow-Origin'] = '*'
+        self.response.headers['Content-Type'] = 'application/json'
+        try:
+            logging.info("Namespace:: %s", namespace_manager.get_namespace())
+            offer_id = self.request.get('offer_id')
+            member_id = self.request.get('member_id')
+            start_date = self.request.get('start_date')
+            end_date = self.request.get('end_date')
+
+            logging.info(offer_id + " -------- " + member_id)
+            logging.info("Start date, end date :: %s, %s", start_date, end_date)
+
+            offer_key = ndb.Key('OfferData', offer_id)
+            member_key = ndb.Key('MemberData', member_id)
+
+            offer = offer_key.get(use_datastore=True, use_memcache=False, use_cache=False)
+            member = member_key.get(use_datastore=True, use_memcache=False, use_cache=False)
+
+            result = TellurideService.update_kpos_offer(offer, member, start_date, end_date)
+            self.response.write(json.dumps({'data': result}))
+        except httplib.HTTPException as exc:
+            logging.error(exc)
+            self.response.set_status(408)
+            response = {"data": "Request has timed out. Please try again."}
+            self.response.write(json.dumps(response))
+        except Exception as e:
+            logging.error(e)
+            self.response.set_status(500)
+            response = {"data": "Internal Server Error"}
+            self.response.write(json.dumps(response))
 
 
 # [START app]

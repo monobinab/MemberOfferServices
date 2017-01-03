@@ -316,7 +316,7 @@ class ActivateEmailOffer(webapp2.RequestHandler):
                             response_dict['message'] = "Offer has been activated successfully"
                         elif status_code == 1 or status_code == 99:
                             # TODO : check response from telluride when user is trying to activate an expired offer.
-                            member_offer_obj.status = 1  # TODO: 1 or 0?
+                            member_offer_obj.status = 0  # TODO: 1 or 0?
                             member_offer_obj.put()
                             response_dict['message'] = "Member already registered for this offer"
                         else:
@@ -439,7 +439,6 @@ class IssueActivateKPOSOffer(webapp2.RequestHandler):
         be made. 1. Bring offer to DRAFT state, 2. update start and end date for the offer, 3. change offer
         state to ACTIVATED. Register the member to the offer at Telluride. The MemberOfferData kind is then
         updated with details of this member-offer mapping.
-        :return: response
         """
         self.response.headers['Content-Type'] = 'application/json'
         self.response.headers['Access-Control-Allow-Origin'] = '*'
@@ -457,7 +456,8 @@ class IssueActivateKPOSOffer(webapp2.RequestHandler):
             logging.info("Request channel :: %s", issuance_channel)
 
             if not offer_id or not member_id or not start_date or not end_date:
-                response_dict['message'] = "Please provide offer_id, member_id, start date and end date with the request"
+                response_dict['message'] = """Please provide offer_id, member_id,
+                                           start date and end date with the request"""
                 self.response.write(json.dumps(response_dict))
                 return
 
@@ -487,7 +487,7 @@ class IssueActivateKPOSOffer(webapp2.RequestHandler):
 
                 if offer_end_date == end_date and offer_start_date == start_date:
                     logging.info("Start and end date is the same as campaign dates.")
-                    message = self.create_offer(offer_id, member_id, start_date, end_date, issuance_channel)
+                    message = self.register_offer(offer_id, member_id, start_date, end_date, issuance_channel)
                     response_dict['message'] = message
                 else:
                     logging.info("Start and end dates to be updated.")
@@ -502,10 +502,53 @@ class IssueActivateKPOSOffer(webapp2.RequestHandler):
 
         self.response.write(json.dumps(response_dict))
 
-    def create_offer(self, offer_id, member_id, start_date, end_date, issuance_channel):
+    def register_offer(self, offer_id, member_id, start_date, end_date, issuance_channel):
         host = get_telluride_host()
         relative_url = str("registerMember?offer_id=" + offer_id +
                            "&&member_id=" + member_id)
+        logging.info("Telluride URL :: %s, %s", host, relative_url)
+        result = make_request(host=host, relative_url=relative_url, request_type="GET", payload='')
+
+        logging.info(json.loads(result))
+        result = json.loads(result).get('data')
+        logging.info(result)
+
+        status_code = int(result.get('status_code'))
+
+        offer_key = ndb.Key('OfferData', offer_id)
+        member_key = ndb.Key('MemberData', member_id)
+
+        member_offer_data = MemberOfferData(offer=offer_key,
+                                            member=member_key,
+                                            offer_id=offer_id,
+                                            member_id=member_id,
+                                            status=0,
+                                            issuance_date=datetime.now(),
+                                            validity_start_date=start_date,
+                                            validity_end_date=end_date,
+                                            issuance_channel=issuance_channel)
+
+
+        if status_code == 0:
+            member_offer_data.status = 1
+            member_offer_data.activation_date = datetime.now()
+            member_offer_data.put()
+        elif status_code == 1 or status_code == 99:
+            # TODO : check response from telluride when user is trying to activate an expired offer.
+            member_offer_data.status = 0  # TODO: 1 or 0?
+            member_offer_data.put()
+        else:
+            logging.error("Telluride call failed. %s", result.get('error_message'))
+
+
+        return result.get('message')
+
+    def update_offer(self, offer_id, member_id, start_date, end_date, issuance_channel):
+        host = get_telluride_host()
+        relative_url = str("kposOffer?offer_id=" + offer_id +
+                           "&&member_id=" + member_id +
+                           "&&start_date=" + start_date +
+                           "&&end_date=" + end_date)
         logging.info("Telluride URL :: %s, %s", host, relative_url)
         result = make_request(host=host, relative_url=relative_url, request_type="GET", payload='')
 
@@ -525,28 +568,22 @@ class IssueActivateKPOSOffer(webapp2.RequestHandler):
                                             validity_start_date=start_date,
                                             validity_end_date=end_date,
                                             issuance_channel=issuance_channel)
+        status_code = int(result.get('status_code'))
 
-        doc = ET.fromstring(result)
-        if doc is not None:
-            status_code = int(doc.find('.//{http://www.epsilon.com/webservices/}Status').text)
-            logging.info("Status code:: %d" % status_code)
-            if status_code == 0:
-                member_offer_data.status = 1
-                member_offer_data.activation_date = datetime.now()
-                member_offer_data.put()
-                message = "Offer has been activated successfully"
-            elif status_code == 1 or status_code == 99:
-                # TODO : check response from telluride when user is trying to activate an expired offer.
-                member_offer_data.status = 1  # TODO: 1 or 0?
-                member_offer_data.put()
-                message = "Member already registered for this offer"
-            else:
-                logging.error("Telluride call failed.")
-                message = "Sorry, Offer could not be activated"
+        if status_code == 0:
+            member_offer_data.status = 1
+            member_offer_data.activation_date = datetime.now()
+            member_offer_data.put()
+
+            offer = offer_key.get()
+            offer.OfferEndDate = end_date
+            offer.OfferStartDate = start_date
+            offer.put()
+        elif status_code == 1 or status_code == 99:
+            # TODO : check response from telluride when user is trying to activate an expired offer.
+            member_offer_data.status = 0  # TODO: 1 or 0?
+            member_offer_data.put()
         else:
-            logging.error("Telluride call failed.")
-            message = "Sorry, Offer could not be activated"
-        return message
+            logging.error("Telluride call failed. %s", result.get('error_message'))
 
-    def update_offer(self):
-        pass
+        return result.get('message')

@@ -2,7 +2,8 @@ import logging
 import httplib
 from google.appengine.api import memcache
 import json
-from getXml import get_create_offer_xml, get_update_offer_xml, get_register_offer_xml, get_redeem_offer_xml, get_balance_xml
+from getXml import get_create_offer_xml, get_update_offer_xml, get_register_offer_xml, \
+    get_redeem_offer_xml, get_balance_xml, get_change_offer_dates_xml
 import xml.etree.ElementTree as ET
 from utilities import get_url_configuration
 
@@ -31,7 +32,7 @@ class TellurideService:
         status_code = int(doc.find('.//{'+STATUS_NS+'}Status').text)
         logging.info("Status code:: %s", status_code)
         if status_code == 0:
-            update_offer_xml = get_update_offer_xml(offer_entity=offer).rstrip('\n')
+            update_offer_xml = get_update_offer_xml(offer_entity=offer, offer_status='ACTIVATED').rstrip('\n')
             update_offer_result = TellurideService.make_request(url=config_data['ACTIVATE_OFFER_URL'],
                                                                 put_request=config_data['ACTIVATE_OFFER_REQUEST'],
                                                                 request_type="POST", data=update_offer_xml,
@@ -123,6 +124,96 @@ class TellurideService:
         # doc = ET.fromstring(result)
         # status_code = doc.find('.//{http://www.epsilon.com/webservices/}Status').text
         return result
+
+    @classmethod
+    def update_kpos_offer(cls, offer, member, start_date, end_date):
+        """
+        :param offer: offer object
+        :param member: member object
+        :param start_date: new start date
+        :param end_date: new end date
+        1. Change offer status to DRAFT
+        2. Update offer start and end dates and send telluride request.
+        3. Change offer status to ACTIVATED
+        :return:
+        """
+        config_data = get_url_configuration()
+
+        response_dict = TellurideService.change_offer_status(offer, 'DRAFT')
+        logging.info("Offer status changed to DRAFT. Response dict :: %s", response_dict)
+
+        change_offer_dates_xml = get_change_offer_dates_xml(offer=offer,
+                                                            start_date=start_date,
+                                                            end_date=end_date).rstrip('\n')
+
+        change_offer_dates_result = TellurideService.make_request(url=config_data['CREATE_OFFER_URL'],
+                                                                  put_request=config_data['CREATE_OFFER_REQUEST'],
+                                                                  request_type="POST",
+                                                                  data=change_offer_dates_xml,
+                                                                  config_data=config_data,
+                                                                  is_token_required=True)
+        doc = ET.fromstring(change_offer_dates_result)
+        status_code = int(doc.find('.//{' + STATUS_NS + '}Status').text)
+        logging.info("Status code:: %s", status_code)
+
+        if status_code == 0:
+            response_dict = TellurideService.change_offer_status(offer, 'ACTIVATED')
+            logging.info("Offer status changed to ACTIVATED. Response dict :: %s", response_dict)
+        else:
+            error_code = doc.find('.//{' + ERROR_NS + '}ErrorCode').text
+            error_text = doc.find('.//{' + ERROR_NS + '}ErrorText').text
+            logging.info("Error code:: %s", error_code)
+            logging.info("Error text:: %s", error_text)
+
+        return change_offer_dates_result
+
+    @classmethod
+    def change_offer_status(cls, offer, offer_status):
+        response_dict = dict()
+        config_data = get_url_configuration()
+        update_offer_xml = get_update_offer_xml(offer_entity=offer,
+                                                offer_status=offer_status).rstrip('\n')
+
+        update_offer_result = TellurideService.make_request(url=config_data['ACTIVATE_OFFER_URL'],
+                                                            put_request=config_data['ACTIVATE_OFFER_REQUEST'],
+                                                            request_type="POST",
+                                                            data=update_offer_xml,
+                                                            config_data=config_data,
+                                                            is_token_required=True)
+        doc = ET.fromstring(update_offer_result)
+        status_code = int(doc.find('.//{' + STATUS_NS + '}Status').text)
+
+        if update_offer_result is not None:
+            if status_code == 0:
+                logging.info("Activated offer")
+                response_dict['message'] = str("Offer status has been changed successfully to %s", offer_status)
+                response_dict['status_code'] = status_code
+            else:
+                response_dict['message'] = "Offer could not activate."
+                response_dict['error_message'] = doc.find('.//{' + ERROR_NS + '}ErrorText').text
+                response_dict['status_code'] = status_code
+        else:
+            error_code = doc.find('.//{'+ERROR_NS+'}ErrorCode').text
+            error_text = doc.find('.//{'+ERROR_NS+'}ErrorText').text
+            logging.info("Error code:: %s", error_code)
+            logging.info("Error text:: %s", error_text)
+
+            if error_code is not None:
+                # error_text = doc.find('.//{http://rewards.sears.com/schemas/}ErrorText').text
+                if not error_text == "Offer update only allowed in DRAFT status":
+                    logging.error("Create offer failed:: Telluride call returned with error."
+                                  " Status:: %s, Status Text:: %s and Error Text:: %s", status_code,
+                                  doc.find('.//{'+STATUS_NS+'}StatusText').text, error_text)
+                    response_dict['message'] = "Offer activation has failed!!!"
+
+                else:
+                    response_dict['message'] = "Offer could not be created."
+                    response_dict['status_code'] = status_code
+                    response_dict['error_message'] = error_text
+            else:
+                response_dict['message'] = "Offer has been created successfully, but could not activate."
+                response_dict['status_code'] = status_code
+        return response_dict
 
     @classmethod
     def make_request(cls, url, put_request, request_type, data, config_data, is_token_required):
