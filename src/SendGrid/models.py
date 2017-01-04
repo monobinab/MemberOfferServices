@@ -75,7 +75,7 @@ class MemberOfferData(ndb.Model):
     activation_date = ndb.DateTimeProperty(indexed=True, default=None)
     redeemed = ndb.BooleanProperty(default=False)
     redeemed_date = ndb.DateTimeProperty(indexed=True, default=None)
-    user_action_date = ndb.DateTimeProperty(auto_now=True, auto_now_add=False)
+    user_action_date = ndb.DateTimeProperty(indexed=False)
     validity_start_date = ndb.DateTimeProperty(indexed=False)
     validity_end_date = ndb.DateTimeProperty(indexed=True)
     status = ndb.IntegerProperty(default=0)

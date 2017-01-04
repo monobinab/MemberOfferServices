@@ -495,7 +495,14 @@ class IssueActivateKPOSOffer(webapp2.RequestHandler):
                     logging.info("Start and end dates to be updated.")
                     message = self.update_offer(offer_id, member_id, start_date, end_date, issuance_channel)
                     response_dict['message'] = message
-                    # TODO: Update offer entity with new dates
+
+                    register_message = self.register_offer(offer_id, member_id, start_date, end_date, issuance_channel)
+                    logging.info("Register member to offer message :: %s", register_message)
+
+                    offer.OfferEndDate = end_date
+                    offer.OfferStartDate = start_date
+                    offer.put()
+                    logging.info("Updated offer entity with new dates.")
             else:
                 logging.error("could not fetch offer or member details for key:: %s", offer_key)
                 response_dict['message'] = "Sorry could not fetch member offer details."

@@ -171,7 +171,7 @@ class TellurideService:
                     logging.info("ACTIVATE request status code :: %s", status_code)
 
                     if status_code == 0:
-                        response_dict['message'] = "Offer dates successfully updated."
+                        response_dict['message'] = "Success! Offer dates updated."
                     else:
                         response_dict['message'] = "Error! Offer dates update failed."
                         response_dict['status_code'] = status_code
