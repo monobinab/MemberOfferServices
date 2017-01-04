@@ -3,10 +3,9 @@ from webapp2 import Route
 
 app = webapp2.WSGIApplication([
     Route('/', handler='main.IndexPageHandler'),
-    Route('/members', handler='main.AllMemberOffersHandler'),
-    Route('/getMember', handler='main.SingleMemberOfferHandler'),
-    Route('/activateOffer', handler='main.ActivateOfferHandler'),
-    Route('/kposOffer', handler='main.KPOSOfferHandler'),
-    # Route('/modeldata', handler='main.ModelDataHandler'),
-    Route('/sendOffer', handler='main.SendOfferToMemberHandler'),
+    Route('/members', handler='main.AllMemberOffers'),
+    Route('/getMember', handler='main.SingleMemberOffer'),
+    Route('/activateOffer', handler='main.ActivateEmailOffer'),
+    Route('/kposOffer', handler='main.IssueActivateKPOSOffer'),
+    Route('/sendOffer', handler='main.SendOfferToMember'),
 ], debug=True)

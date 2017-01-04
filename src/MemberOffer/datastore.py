@@ -3,7 +3,6 @@ import logging
 from datetime import datetime, timedelta
 from google.appengine.api import datastore_errors
 from utilities import make_request
-import time
 
 
 class OfferDataService(CampaignData):
@@ -40,7 +39,7 @@ class OfferDataService(CampaignData):
                               Actions_ActionProperty_PropertyType="Tier",
                               Actions_ActionProperty_Property_Name="MIN",
                               Actions_ActionProperty_Property_Values_Value="0.01",
-                              issuance_date=datetime.now())
+                              created_at=datetime.now())
         offer_obj.key = ndb.Key('OfferData', offer_name)
         offer_obj.campaign = campaign_key
 
@@ -125,7 +124,7 @@ class MemberOfferDataService(MemberOfferData):
                                             member=member_entity.key,
                                             status=0,
                                             issuance_date=datetime.now(),
-                                            issuance_channel = issuance_channel)
+                                            issuance_channel=issuance_channel)
         member_offer_data_key = member_offer_data.put()
         return member_offer_data_key
 
@@ -145,7 +144,7 @@ class MemberOfferDataService(MemberOfferData):
                         logging.info("Total member-offers found for the offer %s are %d" % (each_offer.key, len(result)))
 
                         for each_entity in result:
-                            if each_entity.status:
+                            if each_entity.status > 0:
                                 redeem_count += 1
                             else:
                                 non_redeem_count += 1

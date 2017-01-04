@@ -93,7 +93,6 @@ class CampaignDataService(CampaignData):
 
         campaign_name = campaign_dict['name']
         campaign_budget = int(campaign_dict['money'])
-
         campaign_category = campaign_dict['category']
         campaign_format_level = campaign_dict['format_level'] if campaign_dict['format_level'] is not None else ""
         campaign_convratio = int(campaign_dict['conversion_ratio'])
@@ -127,9 +126,9 @@ class MemberOfferDataService(MemberOfferData):
     def create(cls, offer_entity, member_entity, issuance_channel):
         member_offer_data = MemberOfferData(offer=offer_entity.key,
                                             member=member_entity.key,
-                                            status=False,
+                                            status=0,
                                             issuance_date=datetime.now(),
-                                            issuance_channel=issuance_channel)
+                                            issuance_channel = issuance_channel)
         member_offer_data_key = member_offer_data.put()
         return member_offer_data_key
 
@@ -149,7 +148,7 @@ class MemberOfferDataService(MemberOfferData):
                         logging.info("Total member-offers found for the offer %s are %d" % (each_offer.key, len(result)))
 
                         for each_entity in result:
-                            if each_entity.status:
+                            if each_entity.status > 0:
                                 redeem_count += 1
                             else:
                                 non_redeem_count += 1
@@ -179,3 +178,4 @@ class MemberOfferDataService(MemberOfferData):
             response_dict['message'] = 'Please provide campaign id.'
             response_dict['status'] = 'Failure'
         return response_dict
+
