@@ -2,7 +2,7 @@ import sys
 sys.path.insert(0, 'lib')
 import logging
 import webapp2
-
+import os
 import json
 from models import ndb
 from datastore import OfferDataService
@@ -65,7 +65,8 @@ class OfferDetailsHandler(webapp2.RequestHandler):
         offer_entity = OfferDataService.create_offer_obj(campaign, offer_value)
 
         # HACK: Need to remove later. Only for testing purpose. <>
-        member_id = '7081327663412819'
+        if os.environ['CURRENT_VERSION_ID'] in ['qa', 'dev']:
+            member_id = '7081327663412819'
         member_key = ndb.Key('MemberData', member_id)
         logging.info("Fetched member_key for member: %s", member_id)
         member_entity = member_key.get()

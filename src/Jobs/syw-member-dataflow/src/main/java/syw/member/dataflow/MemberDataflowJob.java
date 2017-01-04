@@ -68,7 +68,7 @@ public class MemberDataflowJob extends HttpServlet {
 
 		public Entity makeEntity(TableRow content) {
 			Entity.Builder entityBuilder = Entity.newBuilder();
-			Key.Builder keyBuilder = makeKey("BqMbrData", (String)content.get("lyl_id_no"));
+			Key.Builder keyBuilder = makeKey("MemberData", (String)content.get("lyl_id_no"));
 			keyBuilder.getPartitionIdBuilder().setNamespaceId("dev");
 			entityBuilder.setKey(keyBuilder.build());
 
@@ -93,9 +93,36 @@ public class MemberDataflowJob extends HttpServlet {
 
 	public static void getMemberData(){
 		Log.info("Start BigQuery dataflow");
+		/*
+		 * Query:: 
+		 * SELECT
+		  Locn_Nbr AS store,
+		  Lyl_Id_No AS member
+		FROM [syw-analytics-repo-prod:cbr_mart_tbls.eadp_kmart_pos_dtl]
+		WHERE Lyl_Id_No is not NULL
+		  AND Locn_Nbr is not NULL
+		  AND SOAR_NO is not NULL
+		  AND Burn_Amt is not NULL
+		  AND SellQty is not NULL
+		  AND Kmt_Sell is not NULL
+		  AND Md_Amt is not NULL
+		  AND Day_Dt >= CAST('2015-08-01' AS DATE)
+		  AND Day_Dt <= CAST('2016-07-31' AS DATE)
+		  AND Locn_Nbr in (9524, 3418)
+		GROUP BY store, member*/
 
-		String query = "SELECT lyl_id_no, kmt_primary_store FROM `syw-analytics-repo-prod.crm_perm_tbls.sywr_primary_store` "
-				+ "where kmt_primary_store in (9524, 3418)";
+		String query = "SELECT  Locn_Nbr AS store,  Lyl_Id_No AS member "
+				+ "FROM [syw-analytics-repo-prod:cbr_mart_tbls.eadp_kmart_pos_dtl] "
+				+ "WHERE Lyl_Id_No is not NULL  "
+				+ "AND Locn_Nbr is not NULL  "
+				+ "AND SOAR_NO is not NULL  "
+				+ "AND Burn_Amt is not NULL  "
+				+ "AND SellQty is not NULL  "
+				+ "AND Kmt_Sell is not NULL  "
+				+ "AND Md_Amt is not NULL  "
+				+ "AND Day_Dt >= CAST('2015-08-01' AS DATE)  "
+				+ "AND Day_Dt <= CAST('2016-07-31' AS DATE)  "
+				+ "AND Locn_Nbr in (9524, 3418) GROUP BY store, member";
 		Log.info("Query: " + query);
 
 		try {
@@ -115,7 +142,8 @@ public class MemberDataflowJob extends HttpServlet {
 
 			Log.info("BigQuery-DataStore pipeline created");
 			PCollection<TableRow> BigQueryReadingCollection = bp
-					.apply(BigQueryIO.Read.withoutValidation().usingStandardSql().fromQuery(query));
+					.apply(BigQueryIO.Read.withoutValidation().fromQuery(query));
+//					.apply(BigQueryIO.Read.withoutValidation().usingStandardSql().fromQuery(query));
 			PCollection<Entity> BigQueryTransformData = BigQueryReadingCollection
 					.apply(ParDo.of(new SplitLineDataTask()));
 			BigQueryTransformData.apply(DatastoreIO.v1().write().withProjectId(PIPELINE_PROJECT_ID));
