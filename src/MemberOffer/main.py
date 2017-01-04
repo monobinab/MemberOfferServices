@@ -440,7 +440,7 @@ class IssueActivateKPOSOffer(webapp2.RequestHandler):
         state to ACTIVATED. Register the member to the offer at Telluride. The MemberOfferData kind is then
         updated with details of this member-offer mapping.
         """
-        self.response.headers['Content-Type'] = 'application/json'
+        self.response.headers['Content-Type'] = 'application.json'
         self.response.headers['Access-Control-Allow-Origin'] = '*'
         response_dict = dict()
         try:
@@ -452,10 +452,10 @@ class IssueActivateKPOSOffer(webapp2.RequestHandler):
             logging.info("Request start_date: " + start_date)
             end_date = self.request.get('end_date')
             logging.info("Request end_date: " + end_date)
-            issuance_channel = self.request.get("channel") or "kpos"
+            issuance_channel = self.request.get("channel")
             logging.info("Request channel :: %s", issuance_channel)
 
-            if not offer_id or not member_id or not start_date or not end_date:
+            if not offer_id or not member_id or not start_date or not end_date or not issuance_channel:
                 response_dict['message'] = """Please provide offer_id, member_id,
                                            start date and end date with the request"""
                 self.response.write(json.dumps(response_dict))
@@ -479,8 +479,10 @@ class IssueActivateKPOSOffer(webapp2.RequestHandler):
             offer = offer_key.get()
             member = member_key.get()
 
-            offer_end_date = offer.OfferEndDate.strftime('%Y-%m-%d')
-            offer_start_date = offer.OfferStartDate.strftime('%Y-%m-%d')
+            offer_end_date = offer.OfferEndDate
+            offer_start_date = offer.OfferStartDate
+
+            logging.info("The offer's current start and end date are :: %s, %s", offer_start_date, offer_end_date)
 
             if offer is not None and member is not None:
                 logging.info("Valid offer and member. ")
@@ -493,6 +495,7 @@ class IssueActivateKPOSOffer(webapp2.RequestHandler):
                     logging.info("Start and end dates to be updated.")
                     message = self.update_offer(offer_id, member_id, start_date, end_date, issuance_channel)
                     response_dict['message'] = message
+                    # TODO: Update offer entity with new dates
             else:
                 logging.error("could not fetch offer or member details for key:: %s", offer_key)
                 response_dict['message'] = "Sorry could not fetch member offer details."
@@ -500,7 +503,7 @@ class IssueActivateKPOSOffer(webapp2.RequestHandler):
             logging.error(exc)
             response_dict['message'] = "Sorry could not fetch offer details because of the request time out."
 
-        self.response.write(json.dumps(response_dict))
+        self.response.write(json.dumps({'data':response_dict}))
 
     def register_offer(self, offer_id, member_id, start_date, end_date, issuance_channel):
         host = get_telluride_host()
@@ -524,8 +527,8 @@ class IssueActivateKPOSOffer(webapp2.RequestHandler):
                                             member_id=member_id,
                                             status=0,
                                             issuance_date=datetime.now(),
-                                            validity_start_date=start_date,
-                                            validity_end_date=end_date,
+                                            validity_start_date=datetime.strptime(start_date, '%Y-%m-%d'),
+                                            validity_end_date=datetime.strptime(end_date, '%Y-%m-%d'),
                                             issuance_channel=issuance_channel)
 
 
@@ -545,12 +548,14 @@ class IssueActivateKPOSOffer(webapp2.RequestHandler):
 
     def update_offer(self, offer_id, member_id, start_date, end_date, issuance_channel):
         host = get_telluride_host()
-        relative_url = str("kposOffer?offer_id=" + offer_id +
+        relative_url = str("updateKposOffer?offer_id=" + offer_id +
                            "&&member_id=" + member_id +
                            "&&start_date=" + start_date +
-                           "&&end_date=" + end_date)
+                           "&&end_date=" + end_date +
+                           "&&channel=" + issuance_channel)
         logging.info("Telluride URL :: %s, %s", host, relative_url)
         result = make_request(host=host, relative_url=relative_url, request_type="GET", payload='')
+        logging.info("RESULT ::%s", result)
 
         logging.info(json.loads(result))
         result = json.loads(result).get('data')
@@ -565,8 +570,8 @@ class IssueActivateKPOSOffer(webapp2.RequestHandler):
                                             member_id=member_id,
                                             status=0,
                                             issuance_date=datetime.now(),
-                                            validity_start_date=start_date,
-                                            validity_end_date=end_date,
+                                            validity_start_date=datetime.strptime(start_date, '%Y-%m-%d'),
+                                            validity_end_date=datetime.strptime(end_date, '%Y-%m-%d'),
                                             issuance_channel=issuance_channel)
         status_code = int(result.get('status_code'))
 

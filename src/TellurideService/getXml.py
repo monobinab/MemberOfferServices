@@ -232,7 +232,7 @@ def get_change_offer_dates_xml(offer, start_date, end_date):
                          <ns2:OfferSubType>"""+offer.OfferSubType+"""</ns2:OfferSubType>
                          <ns2:OfferBUProgram>
                             <ns2:BUProgram>
-                               <ns2:BUProgramName>"""+offer.BUProgram_BUProgramName+"""</ns2:BUProgramName>
+                               <ns2:BUProgramName>"""+offer.OfferBUProgram_BUProgram_BUProgramName+"""</ns2:BUProgramName>
                             </ns2:BUProgram>
                          </ns2:OfferBUProgram>
                          <ns2:ReceiptDescription>"""+offer.ReceiptDescription+"""</ns2:ReceiptDescription>
@@ -250,7 +250,7 @@ def get_change_offer_dates_xml(offer, start_date, end_date):
                             <ns2:OfferAttribute>
                                <ns2:Name>"""+offer.OfferAttributes_OfferAttribute_Name+"""</ns2:Name>
                                <ns2:Values>
-                                  <ns2:Value>"""+offer.OfferAttribute_Values_Value+"""</ns2:Value>
+                                  <ns2:Value>"""+offer.OfferAttributes_OfferAttribute_Values_Value+"""</ns2:Value>
                                </ns2:Values>
                             </ns2:OfferAttribute>
                             <ns2:OfferAttribute>

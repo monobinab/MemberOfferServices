@@ -155,16 +155,19 @@ class UpdateKPOSOffer(webapp2.RequestHandler):
             member = member_key.get(use_datastore=True, use_memcache=False, use_cache=False)
 
             result = TellurideService.update_kpos_offer(offer, member, start_date, end_date)
+            logging.info("RESULT UPDATE KPOS %s", result)
             self.response.write(json.dumps({'data': result}))
         except httplib.HTTPException as exc:
             logging.error(exc)
             self.response.set_status(408)
             response = {"data": "Request has timed out. Please try again."}
+            logging.info("RESULT UPDATE KPOS %s", response)
             self.response.write(json.dumps(response))
         except Exception as e:
             logging.error(e)
             self.response.set_status(500)
             response = {"data": "Internal Server Error"}
+            logging.info("RESULT UPDATE KPOS %s", response)
             self.response.write(json.dumps(response))
 
 
@@ -176,7 +179,7 @@ app = webapp2.WSGIApplication([
     ('/getBalance', BalanceHandler),
     ('/redeemOffer', RedeemOfferHandler),
     ('/createOffer', CreateOfferHandler),
-    ('/kposOffer', UpdateKPOSOffer),
+    ('/updateKposOffer', UpdateKPOSOffer),
 ], debug=True)
 
 # [END app]
