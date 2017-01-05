@@ -112,6 +112,9 @@ class ConfigData(ndb.Model):
     SERVICE_TOPIC = ndb.StringProperty(indexed=False)
     PUBLISH_TOKEN = ndb.StringProperty(indexed=False)
 
+    REGISTRATION_START_DATE = ndb.IntegerProperty(indexed=True)
+    REGISTRATION_END_DATE = ndb.IntegerProperty(indexed=True)
+
 
 class FrontEndData(ndb.Model):
     Categories = ndb.StringProperty(indexed=True, repeated=True)
@@ -136,3 +139,12 @@ class ServiceEndPointData(ndb.Model):
     backend = ndb.StringProperty(indexed=True)
     email = ndb.StringProperty(indexed=True)
     telluride = ndb.StringProperty(indexed=True)
+
+
+class ModelData(ndb.Model):
+    SOAR = ndb.StringProperty(indexed=True)
+    SOAR_name = ndb.StringProperty(indexed=True)
+    amount = ndb.StringProperty(indexed=True)
+    created_at = ndb.StringProperty(indexed=False)
+    member = ndb.StringProperty(indexed=True)
+    store = ndb.StringProperty(indexed=True)

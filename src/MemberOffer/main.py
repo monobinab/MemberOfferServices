@@ -4,11 +4,11 @@ import json
 import logging
 import httplib
 import webapp2
-from models import CampaignData, MemberData, MemberOfferData, ndb, StoreData
+from models import CampaignData, MemberData, MemberOfferData, ndb, StoreData, ModelData, ConfigData
 from datastore import CampaignDataService, MemberOfferDataService, OfferDataService
 from googleapiclient.errors import HttpError
 from utilities import create_pubsub_message, make_request, get_telluride_host, get_email_host
-from datetime import datetime
+from datetime import datetime, timedelta
 import xml.etree.ElementTree as ET
 import os
 
@@ -31,6 +31,9 @@ class IndexPageHandler(webapp2.RequestHandler):
 
 class AllMemberOffers(webapp2.RequestHandler):
     def get(self):
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.headers['Access-Control-Allow-Origin'] = '*'
+
         query = MemberData.query()
         member_list = query.fetch()
         result = list()
@@ -138,18 +141,18 @@ class AllMemberOffers(webapp2.RequestHandler):
 
             result.append(member_dict)
 
-        self.response.headers['Content-Type'] = 'application/json'
-        self.response.headers['Access-Control-Allow-Origin'] = '*'
         self.response.write(json.dumps({"data": result}))
 
 
 class SingleMemberOffer(webapp2.RequestHandler):
     def get(self):
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.headers['Access-Control-Allow-Origin'] = '*'
         member_id = self.request.get('member_id')
         member = MemberData.get_by_id(member_id)
-
         if member is None:
             result = {"data": "That member does not exist!"}
+            self.response.set_status(404)
             self.response.write(json.dumps(result))
             return
 
@@ -255,8 +258,7 @@ class SingleMemberOffer(webapp2.RequestHandler):
                 member_dict["offer_details"]["latest_offer_updated"] = updated_offer
 
         result.append(member_dict)
-        self.response.headers['Content-Type'] = 'application/json'
-        self.response.headers['Access-Control-Allow-Origin'] = '*'
+
         self.response.write(json.dumps({"data": result}))
 
 
@@ -525,20 +527,8 @@ class IssueActivateKPOSOffer(webapp2.RequestHandler):
         logging.info(result)
 
         status_code = int(result.get('status_code'))
-
-        offer_key = ndb.Key('OfferData', offer_id)
-        member_key = ndb.Key('MemberData', member_id)
-
-        member_offer_data = MemberOfferData(offer=offer_key,
-                                            member=member_key,
-                                            offer_id=offer_id,
-                                            member_id=member_id,
-                                            status=0,
-                                            issuance_date=datetime.now(),
-                                            validity_start_date=datetime.strptime(start_date, '%Y-%m-%d'),
-                                            validity_end_date=datetime.strptime(end_date, '%Y-%m-%d'),
-                                            issuance_channel=issuance_channel)
-
+        member_offer_data = MemberOfferDataService.create_object(offer_id, member_id, issuance_channel,
+                                                                 start_date, end_date)
 
         if status_code == 0:
             member_offer_data.status = 1
@@ -570,17 +560,9 @@ class IssueActivateKPOSOffer(webapp2.RequestHandler):
         logging.info(result)
 
         offer_key = ndb.Key('OfferData', offer_id)
-        member_key = ndb.Key('MemberData', member_id)
 
-        member_offer_data = MemberOfferData(offer=offer_key,
-                                            member=member_key,
-                                            offer_id=offer_id,
-                                            member_id=member_id,
-                                            status=0,
-                                            issuance_date=datetime.now(),
-                                            validity_start_date=datetime.strptime(start_date, '%Y-%m-%d'),
-                                            validity_end_date=datetime.strptime(end_date, '%Y-%m-%d'),
-                                            issuance_channel=issuance_channel)
+        member_offer_data = MemberOfferDataService.create_object(offer_id, member_id, issuance_channel,
+                                                                 start_date, end_date)
         status_code = int(result.get('status_code'))
 
         if status_code == 0:
@@ -600,3 +582,48 @@ class IssueActivateKPOSOffer(webapp2.RequestHandler):
             logging.error("Telluride call failed. %s", result.get('error_message'))
 
         return result.get('message')
+
+
+class GetModelData(webapp2.RequestHandler):
+    def get(self):
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.headers['Access-Control-Allow-Origin'] = '*'
+        member_id = self.request.get('member')
+
+        if not member_id:
+            result = {"data": "Please provide a member ID."}
+            self.response.set_status(404)
+            self.response.write(json.dumps(result))
+            return
+
+        model_data = ModelData.query(ModelData.member == member_id).get()
+
+        if model_data is None:
+            result = {"data": "Model data for this member does not exist."}
+            self.response.set_status(404)
+            self.response.write(json.dumps(result))
+            return
+
+        # TODO: model_data.created_at.strftime("%Y-%m-%d")
+
+        registration_offsets = ConfigData.get_by_id("RegistrationDatesConfig")
+
+        start_date_offset = registration_offsets.REGISTRATION_START_DATE
+        end_date_offset = registration_offsets.REGISTRATION_END_DATE
+
+        logging.info("Start date offset - %s - end date offset - %s ",
+                     start_date_offset, end_date_offset)
+
+        registration_start_date = datetime.now() + timedelta(days=start_date_offset)
+        registration_end_date = datetime.now() + timedelta(days=end_date_offset)
+
+        registration_start_date = registration_start_date.strftime("%Y-%m-%d")
+        registration_end_date = registration_end_date.strftime(("%Y-%m-%d"))
+
+        model_data = model_data.to_dict()
+        model_data["registration_start_date"] = registration_start_date
+        model_data["registration_end_date"] = registration_end_date
+
+        logging.info("Model data :: %s", model_data)
+
+        self.response.write(json.dumps({'data': model_data}))
