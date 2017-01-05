@@ -361,7 +361,7 @@ class SendOfferToMember(webapp2.RequestHandler):
         member_id = self.request.get('member')
         logging.info("Request member_id: " + member_id)
 
-        issuance_channel = self.request.get("channel")
+        issuance_channel = self.request.get("channel") or "email"
         logging.info("Request channel :: %s", issuance_channel)
 
         if not member_id or not offer_id or not issuance_channel:
@@ -467,16 +467,15 @@ class IssueActivateKPOSOffer(webapp2.RequestHandler):
             logging.info("Request offer_id: " + offer_id)
             member_id = self.request.get('member_id')
             logging.info("Request member_id: " + member_id)
-            start_date = self.request.get('start_date')
-            logging.info("Request start_date: " + start_date)
-            end_date = self.request.get('end_date')
-            logging.info("Request end_date: " + end_date)
+            reg_start_date = self.request.get('start_date')
+            logging.info("Request start_date: " + reg_start_date)
+            reg_end_date = self.request.get('end_date')
+            logging.info("Request end_date: " + reg_end_date)
             issuance_channel = self.request.get("channel")
             logging.info("Request channel :: %s", issuance_channel)
 
-            if not offer_id or not member_id or not start_date or not end_date or not issuance_channel:
-                response_dict['message'] = """Please provide offer_id, member_id,
-                                           start date, end date and channel."""
+            if not offer_id or not member_id or not reg_start_date or not reg_end_date or not issuance_channel:
+                response_dict['message'] = """Please provide offer_id, member_id, start date, end date and channel."""
                 self.response.set_status(404)
                 self.response.write(json.dumps(response_dict))
                 return
@@ -509,22 +508,24 @@ class IssueActivateKPOSOffer(webapp2.RequestHandler):
             if offer is not None and member is not None:
                 logging.info("Valid offer and member. ")
 
-                if offer_end_date == end_date and offer_start_date == start_date:
-                    logging.info("Start and end date is the same as campaign dates.")
-                    message = self.register_offer(offer_id, member_id, start_date, end_date, issuance_channel)
+                # Ideally, offer end date will be after member registration end date, i.e reg is within offer period.
+                # If registration end date is LATER THAN offer's current end date, extend the offer's end date.
+                if offer_end_date >= reg_end_date:
+                    logging.info("Start and end date is within campaign date range. Registering member...")
+                    message = self.register_offer(offer_id, member_id, reg_start_date, reg_end_date, issuance_channel)
                     response_dict['message'] = message
                 else:
-                    logging.info("Start and end dates to be updated.")
-                    message = self.update_offer(offer_id, member_id, start_date, end_date, issuance_channel)
+                    logging.info("Registration date > offer end date. Offer end date needs to be extended.")
+                    message = self.update_offer(offer_id, member_id, reg_start_date, reg_end_date, issuance_channel)
                     response_dict['message'] = message
 
-                    register_message = self.register_offer(offer_id, member_id, start_date, end_date, issuance_channel)
+                    logging.info("Offer end date updated! Registering member...")
+                    register_message = self.register_offer(offer_id, member_id, reg_start_date, reg_end_date, issuance_channel)
                     logging.info("Register member to offer message :: %s", register_message)
 
-                    offer.OfferEndDate = end_date
-                    offer.OfferStartDate = start_date
+                    offer.OfferEndDate = reg_end_date
                     offer.put()
-                    logging.info("Updated offer entity with new dates.")
+                    logging.info("Updated OfferData with new dates.")
             else:
                 logging.error("could not fetch offer or member details for key:: %s", offer_key)
                 response_dict['message'] = "Sorry could not fetch member offer details."
@@ -534,10 +535,12 @@ class IssueActivateKPOSOffer(webapp2.RequestHandler):
 
         self.response.write(json.dumps({'data':response_dict}))
 
-    def register_offer(self, offer_id, member_id, start_date, end_date, issuance_channel):
+    def register_offer(self, offer_id, member_id, reg_start_date, reg_end_date, issuance_channel):
         host = get_telluride_host()
         relative_url = str("registerMember?offer_id=" + offer_id +
-                           "&&member_id=" + member_id)
+                           "&&member_id=" + member_id +
+                           "&&start_date=" + reg_start_date +
+                           "&&end_date=" + reg_end_date)
         logging.info("Telluride URL :: %s, %s", host, relative_url)
         result = make_request(host=host, relative_url=relative_url, request_type="GET", payload='')
 
@@ -547,7 +550,7 @@ class IssueActivateKPOSOffer(webapp2.RequestHandler):
 
         status_code = int(result.get('status_code'))
         member_offer_data = MemberOfferDataService.create_object(offer_id, member_id, issuance_channel,
-                                                                 start_date, end_date)
+                                                                 reg_start_date, reg_end_date)
 
         if status_code == 0:
             member_offer_data.status = 1
@@ -568,8 +571,8 @@ class IssueActivateKPOSOffer(webapp2.RequestHandler):
         relative_url = str("updateKposOffer?offer_id=" + offer_id +
                            "&&member_id=" + member_id +
                            "&&start_date=" + start_date +
-                           "&&end_date=" + end_date +
-                           "&&channel=" + issuance_channel)
+                           "&&end_date=" + end_date)
+
         logging.info("Telluride URL :: %s, %s", host, relative_url)
         result = make_request(host=host, relative_url=relative_url, request_type="GET", payload='')
         logging.info("RESULT ::%s", result)

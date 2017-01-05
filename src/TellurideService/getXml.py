@@ -218,7 +218,7 @@ def get_create_offer_xml(offer_obj):
     return xml_string
 
 
-def get_change_offer_dates_xml(offer, start_date, end_date):
+def get_extend_offer_dates_xml(offer, end_date):
     xml_string = """<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
                    <soap:Body>
                       <ns2:CreateUpdateOffer xmlns:ns2="http://rewards.sears.com/schemas/offer/" xmlns="http://rewards.sears.com/schemas/">
@@ -239,7 +239,7 @@ def get_change_offer_dates_xml(offer, start_date, end_date):
                          <ns2:OfferConditions>TC_XR</ns2:OfferConditions>
                          <ns2:OfferExclusions>TC_XR</ns2:OfferExclusions>
                          <ns2:OfferCategory>"""+offer.OfferCategory+"""</ns2:OfferCategory>
-                         <ns2:OfferStartDate>"""+start_date+"""</ns2:OfferStartDate>
+                         <ns2:OfferStartDate>"""+offer.OfferStartDate+"""</ns2:OfferStartDate>
                          <ns2:OfferStartTime>"""+offer.OfferStartTime+"""</ns2:OfferStartTime>
                          <ns2:OfferEndDate>"""+end_date+"""</ns2:OfferEndDate>
                          <ns2:OfferEndTime>"""+offer.OfferEndTime+"""</ns2:OfferEndTime>
@@ -359,7 +359,6 @@ def get_update_offer_xml(offer_entity, offer_status):
                    </S:Body>
                 </S:Envelope>"""
     return xml_string
-
 
 
 def get_register_offer_xml(offer_entity, member_entity, reg_start_date, reg_end_date):
