@@ -362,8 +362,10 @@ def get_update_offer_xml(offer_entity, offer_status):
 
 
 
-def get_register_offer_xml(offer_entity, member_entity):
-    end_date = offer_entity.OfferEndDate+"T"+offer_entity.OfferEndTime
+def get_register_offer_xml(offer_entity, member_entity, reg_start_date, reg_end_date):
+    end_date = reg_end_date+"T"+offer_entity.OfferEndTime
+    start_date = reg_start_date+"T"+offer_entity.OfferStartTime
+
     xml_string = """<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:web="http://www.epsilon.com/webservices/">
                    <soap:Header/>
                    <soap:Body>
@@ -376,7 +378,7 @@ def get_register_offer_xml(offer_entity, member_entity):
                          <web:AssociateID>000000000000</web:AssociateID>
                          <web:RegisterNumber>001</web:RegisterNumber>
                          <web:StoreNumber>00800</web:StoreNumber>
-                         <web:RegistrationStartDTTM>"""+datetime.now().strftime("%Y-%m-%dT%H:%M:%S")+"""</web:RegistrationStartDTTM>
+                         <web:RegistrationStartDTTM>"""+start_date+"""</web:RegistrationStartDTTM>
                          <web:RegistrationEndDTTM>"""+end_date+"""</web:RegistrationEndDTTM>
                          <web:MemberOfferReset>N</web:MemberOfferReset>
                          <web:OfferMemberGroupList>

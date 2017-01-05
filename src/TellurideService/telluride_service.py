@@ -75,8 +75,8 @@ class TellurideService:
         return response_dict
 
     @classmethod
-    def register_member(cls, offer, member_entity):
-        post_data = get_register_offer_xml(offer, member_entity).rstrip('\n')
+    def register_member(cls, offer, member_entity, reg_start_date, reg_end_date):
+        post_data = get_register_offer_xml(offer, member_entity, reg_start_date, reg_end_date).rstrip('\n')
         logging.info("post_data: %s", post_data)
         config_data = get_url_configuration()
         logging.info("Config Data:: %s" % config_data)
