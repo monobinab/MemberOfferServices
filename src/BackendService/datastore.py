@@ -176,12 +176,7 @@ class MemberOfferDataService(MemberOfferData):
 
 		
 		
-class AllEvents(webapp2.RequestHandler):
-
-    def post(self):
-        logging.info(self.request.body)
-        logging.info(self.request)
-        AllEvents.save_allEventsData(json.loads(self.request.body))
+class EmailEventMetricsDataService(EmailEventMetricsData):
 
     @classmethod
     def get_emailActivity_key(cls):
@@ -228,37 +223,3 @@ class AllEvents(webapp2.RequestHandler):
 
             memberActivity_key = memberActivity.put()
             logging.info('memberActivity_key:: %s', memberActivity_key)
-			
-
-class GetAllEmailActivities(webapp2.RequestHandler):
-
-    def get(self):
-        query = EmailEventMetricsData.query().order(-EmailEventMetricsData.timestamp)
-        activity_list = query.fetch(100)
-        result = list()
-        logging.info('len of the list: %s', len(activity_list))
-        logging.info(activity_list)
-        for each_entity in activity_list:
-
-            activity_dict = dict()
-            logging.info('each entry: %s', each_entity)
-            logging.info('each entry email: %s', each_entity.email)
-            activity_dict['email'] = each_entity.email
-            activity_dict['timestamp'] = each_entity.timestamp
-            activity_dict['smtp-id'] = each_entity.smtp_id
-            activity_dict['event'] = each_entity.event
-            activity_dict['sg_event_id'] = each_entity.sg_event_id
-            activity_dict['sg_message_id'] = each_entity.sg_message_id
-            activity_dict['response'] = each_entity.response
-            activity_dict['attempt'] = each_entity.attempt
-            activity_dict['useragent'] = each_entity.useragent
-            activity_dict['ip'] = each_entity.ip
-            activity_dict['url'] = each_entity.url
-            activity_dict['reason'] = each_entity.reason
-            activity_dict['status'] = each_entity.status
-            activity_dict['asm_group_id'] = each_entity.asm_group_id
-
-            result.append(activity_dict)
-        self.response.headers['Content-Type'] = 'application/json'
-        self.response.headers['Access-Control-Allow-Origin'] = '*'
-        self.response.write(json.dumps({'data': result}))
