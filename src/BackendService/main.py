@@ -6,15 +6,14 @@ import httplib
 import webapp2
 import pubsub_utils
 import csv
-from models import CampaignData, MemberOfferData, ndb, StoreData, OfferData, EmailEventMetricsData
+from models import CampaignData, MemberOfferData, ndb, StoreData, OfferData
 from datastore import CampaignDataService, MemberOfferDataService, OfferDataService
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from google.appengine.api import datastore_errors
 from oauth2client.client import GoogleCredentials
 from utilities import create_pubsub_message, make_request, get_jinja_environment, \
     get_email_host, get_telluride_host
-from datetime import datetime, timedelta
+from datetime import datetime
 
 class BaseHandler(webapp2.RequestHandler):
     def handle_exception(self, exception, debug):
@@ -536,93 +535,6 @@ class MigrateNamespaceData(webapp2.RequestHandler):
         self.migrate_sendgrid_data(from_ns=from_ns, to_ns=to_ns)
         self.migrate_endpoints_data(from_ns=from_ns, to_ns=to_ns)
         self.response.write("Data migrated successfully!!!")
-
-class AllEvents(webapp2.RequestHandler):
-
-    def post(self):
-        logging.info(self.request.body)
-        logging.info(self.request)
-        AllEvents.save_allEventsData(json.loads(self.request.body))
-
-    @classmethod
-    def get_emailActivity_key(cls):
-        return ndb.Key('EmailEventMetricsData')
-
-    @classmethod
-    @ndb.transactional(xg=True)
-    def save_allEventsData(cls, json_data_list):
-        logging.info('list data :: %s', json_data_list)
-        for activity_dict in json_data_list:
-            logging.info('Json data:: %s', activity_dict)
-            email = activity_dict['email']
-            timestamp = activity_dict.get('timestamp',None)
-            smtp_id = activity_dict.get('smtp_id',None)
-            event = activity_dict.get('event',None)
-            category = activity_dict.get('category',None)
-            sg_event_id = activity_dict.get('sg_event_id',None)
-            sg_message_id = activity_dict.get('sg_message_id',None)
-            response = activity_dict.get('response',None)
-            attempt = activity_dict.get('attempt',None)
-            useragent = activity_dict.get('useragent',None)
-            ip = activity_dict.get('ip',None)
-            url = activity_dict.get('url',None)
-            reason = activity_dict.get('reason',None)
-            status = activity_dict.get('status',None)
-            asm_group_id = activity_dict.get('asm_group_id',None)
-            memberActivity = EmailEventMetricsData(
-				category=category,
-                email=email,
-                timestamp=timestamp,
-                smtp_id=smtp_id,
-                event=event,
-                sg_event_id=sg_event_id,
-                sg_message_id=sg_message_id,
-				response=response,
-				attempt=attempt,
-				useragent=useragent,
-				ip=ip,
-				url=url,
-				reason=reason,
-				status=status,
-				asm_group_id=asm_group_id
-                )
-
-            memberActivity_key = memberActivity.put()
-            logging.info('memberActivity_key:: %s', memberActivity_key)
-			
-
-class GetAllEmailActivities(webapp2.RequestHandler):
-
-    def get(self):
-        query = EmailEventMetricsData.query().order(-EmailEventMetricsData.timestamp)
-        activity_list = query.fetch(100)
-        result = list()
-        logging.info('len of the list: %s', len(activity_list))
-        logging.info(activity_list)
-        for each_entity in activity_list:
-
-            activity_dict = dict()
-            logging.info('each entry: %s', each_entity)
-            logging.info('each entry email: %s', each_entity.email)
-            activity_dict['email'] = each_entity.email
-            activity_dict['timestamp'] = each_entity.timestamp
-            activity_dict['smtp-id'] = each_entity.smtp_id
-            activity_dict['event'] = each_entity.event
-            activity_dict['sg_event_id'] = each_entity.sg_event_id
-            activity_dict['sg_message_id'] = each_entity.sg_message_id
-            activity_dict['response'] = each_entity.response
-            activity_dict['attempt'] = each_entity.attempt
-            activity_dict['useragent'] = each_entity.useragent
-            activity_dict['ip'] = each_entity.ip
-            activity_dict['url'] = each_entity.url
-            activity_dict['reason'] = each_entity.reason
-            activity_dict['status'] = each_entity.status
-            activity_dict['asm_group_id'] = each_entity.asm_group_id
-
-            result.append(activity_dict)
-        self.response.headers['Content-Type'] = 'application/json'
-        self.response.headers['Access-Control-Allow-Origin'] = '*'
-        self.response.write(json.dumps({'data': result}))
 
 
 # [START app]
