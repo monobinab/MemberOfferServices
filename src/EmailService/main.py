@@ -11,7 +11,7 @@ from sendEmail import send_mail
 
 class IndexPageHandler(webapp2.RequestHandler):
     def get(self):
-        self.response.write("sendgrid-email-service")
+        self.response.write("email-service")
 
 
 class EmailOfferMembersHandler(webapp2.RequestHandler):
@@ -43,6 +43,8 @@ class EmailOfferMembersHandler(webapp2.RequestHandler):
 
 class OfferDetailsHandler(webapp2.RequestHandler):
     def get(self):
+        self.response.headers['Access-Control-Allow-Origin'] = '*'
+        self.response.headers['Content-type'] = 'application/json'
         offer_value = self.request.get('offer')
         member_id = self.request.get('member')
         campaign_name = self.request.get('campaign')

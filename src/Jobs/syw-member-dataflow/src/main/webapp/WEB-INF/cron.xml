@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <cronentries>
-  <cron>
+ <cron>
     <url>/rundataflowjob</url>
-    <description>Run a import member data</description>
-    <schedule>every 5 minutes</schedule>
-    <timezone>Asia/Kolkata</timezone>
+    <description>Migrate member data job</description>
+    <schedule>every day 06:00</schedule>
+    <timezone>Asia/Calcutta</timezone>
   </cron>
 </cronentries>
