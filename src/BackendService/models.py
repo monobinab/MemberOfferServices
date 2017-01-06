@@ -136,3 +136,20 @@ class ServiceEndPointData(ndb.Model):
     email = ndb.StringProperty(indexed=True)
     telluride = ndb.StringProperty(indexed=True)
 
+
+class EmailEventMetricsData(ndb.Model):
+    email = ndb.StringProperty(indexed=True)
+    timestamp = ndb.IntegerProperty(indexed=True)
+    smtp_id = ndb.StringProperty(indexed=False)
+    event = ndb.StringProperty(indexed=True)
+    category = ndb.StringProperty(indexed=True)
+    sg_event_id = ndb.StringProperty(indexed=False)
+    sg_message_id = ndb.StringProperty(indexed=False)
+    response = ndb.StringProperty(indexed=False)
+    attempt = ndb.StringProperty(indexed=False)
+    useragent = ndb.StringProperty(indexed=False)
+    ip = ndb.StringProperty(indexed=False)
+    url = ndb.StringProperty(indexed=False)
+    reason = ndb.StringProperty(indexed=True)
+    status = ndb.StringProperty(indexed=False)
+    asm_group_id = ndb.IntegerProperty(indexed=False)
