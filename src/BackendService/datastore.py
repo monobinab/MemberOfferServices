@@ -58,6 +58,7 @@ class OfferDataService(CampaignData):
 
         try:
             offer_key = offer.put()
+            logging.info("Offer created:: %s", offer_key)
             logging.info("OfferNumber:: %s", offer.OfferNumber)
             response_dict['message'] = 'success'
             return response_dict

@@ -2,6 +2,7 @@ runtime: python27
 api_version: 1
 threadsafe: false
 module: backend
+
 handlers:
 - url: .*
   script: main.py
