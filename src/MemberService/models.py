@@ -126,13 +126,16 @@ class StoreData(ndb.Model):
     Locations = ndb.StringProperty(indexed=False, repeated=True)
 
 
-class BUData(ndb.Model):
-    Format = ndb.StringProperty(indexed=True)
-    Business_Units = ndb.StringProperty(indexed=True, repeated=True)
-
-
 class ServiceEndPointData(ndb.Model):
     backend = ndb.StringProperty(indexed=True)
     email = ndb.StringProperty(indexed=True)
     telluride = ndb.StringProperty(indexed=True)
 
+
+class ModelData(ndb.Model):
+    SOAR = ndb.StringProperty(indexed=True)
+    SOAR_name = ndb.StringProperty(indexed=True)
+    amount = ndb.StringProperty(indexed=True)
+    created_at = ndb.StringProperty(indexed=False)
+    member = ndb.StringProperty(indexed=True)
+    store = ndb.StringProperty(indexed=True)

@@ -1,0 +1,12 @@
+runtime: python27
+api_version: 1
+threadsafe: false
+
+module: member
+
+handlers:
+- url: .*
+  script: router.app
+
+automatic_scaling:
+  min_idle_instances: 1

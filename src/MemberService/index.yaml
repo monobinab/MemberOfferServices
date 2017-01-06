@@ -1,0 +1,13 @@
+indexes:
+
+- kind: MemberOfferData
+  properties:
+  - name: member
+  - name: created_at
+    direction: desc
+
+- kind: MemberOfferData
+  properties:
+  - name: member
+  - name: updated_at
+    direction: desc
