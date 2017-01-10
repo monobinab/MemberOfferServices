@@ -1,8 +1,7 @@
-from models import CampaignData, OfferData, MemberOfferData, MemberData,EmailEventMetricsData, ndb
 import logging
 from datetime import datetime, timedelta
 from google.appengine.api import datastore_errors
-from utilities import make_request
+from models import CampaignData, OfferData, MemberOfferData, EmailEventMetricsData, ndb, BuMappingData
 
 
 class OfferDataService(CampaignData):
@@ -12,7 +11,7 @@ class OfferDataService(CampaignData):
 
         start_date = campaign.start_date
         # Calculating end date based on validity value which is in weeks.
-        end_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=7 * int(campaign.valid_till) - 1)
+        end_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=7*int(campaign.valid_till) - 1)
         end_date = end_date.strftime("%Y-%m-%d")
         logging.info("Offer Start_date:: %s and end_date %s", start_date, end_date)
 
@@ -23,7 +22,14 @@ class OfferDataService(CampaignData):
             rules_condition = "SEARSLEGACY~803~~~~~~" if campaign.category == "Apparel" else \
                 "SEARSLEGACY~803~615~~~~~~"
         elif campaign.format_level == 'Kmart':
-            rules_condition = "KMARTSHC~1~35~~~~~~"
+            category_list = campaign.category.split('-')
+            prod_heirarchy_list = list()
+            mapping_list = BuMappingData.query(BuMappingData.soar_no == category_list[0]).all()
+            for each_entity in mapping_list:
+                prod_heirarchy_list.append(each_entity.product_heirarchy)
+            rules_condition = ",".join(prod_heirarchy_list)
+            logging.info("Rules condition:: %s", rules_condition)
+            # rules_condition = "KMARTSHC~1~35~~~~~~"
         # category_list = campaign.category.split('-')
         # category = ''.join(category_list[2:])
         # logging.info("Category:: %s", category)
@@ -43,7 +49,7 @@ class OfferDataService(CampaignData):
                               Actions_ActionProperty_PropertyType="Tier",
                               Actions_ActionProperty_Property_Name="MIN",
                               Actions_ActionProperty_Property_Values_Value="0.01",
-                              created_at=datetime.now())
+                              issuance_date=datetime.now())
         offer_obj.key = ndb.Key('OfferData', offer_name)
         offer_obj.campaign = campaign_key
 
@@ -91,7 +97,6 @@ class CampaignDataService(CampaignData):
 
         campaign_name = campaign_dict['name']
         campaign_budget = int(campaign_dict['money'])
-
         campaign_category = campaign_dict['category']
         campaign_format_level = campaign_dict['format_level'] if campaign_dict['format_level'] is not None else ""
         campaign_convratio = int(campaign_dict['conversion_ratio'])
@@ -122,8 +127,12 @@ class CampaignDataService(CampaignData):
 
 class MemberOfferDataService(MemberOfferData):
     @classmethod
-    def create(cls, offer_entity, member_entity, channel):
-        member_offer_data = MemberOfferData(offer=offer_entity.key, member=member_entity.key, status=False, email_sent_at=datetime.now(), channel = channel)
+    def create(cls, offer_entity, member_entity, issuance_channel):
+        member_offer_data = MemberOfferData(offer=offer_entity.key,
+                                            member=member_entity.key,
+                                            status=0,
+                                            issuance_date=datetime.now(),
+                                            issuance_channel = issuance_channel)
         member_offer_data_key = member_offer_data.put()
         return member_offer_data_key
 
@@ -143,7 +152,7 @@ class MemberOfferDataService(MemberOfferData):
                         logging.info("Total member-offers found for the offer %s are %d" % (each_offer.key, len(result)))
 
                         for each_entity in result:
-                            if each_entity.status:
+                            if each_entity.status > 0:
                                 redeem_count += 1
                             else:
                                 non_redeem_count += 1
@@ -173,7 +182,6 @@ class MemberOfferDataService(MemberOfferData):
             response_dict['message'] = 'Please provide campaign id.'
             response_dict['status'] = 'Failure'
         return response_dict
-
 
 
 class EmailEventMetricsDataService(EmailEventMetricsData):

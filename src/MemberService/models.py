@@ -71,17 +71,19 @@ class MemberOfferData(ndb.Model):
     offer = ndb.KeyProperty(kind="OfferData")
     member = ndb.KeyProperty(kind="MemberData")
 
+    offer_id = ndb.StringProperty(indexed=False)
+    member_id = ndb.StringProperty(indexed=False)
+
     issuance_channel = ndb.StringProperty(indexed=True)
     activated_channel = ndb.StringProperty(indexed=True)
 
     issuance_date = ndb.DateTimeProperty(auto_now_add=True, indexed=True)
-    activated_date = ndb.DateTimeProperty(indexed=True)
+    activation_date = ndb.DateTimeProperty(indexed=True, default=None)
 
     redeemed = ndb.BooleanProperty(default=False)
     redeemed_date = ndb.DateTimeProperty(indexed=True)
 
-    created_at = ndb.DateTimeProperty(auto_now_add=True, indexed=True)
-    updated_at = ndb.DateTimeProperty(auto_now=True, auto_now_add=False)
+    user_action_date = ndb.DateTimeProperty(auto_now=True, auto_now_add=False)
 
     validity_start_date = ndb.DateTimeProperty(indexed=False)
     validity_end_date = ndb.DateTimeProperty(indexed=True)
@@ -114,6 +116,9 @@ class ConfigData(ndb.Model):
     SERVICE_TOPIC = ndb.StringProperty(indexed=False)
     PUBLISH_TOKEN = ndb.StringProperty(indexed=False)
 
+    REGISTRATION_START_DATE = ndb.IntegerProperty(indexed=True)
+    REGISTRATION_END_DATE = ndb.IntegerProperty(indexed=True)
+
 
 class FrontEndData(ndb.Model):
     Categories = ndb.StringProperty(indexed=True, repeated=True)
@@ -127,6 +132,11 @@ class FrontEndData(ndb.Model):
 class StoreData(ndb.Model):
     Format_Level = ndb.StringProperty(indexed=True)
     Locations = ndb.StringProperty(indexed=False, repeated=True)
+
+
+class BUData(ndb.Model):
+    Format = ndb.StringProperty(indexed=True)
+    Business_Units = ndb.StringProperty(indexed=True, repeated=True)
 
 
 class ServiceEndPointData(ndb.Model):

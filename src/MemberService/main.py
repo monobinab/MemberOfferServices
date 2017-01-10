@@ -7,11 +7,12 @@ import httplib
 import webapp2
 import xml.etree.ElementTree as ET
 
-from models import MemberData, MemberOfferData, ndb
+from models import MemberData, MemberOfferData, ndb, ModelData
 from datastore import MemberOfferDataService, OfferDataService
 from googleapiclient.errors import HttpError
 from utilities import make_request, get_telluride_host, get_email_host
 from datetime import datetime
+
 
 
 class BaseHandler(webapp2.RequestHandler):
@@ -261,85 +262,6 @@ class SingleMemberOfferHandler(webapp2.RequestHandler):
         self.response.write(json.dumps({"data": result}))
 
 
-class ActivateOfferHandler(webapp2.RequestHandler):
-    def get(self):
-        self.response.headers['Content-Type'] = 'application/json'
-        self.response.headers['Access-Control-Allow-Origin'] = '*'
-        response_dict = dict()
-        try:
-            offer_id = self.request.get('offer_id')
-            logging.info("Request offer_id: " + offer_id)
-            member_id = self.request.get('member_id')
-            logging.info("Request member_id: " + member_id)
-
-            if not offer_id or not member_id:
-                response_dict['message'] = "Please provide offer_id, member_id, start date and end date with the request"
-                self.response.write(json.dumps(response_dict))
-                return
-
-            offer_key = ndb.Key('OfferData', offer_id)
-            member_key = ndb.Key('MemberData', member_id)
-            if offer_key is None:
-                result = {"data": "Invalid offer!"}
-                self.response.write(json.dumps(result))
-                return
-            if member_key is None:
-                result = {"data": "That member does not exist!"}
-                self.response.write(json.dumps(result))
-                return
-
-            logging.info("fetched offer_key and member key ")
-
-            offer = offer_key.get()
-            member = member_key.get()
-            if offer is not None and member is not None:
-                logging.info("offer is not None")
-                member_offer_obj = MemberOfferData.query(MemberOfferData.member == member_key,
-                                                         MemberOfferData.offer == offer_key).get()
-
-                if member_offer_obj is not None:
-                    host = get_telluride_host()
-                    relative_url = str("registerMember?offer_id=" + offer_id + "&&member_id=" + member_id)
-                    logging.info("Telluride URL :: %s, %s", host, relative_url)
-                    result = make_request(host=host, relative_url=relative_url, request_type="GET", payload='')
-
-                    logging.info(json.loads(result))
-                    result = json.loads(result).get('data')
-                    logging.info(result)
-                    doc = ET.fromstring(result)
-                    if doc is not None:
-                        status_code = int(doc.find('.//{http://www.epsilon.com/webservices/}Status').text)
-                        logging.info("Status code:: %d" % status_code)
-                        if status_code == 0:
-                            member_offer_obj.status = 1
-                            member_offer_obj.activated_date = datetime.now()
-                            member_offer_obj.put()
-                            response_dict['message'] = "Offer has been activated successfully"
-                        elif status_code == 1 or status_code == 99:
-                            # TODO : check response from telluride when user is trying to activate an expired offer.
-                            member_offer_obj.status = 1
-                            member_offer_obj.put()
-                            response_dict['message'] = "Member already registered for this offer"
-                        else:
-                            logging.error("Telluride call failed.")
-                            response_dict['message'] = "Sorry, Offer could not be activated"
-                    else:
-                        logging.error("Telluride call failed.")
-                        response_dict['message'] = "Sorry, Offer could not be activated"
-                else:
-                    logging.error("Member Offer Object not found for offer key :: %s and member key:: %s",
-                                  offer_key, member_key)
-                    response_dict['message'] = "Sorry, Offer could not be activated. Member Offer Object not found."
-            else:
-                logging.error("could not fetch offer or member details for key:: %s", offer_key)
-                response_dict['message'] = "Sorry could not fetch member offer details."
-        except httplib.HTTPException as exc:
-            logging.error(exc)
-            response_dict['message'] = "Sorry could not fetch offer details because of the request time out."
-
-        self.response.write(json.dumps(response_dict))
-
-
 class KPOSOfferHandler(webapp2.RequestHandler):
     def get(self):
         self.response.headers['Content-Type'] = 'application/json'
@@ -434,93 +356,49 @@ class KPOSOfferHandler(webapp2.RequestHandler):
         self.response.write(json.dumps(response_dict))
 
 
-# class SendOfferToMemberHandler(webapp2.RequestHandler):
-#     # TODO: Make response consistent with other APIs as well
-#     def get(self):
-#         self.response.headers['Content-Type'] = 'application/json'
-#         self.response.headers['Access-Control-Allow-Origin'] = '*'
-#         member_id = self.request.get('member_id')
-#         offer_value = self.request.get('offer_value')
-#         campaign_name = self.request.get('campaign_name')
-#         channel = "EMAIL"
-#
-#         if not member_id or not offer_value or not campaign_name:
-#             response_dict = {"message": "Please provide member_id, offer_value and campaign_name with the request"}
-#             self.response.write(json.dumps(response_dict))
-#         else:
-#             response = self.process_data(member_id, offer_value, campaign_name, channel)
-#             self.response.write(json.dumps(response))
-#
-#     def process_data(self, member_id, offer_value, campaign_name, channel):
-#         response_dict = dict()
-#         campaign_key = ndb.Key('CampaignData', campaign_name)
-#         logging.info("fetched campaign_key for: %s", campaign_name)
-#         campaign = campaign_key.get()
-#
-#         if campaign is None:
-#             logging.info("campaign is None")
-#             response_dict['message'] = "Error: Campaign not found"
-#             return response_dict
-#         else:
-#             logging.info("campaign is not None")
-#             try:
-#                 success_msg = "Offer email sent successfully"
-#                 response_dict['message'] = ""
-#                 logging.info('campaign_name: %s , member_id: %s, offer_value: %s', campaign_name, member_id, offer_value)
-#
-#                 offer_name = "{}_{}".format(str(campaign.name), str(offer_value))
-#
-#                 offer_key = ndb.Key('OfferData', offer_name)
-#                 logging.info("fetched offer_key")
-#                 offer_entry = offer_key.get()
-#
-#                 if offer_entry is None:
-#                     logging.info("Offer is None")
-#                     response_dict['message'] = "Error: Offer not found"
-#                     return response_dict
-#                 else:
-#                     logging.info('Offer is not None. Sending email for Offer: %s', offer_name)
-#                     offer = OfferDataService.create_offer_obj(campaign, offer_value)
-#
-#                     # HACK: Need to remove later. Only for testing purpose. <>
-#                     member_id = '7081327663412819'
-#
-#                     member_key = ndb.Key('MemberData', member_id)
-#                     logging.info("Fetched member_key for member: %s", member_id)
-#
-#                     member = member_key.get(use_datastore=True, use_memcache=False, use_cache=False)
-#                     if member is None:
-#                         logging.info("member is None")
-#                         response_dict['message'] = "Member ID " + member_id + " not found in database."
-#                         return response_dict
-#                     else:
-#                         host = get_email_host()
-#                         relative_url = str("offerDetails?offer=" + offer_value +
-#                                            "&&member=" + member_id +
-#                                            "&&campaign=" + campaign_name)
-#
-#                         # send_mail(member_entity=member, offer_entity=offer,
-#                         #           campaign_entity=campaign_entity)
-#
-#                         logging.info("Email URL :: %s %s", host, relative_url)
-#                         result = make_request(host=host, relative_url=relative_url, request_type="GET", payload='')
-#
-#                         logging.info("email service call result :: %s", result)
-#
-#                         # member_offer_data_key = MemberOfferDataService.create(offer, member, channel)
-#
-#                         logging.info('member_offer_key:: %s', member_offer_data_key)
-#                         logging.info('Offer %s email has been sent to:: %s', offer.OfferNumber, member.email)
-#                         response_dict['message'] = success_msg
-#
-#             except HttpError as err:
-#                 print('Error: {}'.format(err.content))
-#                 logging.error('Error: {}'.format(err.content))
-#                 response_dict['message'] = "HttpError exception: " + err.content
-#                 raise err
-#
-#         logging.info('response_dict[message]: %s', response_dict['message'])
-#         return response_dict
+class GetModelData(webapp2.RequestHandler):
+    def get(self):
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.headers['Access-Control-Allow-Origin'] = '*'
+        member_id = self.request.get('member_id')
+
+        if not member_id:
+            result = {"data": "Please provide a member ID."}
+            self.response.set_status(404)
+            self.response.write(json.dumps(result))
+            return
+
+        model_data = ModelData.query(ModelData.member == member_id).get()
+
+        if model_data is None:
+            result = {"data": "Model data for this member does not exist."}
+            self.response.set_status(404)
+            self.response.write(json.dumps(result))
+            return
+
+        # TODO: model_data.created_at.strftime("%Y-%m-%d")
+
+        registration_offsets = ConfigData.get_by_id("RegistrationDatesConfig")
+
+        start_date_offset = registration_offsets.REGISTRATION_START_DATE
+        end_date_offset = registration_offsets.REGISTRATION_END_DATE
+
+        logging.info("Start date offset - %s - end date offset - %s ",
+                     start_date_offset, end_date_offset)
+
+        registration_start_date = datetime.now() + timedelta(days=start_date_offset)
+        registration_end_date = datetime.now() + timedelta(days=end_date_offset)
+
+        registration_start_date = registration_start_date.strftime("%Y-%m-%d")
+        registration_end_date = registration_end_date.strftime(("%Y-%m-%d"))
+
+        model_data = model_data.to_dict()
+        model_data["registration_start_date"] = registration_start_date
+        model_data["registration_end_date"] = registration_end_date
+
+        logging.info("Model data :: %s", model_data)
+
+        self.response.write(json.dumps({'data': model_data}))
 
 
 class UpdateEmailOfferIssuanceHandler(webapp2.RequestHandler):
@@ -561,7 +439,7 @@ class UpdateEmailOfferIssuanceHandler(webapp2.RequestHandler):
             logging.info(response_dict)
             self.response.headers['Access-Control-Allow-Origin'] = '*'
             self.response.headers['Content-type'] = 'application/json'
-            self.response.write(json.dumps(response_dict))
+            self.response.write(json.dumps({'data':response_dict}))
 
 
 class UpdateEmailOfferActivationData(webapp2.RequestHandler):

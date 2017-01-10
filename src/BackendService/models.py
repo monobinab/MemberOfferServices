@@ -67,14 +67,15 @@ class MemberData(ndb.Model):
 class MemberOfferData(ndb.Model):
     offer = ndb.KeyProperty(kind="OfferData")
     member = ndb.KeyProperty(kind="MemberData")
-    channel = ndb.StringProperty(indexed=True)  # TODO: rename to issuance_channel
+    offer_id = ndb.StringProperty(indexed=False)
+    member_id = ndb.StringProperty(indexed=False)
+    issuance_date = ndb.DateTimeProperty(auto_now_add=True, indexed=True)
+    issuance_channel = ndb.StringProperty(indexed=True)
     activated_channel = ndb.StringProperty(indexed=True)
-    email_sent_at = ndb.DateTimeProperty(auto_now_add=True, indexed=True)  # TODO : rename to issuance_date
-    activated_at = ndb.DateTimeProperty(indexed=True)  # TODO: rename to activated_date
+    activation_date = ndb.DateTimeProperty(indexed=True, default=None)
     redeemed = ndb.BooleanProperty(default=False)
-    redeemed_date = ndb.DateTimeProperty(indexed=True)
-    created_at = ndb.DateTimeProperty(auto_now_add=True, indexed=True)
-    updated_at = ndb.DateTimeProperty(auto_now=True, auto_now_add=False)
+    redeemed_date = ndb.DateTimeProperty(indexed=True, default=None)
+    user_action_date = ndb.DateTimeProperty(auto_now=True, auto_now_add=False)
     validity_start_date = ndb.DateTimeProperty(indexed=False)
     validity_end_date = ndb.DateTimeProperty(indexed=True)
     status = ndb.IntegerProperty(default=0)
@@ -135,6 +136,7 @@ class ServiceEndPointData(ndb.Model):
     backend = ndb.StringProperty(indexed=True)
     email = ndb.StringProperty(indexed=True)
     telluride = ndb.StringProperty(indexed=True)
+    member = ndb.StringProperty(indexed=True)
 
 
 class EmailEventMetricsData(ndb.Model):
@@ -153,3 +155,17 @@ class EmailEventMetricsData(ndb.Model):
     reason = ndb.StringProperty(indexed=True)
     status = ndb.StringProperty(indexed=False)
     asm_group_id = ndb.IntegerProperty(indexed=False)
+
+
+class BuMappingData(ndb.Model):
+    soar_no = ndb.StringProperty(indexed=True)
+    soar_nm = ndb.IntegerProperty(indexed=True)
+    fp_dvsn_desc = ndb.StringProperty(indexed=False)
+    bus_nbr = ndb.StringProperty(indexed=True)
+    unit_nbr = ndb.StringProperty(indexed=True)
+    dvsn_nbr = ndb.StringProperty(indexed=False)
+    dept_nbr = ndb.StringProperty(indexed=False)
+    catg_cluster_nbr = ndb.StringProperty(indexed=False)
+    catg_nbr = ndb.StringProperty(indexed=False)
+    sub_catg_nbr = ndb.StringProperty(indexed=False)
+    product_heirarchy = ndb.StringProperty(indexed=False)

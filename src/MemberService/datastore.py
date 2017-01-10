@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from google.appengine.api import datastore_errors
 from models import CampaignData, OfferData, MemberOfferData, ndb
 
+date_format = '%Y-%m-%d %H:%m'
 
 class OfferDataService(CampaignData):
     @classmethod
@@ -38,7 +39,7 @@ class OfferDataService(CampaignData):
                               Actions_ActionProperty_PropertyType="Tier",
                               Actions_ActionProperty_Property_Name="MIN",
                               Actions_ActionProperty_Property_Values_Value="0.01",
-                              created_at=datetime.now())
+                              cre=datetime.now())
         offer_obj.key = ndb.Key('OfferData', offer_name)
         offer_obj.campaign = campaign_key
 
@@ -122,13 +123,30 @@ class MemberOfferDataService(MemberOfferData):
         reg_start_datetime = datetime.strptime(reg_start_date, "%Y-%m-%d")
         reg_end_datetime = datetime.strptime(reg_end_date, "%Y-%m-%d")
 
-        member_offer_data = MemberOfferData(offer=offer_entity.key, member=member_entity.key, status=False,
+        member_offer_data = MemberOfferData(offer=offer_entity.key, member=member_entity.key, status=0,
                                             issuance_date=datetime.now(), issuance_channel=channel,
                                             validity_start_date=reg_start_datetime, validity_end_date=reg_end_datetime)
 
         member_offer_data.key = ndb.Key('MemberOfferData', offer_entity.key.id()+"_"+member_entity.key.id())
+
         member_offer_data_key = member_offer_data.put()
         return member_offer_data_key
+
+    @classmethod
+    def create_object(cls, offer_id, member_id, issuance_channel, start_date, end_date):
+        offer_key = ndb.Key('OfferData', offer_id)
+        member_key = ndb.Key('MemberData', member_id)
+
+        member_offer_data = MemberOfferData(offer=offer_key,
+                                            member=member_key,
+                                            offer_id=offer_id,
+                                            member_id=member_id,
+                                            status=0,
+                                            issuance_date=datetime.now(),
+                                            validity_start_date=datetime.strptime(start_date, '%Y-%m-%d'),
+                                            validity_end_date=datetime.strptime(end_date, '%Y-%m-%d'),
+                                            issuance_channel=issuance_channel)
+        return member_offer_data
 
     @classmethod
     def get_offer_metrics(cls, campaign_id):
@@ -146,7 +164,7 @@ class MemberOfferDataService(MemberOfferData):
                         logging.info("Total member-offers found for the offer %s are %d" % (each_offer.key, len(result)))
 
                         for each_entity in result:
-                            if each_entity.status:
+                            if each_entity.status > 0:
                                 redeem_count += 1
                             else:
                                 non_redeem_count += 1
@@ -175,4 +193,42 @@ class MemberOfferDataService(MemberOfferData):
         else:
             response_dict['message'] = 'Please provide campaign id.'
             response_dict['status'] = 'Failure'
+        return response_dict
+
+    @classmethod
+    def create_response_object(cls, item):
+        response_dict = dict()
+        response_dict["member"] = item.member.id()
+        response_dict["status"] = item.status if item.status is not None else 0
+        response_dict["offer"] = item.offer.id()
+        response_dict["issuance_date"] = item.issuance_date.strftime(date_format) if \
+            item.issuance_date is not None else None
+
+        response_dict["activation_date"] = item.activation_date.strftime(date_format) if \
+            item.activation_date is not None else None
+
+        response_dict["user_action_date"] = item.user_action_date.strftime(date_format) if \
+            item.user_action_date is not None else None
+
+        response_dict["validity_end_date"] = item.validity_end_date.strftime(date_format) if \
+            item.validity_end_date is not None else None
+
+        response_dict["redeemed_date"] = item.redeemed_date.strftime(date_format) if \
+            item.redeemed_date is not None else None
+
+        response_dict["redeemed"] = item.redeemed
+        response_dict["validity_start_date"] = item.validity_start_date.strftime(date_format) if \
+            item.validity_start_date is not None else None
+
+        response_dict["activated_channel"] = item.activated_channel
+        response_dict["issuance_date"] = item.issuance_date.strftime(date_format) if \
+            item.issuance_date is not None else None
+        response_dict["issuance_channel"] = str(item.issuance_channel)
+
+        offer = item.offer.get()
+        campaign = offer.campaign.get()
+        logging.info("Campaign :: %s ", campaign.to_dict())
+        response_dict["offer_value"] = offer.surprise_points
+        response_dict["category"] = campaign.category
+        
         return response_dict

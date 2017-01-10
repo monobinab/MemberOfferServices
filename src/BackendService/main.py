@@ -12,9 +12,10 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from oauth2client.client import GoogleCredentials
 from utilities import create_pubsub_message, make_request, get_jinja_environment, \
-    get_email_host, get_telluride_host
+    get_email_host, get_telluride_host, get_member_host
 from datetime import datetime
 from google.appengine.api import urlfetch
+import time
 
 class BaseHandler(webapp2.RequestHandler):
     def handle_exception(self, exception, debug):
@@ -29,7 +30,7 @@ class BaseHandler(webapp2.RequestHandler):
 
 class IndexPageHandler(webapp2.RequestHandler):
     def get(self):
-        self.response.write("campaign-backend-service")
+        self.response.write("backend-service")
 
 
 class SaveCampaignHandler(webapp2.RequestHandler):
@@ -165,37 +166,54 @@ class ActivateOfferHandler(webapp2.RequestHandler):
                 member_offer_obj = MemberOfferData.query(MemberOfferData.member == member_key,
                                                          MemberOfferData.offer == offer_key).get()
 
+                today = datetime.now()
+                today_ts = time.mktime(today.timetuple())
+                end_date_ns = time.mktime(member_offer_obj.validity_end_date.timetuple())
+                start_date_ns = time.mktime(member_offer_obj.validity_start_date.timetuple())
+
                 if member_offer_obj is not None:
-                    host = get_telluride_host()
-                    relative_url = str("registerMember?offer_id="+offer_id+"&&member_id="+member_id)
-                    result = make_request(host=host, relative_url=relative_url, request_type="GET", payload='')
-
-                    logging.info(json.loads(result))
-                    result = json.loads(result).get('data')
-                    logging.info(result)
-
-                    status_code = int(result['status_code'])
-                    logging.info("Status code:: %d" % status_code)
-                    if status_code == 0:
-                        member_offer_obj.status = True
-                        member_offer_obj.activated_at = datetime.now()
-                        member_offer_obj.put()
-
-                        response_dict['message'] = "Offer has been activated successfully"
-                        message = "Offer has been activated successfully"
-                        offer_success = 1
-
-                    elif status_code == 1 or status_code == 99:
-                        member_offer_obj.status = True
-                        member_offer_obj.put()
-                        response_dict['message'] = "Member already registered for this offer"
-                        message = "Member already registered for this offer"
+                    if (today_ts < start_date_ns) and (today_ts > end_date_ns):
+                        logging.error("Dates are not valid.")
+                        response_dict['message'] = "Sorry, Offer is not valid anymore"
+                        message = "Sorry, Offer is not valid anymore"
                         offer_success = 0
                     else:
-                        logging.error("Telluride call failed.")
-                        response_dict['message'] = "Sorry, Offer could not be activated"
-                        message = "Sorry, Offer could not be activated"
-                        offer_success = 0
+                        host = get_telluride_host()
+                        relative_url = str("registerMember?offer_id="+offer_id+"&&member_id="+member_id
+                                           + "&&reg_start_date="+member_offer_obj.validity_start_date
+                                           + "&&reg_end_date="+member_offer_obj.validity_end_date)
+                        result = make_request(host=host, relative_url=relative_url, request_type="GET", payload='')
+
+                        logging.info(json.loads(result))
+                        result = json.loads(result).get('data')
+                        logging.info(result)
+
+                        status_code = int(result['status_code'])
+                        logging.info("Status code:: %d" % status_code)
+                        if status_code == 0 or status_code == 99:
+                            response_dict['message'] = "Offer has been activated successfully."
+                            message = "Offer has been activated successfully."
+                            offer_success = 1
+                            if status_code == 99:
+                                response_dict['message'] = "Member already registered for this offer."
+                                message = "Member already registered for this offer."
+                                offer_success = 0
+
+                            # Update MemberOfferData status call
+                            relative_url = ("updateEmailOfferActivationData?offer_id=%s&member_id=%s&channel=Email" \
+                                            "&reg_start_date=%s&reg_end_date=%s",offer_id, member_id,
+                                            member_offer_obj.validity_start_date.strftime('%Y-%m-%d'),
+                                            member_offer_obj.validity_end_date.strftime('%Y-%m-%d'))
+                            result = make_request(host=get_member_host(), relative_url=relative_url, payload='', request_type='GET')
+                            logging.info(json.loads(result))
+                            result = json.loads(result).get('data')
+                            logging.info("Response from member service::%s" + result)
+
+                        else:
+                            logging.error("Telluride call failed.")
+                            response_dict['message'] = "Sorry, Offer could not be activated"
+                            message = "Sorry, Offer could not be activated"
+                            offer_success = 0
 
                 else:
                     logging.error("Member Offer Object not found for offer key :: %s and member key:: %s",
@@ -230,7 +248,6 @@ class ActivateOfferHandler(webapp2.RequestHandler):
 
 
 class UIListItemsHandler(webapp2.RequestHandler):
-
     def get(self):
         key = ndb.Key('FrontEndData', '1')
         result = key.get(use_datastore=True, use_memcache=False, use_cache=False)
@@ -265,7 +282,6 @@ class UIListItemsHandler(webapp2.RequestHandler):
 
 
 class MetricsHandler(webapp2.RequestHandler):
-
     def get(self):
         campaign_id = self.request.get("campaign_id")
         result_dict = MemberOfferDataService.get_offer_metrics(campaign_id=campaign_id)

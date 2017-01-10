@@ -138,3 +138,10 @@ def get_email_host():
     data_key = ndb.Key('ServiceEndPointData', 'endpoints')
     data_entity = data_key.get()
     return data_entity.email
+
+
+def get_member_host():
+    data_key = ndb.Key('ServiceEndPointData', 'endpoints')
+    data_entity = data_key.get()
+    return data_entity.member
+

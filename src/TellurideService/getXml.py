@@ -218,7 +218,121 @@ def get_create_offer_xml(offer_obj):
     return xml_string
 
 
-def get_update_offer_xml(offer_entity):
+def get_extend_offer_dates_xml(offer, end_date):
+    xml_string = """<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
+                   <soap:Body>
+                      <ns2:CreateUpdateOffer xmlns:ns2="http://rewards.sears.com/schemas/offer/" xmlns="http://rewards.sears.com/schemas/">
+                         <MessageVersion>01</MessageVersion>
+                         <RequestorID>OFRP</RequestorID>
+                         <Source>TI</Source>
+                         <ns2:OfferNumber>"""+offer.OfferNumber+"""</ns2:OfferNumber>
+                         <ns2:OfferPointsDollarName>"""+offer.OfferPointsDollarName+"""</ns2:OfferPointsDollarName>
+                         <ns2:OfferDescription>"""+offer.OfferDescription+"""</ns2:OfferDescription>
+                         <ns2:OfferType>"""+offer.OfferType+"""</ns2:OfferType>
+                         <ns2:OfferSubType>"""+offer.OfferSubType+"""</ns2:OfferSubType>
+                         <ns2:OfferBUProgram>
+                            <ns2:BUProgram>
+                               <ns2:BUProgramName>"""+offer.OfferBUProgram_BUProgram_BUProgramName+"""</ns2:BUProgramName>
+                            </ns2:BUProgram>
+                         </ns2:OfferBUProgram>
+                         <ns2:ReceiptDescription>"""+offer.ReceiptDescription+"""</ns2:ReceiptDescription>
+                         <ns2:OfferConditions>TC_XR</ns2:OfferConditions>
+                         <ns2:OfferExclusions>TC_XR</ns2:OfferExclusions>
+                         <ns2:OfferCategory>"""+offer.OfferCategory+"""</ns2:OfferCategory>
+                         <ns2:OfferStartDate>"""+offer.OfferStartDate+"""</ns2:OfferStartDate>
+                         <ns2:OfferStartTime>"""+offer.OfferStartTime+"""</ns2:OfferStartTime>
+                         <ns2:OfferEndDate>"""+end_date+"""</ns2:OfferEndDate>
+                         <ns2:OfferEndTime>"""+offer.OfferEndTime+"""</ns2:OfferEndTime>
+                         <ns2:ExpenseAllocation>Allocate by Specified %</ns2:ExpenseAllocation>
+                         <ns2:ModifiedBy>xoffdev1</ns2:ModifiedBy>
+                         <ns2:ModifiedTS>"""+datetime.now().strftime("%Y-%m-%d %H:%M:%S")+"""</ns2:ModifiedTS>
+                         <ns2:OfferAttributes>
+                            <ns2:OfferAttribute>
+                               <ns2:Name>"""+offer.OfferAttributes_OfferAttribute_Name+"""</ns2:Name>
+                               <ns2:Values>
+                                  <ns2:Value>"""+offer.OfferAttributes_OfferAttribute_Values_Value+"""</ns2:Value>
+                               </ns2:Values>
+                            </ns2:OfferAttribute>
+                            <ns2:OfferAttribute>
+                               <ns2:Name>OFFER_DAILY_IND</ns2:Name>
+                               <ns2:Values>
+                                  <ns2:Value>N</ns2:Value>
+                               </ns2:Values>
+                            </ns2:OfferAttribute>
+                         </ns2:OfferAttributes>
+
+                         <ns2:Rules>
+                            <!--ns2:Rule Entity="Location">
+                               <ns2:Conditions>
+                                  <ns2:Condition>
+                                     <ns2:Name>STORE_LOCATION</ns2:Name>
+                                     <ns2:Operator>EQUALS</ns2:Operator>
+                                     <ns2:Values>
+                                        <ns2:Value>Order Location</ns2:Value>
+                                     </ns2:Values>
+                                  </ns2:Condition>
+                                  <ns2:Condition>
+                                     <ns2:Name>STORE_NUMBERS</ns2:Name>
+                                     <ns2:Operator>CONTAINS</ns2:Operator>
+                                     <ns2:Values>
+                                        <ns2:Value>KPOS</ns2:Value>
+                                     </ns2:Values>
+                                     <ns2:ConditionAttributes>
+                                        <ns2:ConditionAttribute>
+                                           <ns2:Name>NPOS</ns2:Name>
+                                           <ns2:Operator>IN</ns2:Operator>
+                                           <ns2:Values>
+                                              <ns2:Value>01001</ns2:Value>
+                                              <ns2:Value>01003</ns2:Value>
+                                           </ns2:Values>
+                                        </ns2:ConditionAttribute>
+                                     </ns2:ConditionAttributes>
+                                  </ns2:Condition>
+                               </ns2:Conditions>
+                            </ns2:Rule-->
+
+
+                            <ns2:Rule Entity="Member">
+                               <ns2:Conditions>
+                                  <ns2:Condition>
+                                     <ns2:Name>MEMBER_STATUS</ns2:Name>
+                                     <ns2:Operator>IN</ns2:Operator>
+                                     <ns2:Values>
+                                        <ns2:Value>BONUS</ns2:Value>
+                                        <ns2:Value>BASE</ns2:Value>
+                                     </ns2:Values>
+                                  </ns2:Condition>
+                                  <ns2:Condition>
+                                     <ns2:Name>MEMBER_GROUPS</ns2:Name>
+                                     <ns2:Operator>IN</ns2:Operator>
+                                     <ns2:Values>
+                                        <ns2:Value>"""+offer.OfferNumber+"""</ns2:Value>
+                                     </ns2:Values>
+                                  </ns2:Condition>
+                               </ns2:Conditions>
+                            </ns2:Rule>
+                            <ns2:Rule Entity=\""""+offer.Rules_Rule_Entity+"""\">
+                               <ns2:Conditions>
+                                  <ns2:Condition>
+                                     <ns2:Name>"""+offer.Rules_Conditions_Condition_Name+"""</ns2:Name>
+                                     <ns2:Operator>"""+offer.Rules_Conditions_Condition_Operator+"""</ns2:Operator>
+                                     <ns2:Values>
+                                        <ns2:Value>"""+offer.Rules_Conditions_Condition_Values_Value+"""</ns2:Value>
+                                     </ns2:Values>
+                                  </ns2:Condition>
+                               </ns2:Conditions>
+                            </ns2:Rule>
+                            <ns2:RuleActions>
+                               <ns2:ActionID>"""+offer.RuleActions_ActionID+"""</ns2:ActionID>
+                            </ns2:RuleActions>
+                         </ns2:Rules>
+                         <ns2:RealTimeFlag>Y</ns2:RealTimeFlag>
+                      </ns2:CreateUpdateOffer>
+                   </soap:Body>
+                </soap:Envelope>"""
+    return xml_string
+
+def get_update_offer_xml(offer_entity, offer_status):
     xml_string = """<S:Envelope xmlns:S="http://www.w3.org/2003/05/soap-envelope">
                    <S:Body>
                       <ns2:UpdateOfferStatus xmlns="http://rewards.sears.com/schemas/" xmlns:ns2="http://rewards.sears.com/schemas/offer/">
@@ -230,7 +344,7 @@ def get_update_offer_xml(offer_entity):
                          <ns2:OffersInfo>
                             <ns2:OfferInfo>
                                <ns2:OfferNumber>"""+offer_entity.OfferNumber+"""</ns2:OfferNumber>
-                               <ns2:OfferStatus>ACTIVATED</ns2:OfferStatus>
+                               <ns2:OfferStatus>"""+offer_status+"""</ns2:OfferStatus>
                             </ns2:OfferInfo>
                          </ns2:OffersInfo>
                          <ns2:AdditionalAttributes>
@@ -247,8 +361,10 @@ def get_update_offer_xml(offer_entity):
     return xml_string
 
 
-def get_register_offer_xml(offer_entity, member_entity):
-    end_date = offer_entity.OfferEndDate+"T"+offer_entity.OfferEndTime
+def get_register_offer_xml(offer_entity, member_entity, reg_start_date, reg_end_date):
+    end_date = reg_end_date+"T"+offer_entity.OfferEndTime
+    start_date = reg_start_date+"T"+offer_entity.OfferStartTime
+
     xml_string = """<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:web="http://www.epsilon.com/webservices/">
                    <soap:Header/>
                    <soap:Body>
@@ -261,7 +377,7 @@ def get_register_offer_xml(offer_entity, member_entity):
                          <web:AssociateID>000000000000</web:AssociateID>
                          <web:RegisterNumber>001</web:RegisterNumber>
                          <web:StoreNumber>00800</web:StoreNumber>
-                         <web:RegistrationStartDTTM>"""+datetime.now().strftime("%Y-%m-%dT%H:%M:%S")+"""</web:RegistrationStartDTTM>
+                         <web:RegistrationStartDTTM>"""+start_date+"""</web:RegistrationStartDTTM>
                          <web:RegistrationEndDTTM>"""+end_date+"""</web:RegistrationEndDTTM>
                          <web:MemberOfferReset>N</web:MemberOfferReset>
                          <web:OfferMemberGroupList>
