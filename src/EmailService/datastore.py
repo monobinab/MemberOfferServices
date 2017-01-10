@@ -73,8 +73,13 @@ class OfferDataService(CampaignData):
 
 class MemberOfferDataService(MemberOfferData):
     @classmethod
-    def create(cls, offer_entity, member_entity, channel):
-        member_offer_data = MemberOfferData(offer=offer_entity.key, member=member_entity.key, status=False, email_sent_at=datetime.now(), channel = channel)
+    def create(cls, offer_entity, member_entity, channel, reg_start_date, reg_end_date):
+        reg_start_datetime = datetime.strptime(reg_start_date, "%Y-%m-%d")
+        reg_end_datetime = datetime.strptime(reg_end_date, "%Y-%m-%d")
+
+        member_offer_data = MemberOfferData(offer=offer_entity.key, member=member_entity.key, status=False,
+                                            email_sent_at=datetime.now(), channel=channel,
+                                            validity_start_date=reg_start_datetime, validity_end_date=reg_end_datetime)
         member_offer_data_key = member_offer_data.put()
         return member_offer_data_key
 

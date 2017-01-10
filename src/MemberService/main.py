@@ -1,16 +1,17 @@
 import sys
 sys.path.insert(0, 'lib')
+
 import json
 import logging
 import httplib
 import webapp2
-from models import CampaignData, MemberData, MemberOfferData, ndb, StoreData
-from datastore import CampaignDataService, MemberOfferDataService, OfferDataService
-from googleapiclient.errors import HttpError
-from utilities import create_pubsub_message, make_request, get_telluride_host, get_email_host
-from datetime import datetime
 import xml.etree.ElementTree as ET
-import os
+
+from models import MemberData, MemberOfferData, ndb
+from datastore import MemberOfferDataService, OfferDataService
+from googleapiclient.errors import HttpError
+from utilities import make_request, get_telluride_host, get_email_host
+from datetime import datetime
 
 
 class BaseHandler(webapp2.RequestHandler):
@@ -26,7 +27,7 @@ class BaseHandler(webapp2.RequestHandler):
 
 class IndexPageHandler(webapp2.RequestHandler):
     def get(self):
-        self.response.write("member-offer-service")
+        self.response.write("member-service")
 
 
 class AllMemberOffersHandler(webapp2.RequestHandler):
@@ -177,8 +178,8 @@ class SingleMemberOfferHandler(webapp2.RequestHandler):
                 issued_offer["email_sent_at"] = item.email_sent_at.strftime('%Y-%m-%d %H:%m') if \
                     item.email_sent_at is not None else None
 
-                issued_offer["activated_at"] = item.activated_at.strftime('%Y-%m-%d %H:%m') if \
-                    item.activated_at is not None else None
+                issued_offer["activated_at"] = item.activated_date.strftime('%Y-%m-%d %H:%m') if \
+                    item.activated_date is not None else None
 
                 issued_offer["updated_at"] = item.updated_at.strftime('%Y-%m-%d %H:%m') if \
                     item.updated_at is not None else None
@@ -223,8 +224,8 @@ class SingleMemberOfferHandler(webapp2.RequestHandler):
                 updated_offer["email_sent_at"] = item.email_sent_at.strftime('%Y-%m-%d %H:%m') if \
                     item.email_sent_at is not None else None
 
-                updated_offer["activated_at"] = item.activated_at.strftime('%Y-%m-%d %H:%m') if \
-                    item.activated_at is not None else None
+                updated_offer["activated_at"] = item.activated_date.strftime('%Y-%m-%d %H:%m') if \
+                    item.activated_date is not None else None
 
                 updated_offer["updated_at"] = item.updated_at.strftime('%Y-%m-%d %H:%m') if \
                     item.updated_at is not None else None
@@ -311,7 +312,7 @@ class ActivateOfferHandler(webapp2.RequestHandler):
                         logging.info("Status code:: %d" % status_code)
                         if status_code == 0:
                             member_offer_obj.status = 1
-                            member_offer_obj.activated_at = datetime.now()
+                            member_offer_obj.activated_date = datetime.now()
                             member_offer_obj.put()
                             response_dict['message'] = "Offer has been activated successfully"
                         elif status_code == 1 or status_code == 99:
@@ -401,10 +402,10 @@ class KPOSOfferHandler(webapp2.RequestHandler):
                         logging.info("Status code:: %d" % status_code)
                         if status_code == 0:
                             member_offer_obj.status = 1
-                            member_offer_obj.activated_at = datetime.now()
+                            member_offer_obj.activated_date = datetime.now()
                             member_offer_obj.validity_start_date = start_date
                             member_offer_obj.validity_end_date = end_date
-                            member_offer_obj.channel = channel
+                            member_offer_obj.channel = channel.upper()
                             member_offer_obj.put()
                             response_dict['message'] = "Offer has been activated successfully"
                         elif status_code == 1 or status_code == 99:
@@ -433,90 +434,164 @@ class KPOSOfferHandler(webapp2.RequestHandler):
         self.response.write(json.dumps(response_dict))
 
 
-class SendOfferToMemberHandler(webapp2.RequestHandler):
-    # TODO: Make response consistent with other APIs as well
+# class SendOfferToMemberHandler(webapp2.RequestHandler):
+#     # TODO: Make response consistent with other APIs as well
+#     def get(self):
+#         self.response.headers['Content-Type'] = 'application/json'
+#         self.response.headers['Access-Control-Allow-Origin'] = '*'
+#         member_id = self.request.get('member_id')
+#         offer_value = self.request.get('offer_value')
+#         campaign_name = self.request.get('campaign_name')
+#         channel = "EMAIL"
+#
+#         if not member_id or not offer_value or not campaign_name:
+#             response_dict = {"message": "Please provide member_id, offer_value and campaign_name with the request"}
+#             self.response.write(json.dumps(response_dict))
+#         else:
+#             response = self.process_data(member_id, offer_value, campaign_name, channel)
+#             self.response.write(json.dumps(response))
+#
+#     def process_data(self, member_id, offer_value, campaign_name, channel):
+#         response_dict = dict()
+#         campaign_key = ndb.Key('CampaignData', campaign_name)
+#         logging.info("fetched campaign_key for: %s", campaign_name)
+#         campaign = campaign_key.get()
+#
+#         if campaign is None:
+#             logging.info("campaign is None")
+#             response_dict['message'] = "Error: Campaign not found"
+#             return response_dict
+#         else:
+#             logging.info("campaign is not None")
+#             try:
+#                 success_msg = "Offer email sent successfully"
+#                 response_dict['message'] = ""
+#                 logging.info('campaign_name: %s , member_id: %s, offer_value: %s', campaign_name, member_id, offer_value)
+#
+#                 offer_name = "{}_{}".format(str(campaign.name), str(offer_value))
+#
+#                 offer_key = ndb.Key('OfferData', offer_name)
+#                 logging.info("fetched offer_key")
+#                 offer_entry = offer_key.get()
+#
+#                 if offer_entry is None:
+#                     logging.info("Offer is None")
+#                     response_dict['message'] = "Error: Offer not found"
+#                     return response_dict
+#                 else:
+#                     logging.info('Offer is not None. Sending email for Offer: %s', offer_name)
+#                     offer = OfferDataService.create_offer_obj(campaign, offer_value)
+#
+#                     # HACK: Need to remove later. Only for testing purpose. <>
+#                     member_id = '7081327663412819'
+#
+#                     member_key = ndb.Key('MemberData', member_id)
+#                     logging.info("Fetched member_key for member: %s", member_id)
+#
+#                     member = member_key.get(use_datastore=True, use_memcache=False, use_cache=False)
+#                     if member is None:
+#                         logging.info("member is None")
+#                         response_dict['message'] = "Member ID " + member_id + " not found in database."
+#                         return response_dict
+#                     else:
+#                         host = get_email_host()
+#                         relative_url = str("offerDetails?offer=" + offer_value +
+#                                            "&&member=" + member_id +
+#                                            "&&campaign=" + campaign_name)
+#
+#                         # send_mail(member_entity=member, offer_entity=offer,
+#                         #           campaign_entity=campaign_entity)
+#
+#                         logging.info("Email URL :: %s %s", host, relative_url)
+#                         result = make_request(host=host, relative_url=relative_url, request_type="GET", payload='')
+#
+#                         logging.info("email service call result :: %s", result)
+#
+#                         # member_offer_data_key = MemberOfferDataService.create(offer, member, channel)
+#
+#                         logging.info('member_offer_key:: %s', member_offer_data_key)
+#                         logging.info('Offer %s email has been sent to:: %s', offer.OfferNumber, member.email)
+#                         response_dict['message'] = success_msg
+#
+#             except HttpError as err:
+#                 print('Error: {}'.format(err.content))
+#                 logging.error('Error: {}'.format(err.content))
+#                 response_dict['message'] = "HttpError exception: " + err.content
+#                 raise err
+#
+#         logging.info('response_dict[message]: %s', response_dict['message'])
+#         return response_dict
+
+
+class UpdateEmailOfferIssuanceHandler(webapp2.RequestHandler):
     def get(self):
-        self.response.headers['Content-Type'] = 'application/json'
-        self.response.headers['Access-Control-Allow-Origin'] = '*'
-        member_id = self.request.get('member_id')
-        offer_value = self.request.get('offer_value')
-        campaign_name = self.request.get('campaign_name')
-        channel = "EMAIL"
-
-        if not member_id or not offer_value or not campaign_name:
-            response_dict = {"message": "Please provide member_id, offer_value and campaign_name with the request"}
-            self.response.write(json.dumps(response_dict))
-        else:
-            response = self.process_data(member_id, offer_value, campaign_name, channel)
-            self.response.write(json.dumps(response))
-
-    def process_data(self, member_id, offer_value, campaign_name, channel):
         response_dict = dict()
-        campaign_key = ndb.Key('CampaignData', campaign_name)
-        logging.info("fetched campaign_key for: %s", campaign_name)
-        campaign = campaign_key.get()
+        try:
+            logging.info("Member id:: %s", self.request.get('member_id'))
+            logging.info("Offer id:: %s", self.request.get('offer_id'))
+            logging.info("Registration start date:: %s", self.request.get('reg_start_date'))
+            logging.info("Registration end date:: %s", self.request.get('reg_end_date'))
+            logging.info("Channel:: %s", self.request.get('channel'))
+            member_entity = ndb.Key('MemberData', self.request.get('member_id')).get()
+            offer_entity = ndb.Key('OfferData', self.request.get('offer_id')).get()
+            reg_start_date = self.request.get('reg_start_date')
+            reg_end_date = self.request.get('reg_end_date')
+            channel = self.request.get('channel')
 
-        if campaign is None:
-            logging.info("campaign is None")
-            response_dict['message'] = "Error: Campaign not found"
-            return response_dict
-        else:
-            logging.info("campaign is not None")
-            try:
-                success_msg = "Offer email sent successfully"
-                response_dict['message'] = ""
-                logging.info('campaign_name: %s , member_id: %s, offer_value: %s', campaign_name, member_id, offer_value)
+            logging.info("Member :: %s", member_entity)
+            logging.info("Offer :: %s", offer_entity)
+            if member_entity is None or offer_entity is None:
+                response_dict = {'status': 'Failure', 'message': "Details not found for the request"}
+            else:
+                member_offer_data_key = MemberOfferDataService.create(offer_entity=offer_entity,
+                                                                      member_entity=member_entity,
+                                                                      channel=channel.upper(),
+                                                                      reg_start_date=reg_start_date,
+                                                                      reg_end_date=reg_end_date)
+                logging.info("Member offer object created:: %s", member_offer_data_key)
+                response_dict = {'status': 'Success',
+                                 'message': "Member Offer entity created successfully!!!"}
 
-                offer_name = "{}_{}".format(str(campaign.name), str(offer_value))
+        except Exception as e:
+            logging.error(e)
+            self.response.set_status(500)
+            response_dict = {'status': 'Failure', 'message': "Server error has encountered an error"}
 
-                offer_key = ndb.Key('OfferData', offer_name)
-                logging.info("fetched offer_key")
-                offer_entry = offer_key.get()
+        finally:
+            logging.info(response_dict)
+            self.response.headers['Access-Control-Allow-Origin'] = '*'
+            self.response.headers['Content-type'] = 'application/json'
+            self.response.write(json.dumps(response_dict))
 
-                if offer_entry is None:
-                    logging.info("Offer is None")
-                    response_dict['message'] = "Error: Offer not found"
-                    return response_dict
-                else:
-                    logging.info('Offer is not None. Sending email for Offer: %s', offer_name)
-                    offer = OfferDataService.create_offer_obj(campaign, offer_value)
 
-                    # HACK: Need to remove later. Only for testing purpose. <>
-                    member_id = '7081327663412819'
+class UpdateEmailOfferActivationData(webapp2.RequestHandler):
+    def get(self):
+        response_dict = dict()
+        try:
+            logging.info("Member id:: %s", self.request.get('member_id'))
+            logging.info("Offer id:: %s", self.request.get('offer_id'))
+            offer_id = self.request.get('offer_id')
+            member_id = self.request.get('member_id')
+            member_offer_entity = ndb.Key('MemberOfferData', offer_id+"_"+member_id).get()
 
-                    member_key = ndb.Key('MemberData', member_id)
-                    logging.info("Fetched member_key for member: %s", member_id)
+            if member_offer_entity is None:
+                response_dict = {'status': 'Failure', 'message': "Details not found for the request"}
+            else:
+                member_offer_entity.status = 1
+                member_offer_entity.activated_date = datetime.now()
+                member_offer_entity.activated_channel = 'EMAIL'
+                member_offer_data_key = member_offer_entity.put()
+                logging.info("Member offer object updated:: %s", member_offer_data_key)
+                response_dict = {'status': 'Success',
+                                 'message': "Member Offer entity updated successfully!!!"}
 
-                    member = member_key.get(use_datastore=True, use_memcache=False, use_cache=False)
-                    if member is None:
-                        logging.info("member is None")
-                        response_dict['message'] = "Member ID " + member_id + " not found in database."
-                        return response_dict
-                    else:
-                        host = get_email_host()
-                        relative_url = str("offerDetails?offer=" + offer_value +
-                                           "&&member=" + member_id +
-                                           "&&campaign=" + campaign_name)
+        except Exception as e:
+            logging.error(e)
+            response_dict = {'status': 'Failure', 'message': "Server error has encountered an error"}
 
-                        # send_mail(member_entity=member, offer_entity=offer,
-                        #           campaign_entity=campaign_entity)
+        finally:
+            logging.info(response_dict)
+            self.response.headers['Access-Control-Allow-Origin'] = '*'
+            self.response.headers['Content-type'] = 'application/json'
+            self.response.write(json.dumps(response_dict))
 
-                        logging.info("Email URL :: %s %s", host, relative_url)
-                        result = make_request(host=host, relative_url=relative_url, request_type="GET", payload='')
-
-                        logging.info("email service call result :: %s", result)
-
-                        member_offer_data_key = MemberOfferDataService.create(offer, member, channel)
-
-                        logging.info('member_offer_key:: %s', member_offer_data_key)
-                        logging.info('Offer %s email has been sent to:: %s', offer.OfferNumber, member.email)
-                        response_dict['message'] = success_msg
-
-            except HttpError as err:
-                print('Error: {}'.format(err.content))
-                logging.error('Error: {}'.format(err.content))
-                response_dict['message'] = "HttpError exception: " + err.content
-                raise err
-
-        logging.info('response_dict[message]: %s', response_dict['message'])
-        return response_dict

@@ -6,8 +6,8 @@ import httplib
 import webapp2
 import pubsub_utils
 import csv
-from models import CampaignData, MemberData, MemberOfferData, ndb, StoreData, OfferData, BUData
-from datastore import CampaignDataService, MemberOfferDataService, OfferDataService
+from models import CampaignData, MemberOfferData, ndb, StoreData, OfferData, EmailEventMetricsData, BUData
+from datastore import CampaignDataService, MemberOfferDataService, OfferDataService, EmailEventMetricsDataService
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from oauth2client.client import GoogleCredentials
@@ -15,7 +15,6 @@ from utilities import create_pubsub_message, make_request, get_jinja_environment
     get_email_host, get_telluride_host
 from datetime import datetime
 from google.appengine.api import urlfetch
-
 
 class BaseHandler(webapp2.RequestHandler):
     def handle_exception(self, exception, debug):
@@ -178,13 +177,13 @@ class ActivateOfferHandler(webapp2.RequestHandler):
                     status_code = int(result['status_code'])
                     logging.info("Status code:: %d" % status_code)
                     if status_code == 0:
-                            member_offer_obj.status = True
-                            member_offer_obj.activated_at = datetime.now()
-                            member_offer_obj.put()
+                        member_offer_obj.status = True
+                        member_offer_obj.activated_at = datetime.now()
+                        member_offer_obj.put()
 
-                            response_dict['message'] = "Offer has been activated successfully"
-                            message = "Offer has been activated successfully"
-                            offer_success = 1
+                        response_dict['message'] = "Offer has been activated successfully"
+                        message = "Offer has been activated successfully"
+                        offer_success = 1
 
                     elif status_code == 1 or status_code == 99:
                         member_offer_obj.status = True
@@ -280,12 +279,12 @@ class BatchJobHandler(webapp2.RequestHandler):
     def get(self):
 
         if self.request.get('dataset_name') is None or not self.request.get('dataset_name') or \
-            self.request.get('table_name') is None or not self.request.get('table_name') or \
-            self.request.get('project_id') is None or not self.request.get('project_id') or \
-            self.request.get('campaign_name') is None or not self.request.get('campaign_name'):
+                        self.request.get('table_name') is None or not self.request.get('table_name') or \
+                        self.request.get('project_id') is None or not self.request.get('project_id') or \
+                        self.request.get('campaign_name') is None or not self.request.get('campaign_name'):
             response_html = "<html><head><title>Batch Job Execution</title></head><body><h3> " \
-                             + "Please provide dataset_name, table_name, project_id and campaign_name with the " \
-                               "request</h3></body></html>"
+                            + "Please provide dataset_name, table_name, project_id and campaign_name with the " \
+                              "request</h3></body></html>"
             self.response.write(response_html)
             return
 
@@ -412,8 +411,8 @@ class BatchJobHandler(webapp2.RequestHandler):
                                             member_offer_data_key = MemberOfferDataService.create(offer, member)
                                             logging.info('member_offer_key:: %s', member_offer_data_key)
                                             logging.info('Offer %s email has been sent to:: %s', offer.OfferNumber, member.email)
-                                            response_dict['message'] = response_dict['message'] + new_line + " Offer "\
-                                                                       +offer.OfferNumber+" emails has been sent to: "\
+                                            response_dict['message'] = response_dict['message'] + new_line + " Offer " \
+                                                                       +offer.OfferNumber+" emails has been sent to: " \
                                                                        +member.email
                                         else:
                                             logging.info(
@@ -433,7 +432,7 @@ class BatchJobHandler(webapp2.RequestHandler):
                                 logging.info('Error creating offer %s in telluride system. Response from telluride call is: %s', offer.OfferNumber,response_dict['message'])
                                 response_dict['message'] = response_dict['message'] + new_line +" Error creating offer "+offer.OfferNumber+" in telluride system. Response from telluride call is:: "+response_dict['message']
 
-                    # [END print_results]
+                                # [END print_results]
 
             except HttpError as err:
                 print('Error: {}'.format(err.content))
@@ -619,6 +618,47 @@ class MigrateNamespaceData(webapp2.RequestHandler):
         self.migrate_endpoints_data(from_ns=from_ns, to_ns=to_ns)
         self.response.write("Data migrated successfully!!!")
 
+class AllEvents(webapp2.RequestHandler):
+
+    def post(self):
+        logging.info(self.request.body)
+        logging.info(self.request)
+        json_data_list = json.loads(self.request.body)
+        EmailEventMetricsDataService.save_allEventsData(json_data_list)
+
+
+class GetAllEmailActivities(webapp2.RequestHandler):
+
+    def get(self):
+        query = EmailEventMetricsData.query().order(-EmailEventMetricsData.timestamp)
+        activity_list = query.fetch(100)
+        result = list()
+        logging.info('len of the list: %s', len(activity_list))
+        logging.info(activity_list)
+        for each_entity in activity_list:
+
+            activity_dict = dict()
+            logging.info('each entry: %s', each_entity)
+            logging.info('each entry email: %s', each_entity.email)
+            activity_dict['email'] = each_entity.email
+            activity_dict['timestamp'] = each_entity.timestamp
+            activity_dict['smtp-id'] = each_entity.smtp_id
+            activity_dict['event'] = each_entity.event
+            activity_dict['sg_event_id'] = each_entity.sg_event_id
+            activity_dict['sg_message_id'] = each_entity.sg_message_id
+            activity_dict['response'] = each_entity.response
+            activity_dict['attempt'] = each_entity.attempt
+            activity_dict['useragent'] = each_entity.useragent
+            activity_dict['ip'] = each_entity.ip
+            activity_dict['url'] = each_entity.url
+            activity_dict['reason'] = each_entity.reason
+            activity_dict['status'] = each_entity.status
+            activity_dict['asm_group_id'] = each_entity.asm_group_id
+
+            result.append(activity_dict)
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.headers['Access-Control-Allow-Origin'] = '*'
+        self.response.write(json.dumps({'data': result}))
 
 # [START app]
 app = webapp2.WSGIApplication([
@@ -632,7 +672,9 @@ app = webapp2.WSGIApplication([
     ('/uploadStoreIDs', UploadStoreIDHandler),
     ('/buNames', SoarBuHandler),
     ('/sendgridEvents', SendGridEvents),
-    ('/migrateEntities', MigrateNamespaceData)
+    ('/migrateEntities', MigrateNamespaceData),
+    ('/allEventsNotification', AllEvents),
+    ('/getemailactivities', GetAllEmailActivities)
 ], debug=True)
 
 # [END app]

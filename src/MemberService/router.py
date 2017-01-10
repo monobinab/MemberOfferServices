@@ -8,5 +8,6 @@ app = webapp2.WSGIApplication([
     Route('/activateOffer', handler='main.ActivateOfferHandler'),
     Route('/kposOffer', handler='main.KPOSOfferHandler'),
     # Route('/modeldata', handler='main.ModelDataHandler'),
-    Route('/sendOffer', handler='main.SendOfferToMemberHandler'),
+    Route('/updateEmailOfferIssuanceData', handler='main.UpdateEmailOfferIssuanceHandler'),
+    Route('/updateEmailOfferActivationData', handler='main.UpdateEmailOfferActivationData'),
 ], debug=True)

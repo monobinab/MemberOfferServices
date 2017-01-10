@@ -89,11 +89,11 @@ public class MemberDataflowJob extends HttpServlet {
 			String email_ad_id = (String) content.get("email_ad_id");
 			email_ad_id = (email_ad_id == null)?"":email_ad_id;
 
-			String sends = (String) content.get("sends");
-			sends = (sends == null)?"":sends;
+			Integer sends = (Integer) content.get("sends");
+			sends = (sends == null)?0:sends;
 
-			String opens = (String) content.get("opens");
-			opens = (opens == null)?"":opens;
+			Integer opens = (Integer) content.get("opens");
+			opens = (opens == null)?0:opens;
 
 			entityBuilder.getMutableProperties().put("member_id", makeValue(lyl_id_no).build());
 			entityBuilder.getMutableProperties().put("kmt_primary_store", makeValue(kmt_primary_store).build());

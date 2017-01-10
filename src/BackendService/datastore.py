@@ -1,4 +1,4 @@
-from models import CampaignData, OfferData, MemberOfferData, MemberData, ndb
+from models import CampaignData, OfferData, MemberOfferData, MemberData,EmailEventMetricsData, ndb
 import logging
 from datetime import datetime, timedelta
 from google.appengine.api import datastore_errors
@@ -173,3 +173,52 @@ class MemberOfferDataService(MemberOfferData):
             response_dict['message'] = 'Please provide campaign id.'
             response_dict['status'] = 'Failure'
         return response_dict
+
+
+
+class EmailEventMetricsDataService(EmailEventMetricsData):
+    @classmethod
+    def get_emailActivity_key(cls):
+        return ndb.Key('EmailEventMetricsData')
+
+    @classmethod
+    @ndb.transactional(xg=True)
+    def save_allEventsData(cls, json_data_list):
+        logging.info('list data :: %s', json_data_list)
+        for activity_dict in json_data_list:
+            logging.info('Json data:: %s', activity_dict)
+            email = activity_dict['email']
+            timestamp = activity_dict.get('timestamp',None)
+            smtp_id = activity_dict.get('smtp_id',None)
+            event = activity_dict.get('event',None)
+            category = activity_dict.get('category',None)
+            sg_event_id = activity_dict.get('sg_event_id',None)
+            sg_message_id = activity_dict.get('sg_message_id',None)
+            response = activity_dict.get('response',None)
+            attempt = activity_dict.get('attempt',None)
+            useragent = activity_dict.get('useragent',None)
+            ip = activity_dict.get('ip',None)
+            url = activity_dict.get('url',None)
+            reason = activity_dict.get('reason',None)
+            status = activity_dict.get('status',None)
+            asm_group_id = activity_dict.get('asm_group_id',None)
+            memberActivity = EmailEventMetricsData(
+                category=category,
+                email=email,
+                timestamp=timestamp,
+                smtp_id=smtp_id,
+                event=event,
+                sg_event_id=sg_event_id,
+                sg_message_id=sg_message_id,
+                response=response,
+                attempt=attempt,
+                useragent=useragent,
+                ip=ip,
+                url=url,
+                reason=reason,
+                status=status,
+                asm_group_id=asm_group_id
+            )
+
+            memberActivity_key = memberActivity.put()
+            logging.info('memberActivity_key:: %s', memberActivity_key)

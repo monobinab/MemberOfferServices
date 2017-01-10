@@ -57,33 +57,36 @@ class OfferData(ndb.Model):
 
 class MemberData(ndb.Model):
     member_id = ndb.StringProperty(indexed=True)
+    kmt_primary_store = ndb.IntegerProperty(indexed=False, default=0)
     email = ndb.StringProperty(indexed=True)
-    address = ndb.StringProperty(indexed=False)
     first_name = ndb.StringProperty(indexed=False)
     last_name = ndb.StringProperty(indexed=False)
-    email_opted_in = ndb.BooleanProperty(default=False)
+    eml_opt_in = ndb.StringProperty(default='N')
+    opens = ndb.IntegerProperty(indexed=False, default=0)
+    sends = ndb.IntegerProperty(indexed=False, default=0)
+    email_ad_id = ndb.StringProperty(indexed=False)
 
 
 class MemberOfferData(ndb.Model):
     offer = ndb.KeyProperty(kind="OfferData")
     member = ndb.KeyProperty(kind="MemberData")
-    channel = ndb.StringProperty(indexed=True)  # TODO: rename to issuance_channel
+
+    issuance_channel = ndb.StringProperty(indexed=True)
     activated_channel = ndb.StringProperty(indexed=True)
-    email_sent_at = ndb.DateTimeProperty(auto_now_add=True, indexed=True)  # TODO : rename to issuance_date
-    activated_at = ndb.DateTimeProperty(indexed=True)  # TODO: rename to activated_date
+
+    issuance_date = ndb.DateTimeProperty(auto_now_add=True, indexed=True)
+    activated_date = ndb.DateTimeProperty(indexed=True)
+
     redeemed = ndb.BooleanProperty(default=False)
     redeemed_date = ndb.DateTimeProperty(indexed=True)
+
     created_at = ndb.DateTimeProperty(auto_now_add=True, indexed=True)
     updated_at = ndb.DateTimeProperty(auto_now=True, auto_now_add=False)
+
     validity_start_date = ndb.DateTimeProperty(indexed=False)
     validity_end_date = ndb.DateTimeProperty(indexed=True)
+
     status = ndb.IntegerProperty(default=0)
-
-
-class SendgridData(ndb.Model):
-    SENDGRID_API_KEY = ndb.StringProperty(indexed=True)
-    SENDGRID_SENDER = ndb.StringProperty(indexed=True)
-    TEMPLATE_ID = ndb.StringProperty(indexed=False)
 
 
 class ConfigData(ndb.Model):
