@@ -38,7 +38,12 @@ def get_create_offer_xml(offer_obj):
         offer_data_dict['Actions_ActionProperty_PropertyType'] = offer_obj.Actions_ActionProperty_PropertyType
         offer_data_dict['Actions_ActionProperty_Property_Name'] = offer_obj.Actions_ActionProperty_Property_Name
         offer_data_dict['Actions_ActionProperty_Property_Values_Value'] = offer_obj.Actions_ActionProperty_Property_Values_Value
+        rule_conditions_values = ""
+        logging.info("Rule Values:: %s", offer_data_dict['Rules_Conditions_Condition_Values_Value'])
 
+        for rule in offer_data_dict['Rules_Conditions_Condition_Values_Value'].split(','):
+            logging.info("Rule Value:: %s", rule)
+            rule_conditions_values += """<ns2:Value>"""+rule+"""</ns2:Value>"""
         xml_string = """<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
                            <soap:Body>
                               <ns2:CreateUpdateOffer xmlns:ns2="http://rewards.sears.com/schemas/offer/" xmlns="http://rewards.sears.com/schemas/">
@@ -136,9 +141,7 @@ def get_create_offer_xml(offer_obj):
                                           <ns2:Condition>
                                              <ns2:Name>"""+offer_data_dict['Rules_Conditions_Condition_Name']+"""</ns2:Name>
                                              <ns2:Operator>"""+offer_data_dict['Rules_Conditions_Condition_Operator']+"""</ns2:Operator>
-                                             <ns2:Values>
-                                                <ns2:Value>"""+offer_data_dict['Rules_Conditions_Condition_Values_Value']+"""</ns2:Value>
-                                             </ns2:Values>
+                                             <ns2:Values>"""+rule_conditions_values+"""</ns2:Values>
                                           </ns2:Condition>
                                        </ns2:Conditions>
                                     </ns2:Rule>
@@ -214,7 +217,7 @@ def get_create_offer_xml(offer_obj):
     except:
         e = sys.exc_info()[0]
         logging.info("Oops!  That was no valid number.  Try again... : %s", e)
-
+    logging.info("xml string:: %s", xml_string)
     return xml_string
 
 

@@ -1,12 +1,12 @@
 import logging
 from datetime import datetime, timedelta
 from google.appengine.api import datastore_errors
-from models import CampaignData, OfferData, MemberOfferData, EmailEventMetricsData, ndb, BuMappingData
+from models import CampaignData, OfferData, MemberOfferData, EmailEventMetricsData, ndb, BuOptMappingData
 
 
 class OfferDataService(CampaignData):
     @classmethod
-    def create_offer_obj(cls, campaign, offer_value):
+    def create_offer_obj(cls, campaign, offer_value, rules_condition):
         campaign_key = ndb.Key('CampaignData', campaign.name)
 
         start_date = campaign.start_date
@@ -16,28 +16,16 @@ class OfferDataService(CampaignData):
         logging.info("Offer Start_date:: %s and end_date %s", start_date, end_date)
 
         offer_name = "%s_%s" % (str(campaign.name), str(offer_value))
-        rules_condition = ""
 
-        if campaign.format_level == 'Sears':
-            rules_condition = "SEARSLEGACY~803~~~~~~" if campaign.category == "Apparel" else \
-                "SEARSLEGACY~803~615~~~~~~"
-        elif campaign.format_level == 'Kmart':
-            category_list = campaign.category.split('-')
-            prod_heirarchy_list = list()
-            mapping_list = BuMappingData.query(BuMappingData.soar_no == category_list[0]).all()
-            for each_entity in mapping_list:
-                prod_heirarchy_list.append(each_entity.product_heirarchy)
-            rules_condition = ",".join(prod_heirarchy_list)
-            logging.info("Rules condition:: %s", rules_condition)
-            # rules_condition = "KMARTSHC~1~35~~~~~~"
-        # category_list = campaign.category.split('-')
-        # category = ''.join(category_list[2:])
-        # logging.info("Category:: %s", category)
+        category_list = campaign.category.split('-')
+        logging.info("Category list:: %s", category_list)
+        logging.info("BU Name:: %s", ",".join(category_list[1]))
+        BU_NAME = category_list[1]
         offer_obj = OfferData(surprise_points=int(offer_value), threshold=10, OfferNumber=offer_name,
                               OfferPointsDollarName=offer_name, OfferDescription=offer_name,
                               OfferType="Xtreme Redeem", OfferSubType="Item", OfferStartDate=start_date,
                               OfferStartTime="00:00:00", OfferEndDate=end_date, OfferEndTime="23:59:00",
-                              OfferBUProgram_BUProgram_BUProgramName="BU - "+campaign.category,
+                              OfferBUProgram_BUProgram_BUProgramName="BU - "+BU_NAME,
                               OfferBUProgram_BUProgram_BUProgramCost=0.00, ReceiptDescription="TELL-16289",
                               OfferCategory="Stackable", OfferAttributes_OfferAttribute_Name="MULTI_TRAN_IND",
                               OfferAttributes_OfferAttribute_Values_Value="N", Rules_Rule_Entity="Product",
@@ -49,17 +37,16 @@ class OfferDataService(CampaignData):
                               Actions_ActionProperty_PropertyType="Tier",
                               Actions_ActionProperty_Property_Name="MIN",
                               Actions_ActionProperty_Property_Values_Value="0.01",
-                              issuance_date=datetime.now())
+                              created_at=datetime.now())
         offer_obj.key = ndb.Key('OfferData', offer_name)
         offer_obj.campaign = campaign_key
 
         return offer_obj
 
     @classmethod
-    def save_offer(cls, campaign, offer_value):
+    def save_offer(cls, campaign, offer_value, rules_condition):
         response_dict = dict()
-
-        offer = OfferDataService.create_offer_obj(campaign, offer_value)
+        offer = OfferDataService.create_offer_obj(campaign, offer_value, rules_condition)
         response_dict['offer'] = offer
 
         try:
@@ -90,14 +77,16 @@ class CampaignDataService(CampaignData):
         return ndb.Key('CampaignData', campaign_name)
 
     @classmethod
-    @ndb.transactional(xg=True)
+    # @ndb.transactional(xg=True)
     def save_campaign(cls, json_data, created_time):
         campaign_dict = json_data['campaign_details']
         offer_dict = json_data['offer_details']
 
         campaign_name = campaign_dict['name']
         campaign_budget = int(campaign_dict['money'])
+
         campaign_category = campaign_dict['category']
+
         campaign_format_level = campaign_dict['format_level'] if campaign_dict['format_level'] is not None else ""
         campaign_convratio = int(campaign_dict['conversion_ratio'])
 
@@ -120,9 +109,27 @@ class CampaignDataService(CampaignData):
         campaign_key = campaign.put()
         logging.info('campaign_key:: %s', campaign_key)
 
+        rules_condition = ""
+        if campaign.format_level == 'Sears':
+            rules_condition = "SEARSLEGACY~803~~~~~~" if campaign.category == "Apparel" else \
+                "SEARSLEGACY~803~615~~~~~~"
+        elif campaign.format_level == 'Kmart':
+            category_list = campaign.category.split('-')
+            logging.info("Category list:: %s", category_list)
+            product_hierarchy_list = list()
+            logging.info("SOAR_NO:: %s", category_list[0])
+            mapping_list = BuOptMappingData.query(BuOptMappingData.soar_no == category_list[0]).fetch()
+            logging.info("Number of mappings found:: %s", len(mapping_list))
+            for each_entity in mapping_list:
+                product_hierarchy_list.append(each_entity.product_hierarchy)
+            logging.info("List:: %s", product_hierarchy_list)
+            rules_condition = ",".join(product_hierarchy_list)
+            logging.info("Rules condition:: %s", rules_condition)
+            # rules_condition = "KMARTSHC~1~35~33~~~~~"
+
         # Creating offers from min values to max values
         for surprise_point in range(offer_min_val, offer_max_val+1):
-            OfferDataService.save_offer(campaign, surprise_point)
+            OfferDataService.save_offer(campaign, surprise_point, rules_condition)
 
 
 class MemberOfferDataService(MemberOfferData):

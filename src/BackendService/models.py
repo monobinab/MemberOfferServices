@@ -157,15 +157,15 @@ class EmailEventMetricsData(ndb.Model):
     asm_group_id = ndb.IntegerProperty(indexed=False)
 
 
-class BuMappingData(ndb.Model):
+class BuOptMappingData(ndb.Model):
     soar_no = ndb.StringProperty(indexed=True)
-    soar_nm = ndb.IntegerProperty(indexed=True)
-    fp_dvsn_desc = ndb.StringProperty(indexed=False)
+    soar_nm = ndb.StringProperty(indexed=True)
+    # fp_dvsn_desc = ndb.StringProperty(indexed=False)
     bus_nbr = ndb.StringProperty(indexed=True)
     unit_nbr = ndb.StringProperty(indexed=True)
     dvsn_nbr = ndb.StringProperty(indexed=False)
-    dept_nbr = ndb.StringProperty(indexed=False)
-    catg_cluster_nbr = ndb.StringProperty(indexed=False)
-    catg_nbr = ndb.StringProperty(indexed=False)
-    sub_catg_nbr = ndb.StringProperty(indexed=False)
-    product_heirarchy = ndb.StringProperty(indexed=False)
+    # dept_nbr = ndb.StringProperty(indexed=False)
+    # catg_cluster_nbr = ndb.StringProperty(indexed=False)
+    # catg_nbr = ndb.StringProperty(indexed=False)
+    # sub_catg_nbr = ndb.StringProperty(indexed=False)
+    product_hierarchy = ndb.StringProperty(indexed=False)

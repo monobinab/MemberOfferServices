@@ -146,9 +146,9 @@ class ServiceEndPointData(ndb.Model):
 
 
 class ModelData(ndb.Model):
-    SOAR = ndb.StringProperty(indexed=True)
-    SOAR_name = ndb.StringProperty(indexed=True)
-    amount = ndb.StringProperty(indexed=True)
-    created_at = ndb.StringProperty(indexed=False)
+    campaign_name = ndb.StringProperty(indexed=True)
+    div_name = ndb.StringProperty(indexed=False)
+    amount = ndb.IntegerProperty(indexed=True)
     member = ndb.StringProperty(indexed=True)
-    store = ndb.StringProperty(indexed=True)
+    store = ndb.IntegerProperty(indexed=True)
+    div_no = ndb.IntegerProperty(indexed=True)
