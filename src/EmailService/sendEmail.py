@@ -10,11 +10,16 @@ def send_mail(member_entity, offer_entity, campaign_entity):
     member_dict['email'] = member_entity.email
     member_dict['name'] = member_entity.first_name + " " + member_entity.last_name
     member_dict['memberid'] = member_entity.member_id
+    member_dict['fname'] = member_entity.first_name
+    member_dict['lname'] = member_entity.last_name
 
     offer_dict = dict()
+    date_format = offer_entity.OfferEndDate
+    split_date = date_format.split('-')
+    expiration_date_format = split_date[1] + "/" + split_date[2] + "/" + split_date[0]
     offer_dict['surprisepoints'] = offer_entity.surprise_points
     offer_dict['threshold'] = offer_entity.threshold
-    offer_dict['expiration'] = offer_entity.OfferEndDate
+    offer_dict['expiration'] = expiration_date_format
     offer_dict['offer_id'] = offer_entity.OfferNumber
     offer_dict['formatlevel'] = campaign_entity.format_level
     offer_dict['category'] = campaign_entity.category
@@ -49,6 +54,12 @@ def send_template_message(member_dict, offer_dict):
     activation_url = get_backend_host() + "activateOffer?offer_id=" + offer_dict['offer_id'].encode("utf-8") + "&&member_id=" + member_dict['memberid'].encode("utf-8")
     logging.info("Activation URL included in email::" + activation_url)
 
+    substitution = mail.Substitution(key="%email%", value=member_dict['email'].encode("utf-8"))
+    personalization.add_substitution(substitution)
+    substitution = mail.Substitution(key="%fname%", value=member_dict['fname'].encode("utf-8"))
+    personalization.add_substitution(substitution)
+    substitution = mail.Substitution(key="%lname%", value=member_dict['lname'].encode("utf-8"))
+    personalization.add_substitution(substitution)
     substitution = mail.Substitution(key="%name%", value=member_dict['name'].encode("utf-8"))
     personalization.add_substitution(substitution)
     substitution = mail.Substitution(key="%dollarsurprisepoints%", value=str(offer_dict['surprisepoints']).encode("utf-8"))
