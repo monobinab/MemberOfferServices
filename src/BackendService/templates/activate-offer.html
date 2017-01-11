@@ -3,12 +3,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
     <title>Shop Your Way</title>
+	<style>
+		.cus-btn {padding:10px 20px;text-decoration:none;color:#000;border-right:1px solid #ccc}
+		.cus-btn:hover {text-decoration:none;color:blue}
+	</style>
   </head>
   <body>
     <div class="navbar navbar-default navbar-static-top">
       <div class="container">
           <ul class="nav navbar-nav">
-            <li><a href="www.shopyourway.com"><img src="https://h2savecom.files.wordpress.com/2015/02/shop-your-way.jpg" data-orig-src="https://s3.sywcdn.net/user/df47_23905672.jpg" alt="Shop Your Way" style="height:40px"></a></li>
+            <li><!--<a href="www.shopyourway.com"><img src="https://h2savecom.files.wordpress.com/2015/02/shop-your-way.jpg" data-orig-src="https://s3.sywcdn.net/user/df47_23905672.jpg" alt="Shop Your Way" style="height:40px"></a>--></li>
 
           </ul>
         </div>
@@ -16,12 +20,21 @@
 
     <div class="container">
       <div class="row" style="margin-bottom:20px">
+	  <div class="col-md-6">
         <img alt="SHOP YOUR WAY®" border="0" class="Logo" height="40" src="https://static.cdn.responsys.net/i2/responsysimages/sywr/contentlibrary/!2016/!templates/images/SYWLOGO2016_black.jpg" style="width: 340px; height: 40px;" width="340">
+		</div>
+		<div class="col-md-6">
+        <img alt="SHOP YOUR WAY®" border="0" class="Logo" style="float:right;width: 80px;" src="https://marketing-image-production.s3.amazonaws.com/uploads/7fdedc046c6e1b7c637de43fef15cc9a1c7c60d7a5eda0ab8db366f4ae570f263f6d1ff43312d743a9d2d525e6672697bc82095144e0bea10cf5a958668acb4f.png">
+		</div>
       </div>
-      <div class="row" style="background:#384047;height: 10px;">
-
-    </div>
-    <div class="row" style="text-align:center">
+      <div class="col-md-12" style="background:#384047;height: 10px;">
+	  </div>
+	  <div class="col-md-12" style="text-align:center;margin:14px 0px;text-align:right;padding-right:0px">
+		<a href="http://www.kmart.com/" class="cus-btn">Shop Kmart</a>
+		<a href="http://www.shopyourway.com/today/redeeempoints/" class="cus-btn">Shop Your way & Redeem points</a>
+		
+	  </div>
+    <div class="col-md-12" style="text-align:center;border:1px solid rgba(128, 128, 128, 0.38); border-radius:4px;background: #f8f8f8;">
 
      {% if offer_success %}
       <h1>Congratulations!</h1>
@@ -35,7 +48,7 @@
        </p>
      {% endif %}
     </div>
-
+	</div>
     </div>
 
 
