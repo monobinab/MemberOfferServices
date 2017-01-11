@@ -8,11 +8,11 @@ from models import CampaignData, MemberData, MemberOfferData, ndb, OfferData
 from datastore import MemberOfferDataService, OfferDataService
 from sendEmail import send_mail
 from googleapiclient.errors import HttpError
-
+import os
 
 class IndexPageHandler(webapp2.RequestHandler):
     def get(self):
-        self.response.write("sendgrid-email-service")
+        self.response.write("email-service")
 
 
 class BaseHandler(webapp2.RequestHandler):
@@ -26,7 +26,7 @@ class BaseHandler(webapp2.RequestHandler):
             self.response.set_status(500)
 
 
-class EmailOfferMembersHandler(BaseHandler):
+class EmailOfferMembersHandler(webapp2.RequestHandler):
     def get(self):
         try:
             logging.info("Member id:: %s", self.request.get('member_id'))
@@ -105,7 +105,8 @@ class ModelDataSendEmailHandler(webapp2.RequestHandler):
                     offer = OfferDataService.create_offer_obj(campaign, offer_value)
 
                     # HACK: Need to remove later. Only for testing purpose. <>
-                    member_id = '7081327663412819'
+                    if os.environ['NAMESPACE'] in ['qa', 'dev']:
+                        member_id = '7081327663412819'
 
                     member_key = ndb.Key('MemberData', member_id)
                     logging.info("Fetched member_key for member: %s", member_id)
