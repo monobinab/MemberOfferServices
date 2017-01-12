@@ -45,7 +45,6 @@ import com.google.cloud.dataflow.sdk.values.PCollection;
 import com.google.datastore.v1.Entity;
 import com.google.datastore.v1.Key;
 
-
 /**
  * A starter example for writing Google Cloud Dataflow programs.
  *
@@ -113,6 +112,7 @@ public class MemberDataflowJob extends HttpServlet {
 			entityBuilder.getMutableProperties().put("last_updated_at", makeValue(today).build());
 
 
+
 			return entityBuilder.build();
 		}
 
@@ -160,6 +160,7 @@ public class MemberDataflowJob extends HttpServlet {
 				+ "AND Day_Dt <= CAST('2016-07-31' AS DATE)  "
 				+ "AND Locn_Nbr in (9524, 3418) GROUP BY store, member";
 */
+
 		String query = "SELECT d.Locn_Nbr AS store, d.lyl_id_no AS member,"
 				+ " b.eml_ad_id AS email_ad_id, eml_opt_in, a.sends, a.opens"
 				+ "	FROM `syw-analytics-repo-prod.cbr_mart_tbls.eadp_kmart_pos_dtl` d"

@@ -170,6 +170,8 @@ class MemberOfferDataService(MemberOfferData):
                                             validity_start_date=datetime.strptime(start_date, '%Y-%m-%d'),
                                             validity_end_date=datetime.strptime(end_date, '%Y-%m-%d'),
                                             issuance_channel=issuance_channel.upper())
+        member_offer_data.key = ndb.Key('MemberOfferData', offer_id + "_" + member_id)
+
         return member_offer_data
 
     @classmethod

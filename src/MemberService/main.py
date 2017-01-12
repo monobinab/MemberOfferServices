@@ -388,6 +388,7 @@ class ModelDataHandler(webapp2.RequestHandler):
         self.response.write(json.dumps({'data': model_dict}))
 
 
+
 class UpdateEmailOfferIssuanceHandler(webapp2.RequestHandler):
     def get(self):
         response_dict = dict()

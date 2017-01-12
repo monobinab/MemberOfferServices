@@ -140,5 +140,5 @@ def get_member_host():
     data_key = ndb.Key('ServiceEndPointData', 'endpoints')
     data_entity = data_key.get(use_datastore=True, use_cache=False, use_memcache=False)
     logging.info("Data entity:: %s", data_entity)
-    return data_entity.member
+
 

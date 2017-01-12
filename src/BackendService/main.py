@@ -182,6 +182,7 @@ class ActivateOfferHandler(webapp2.RequestHandler):
                         relative_url = str("registerMember?offer_id="+offer_id+"&&member_id="+member_id
                                            + "&&start_date="+member_offer_obj.validity_start_date.strftime("%Y-%m-%d")
                                            + "&&end_date="+member_offer_obj.validity_end_date.strftime("%Y-%m-%d"))
+
                         result = make_request(host=host, relative_url=relative_url, request_type="GET", payload='')
 
                         logging.info(json.loads(result))
@@ -209,6 +210,7 @@ class ActivateOfferHandler(webapp2.RequestHandler):
                             logging.info(json.loads(result))
                             result = json.loads(result).get('data')
                             logging.info("Response from member service::%s" + str(result))
+
 
                         else:
                             logging.error("Telluride call failed.")
@@ -646,6 +648,47 @@ class MigrateNamespaceData(webapp2.RequestHandler):
 
         self.response.write("Data migrated successfully!!!")
 
+class AllEvents(webapp2.RequestHandler):
+
+    def post(self):
+        logging.info(self.request.body)
+        logging.info(self.request)
+        json_data_list = json.loads(self.request.body)
+        EmailEventMetricsDataService.save_allEventsData(json_data_list)
+
+
+class GetAllEmailActivities(webapp2.RequestHandler):
+
+    def get(self):
+        query = EmailEventMetricsData.query().order(-EmailEventMetricsData.timestamp)
+        activity_list = query.fetch(100)
+        result = list()
+        logging.info('len of the list: %s', len(activity_list))
+        logging.info(activity_list)
+        for each_entity in activity_list:
+
+            activity_dict = dict()
+            logging.info('each entry: %s', each_entity)
+            logging.info('each entry email: %s', each_entity.email)
+            activity_dict['email'] = each_entity.email
+            activity_dict['timestamp'] = each_entity.timestamp
+            activity_dict['smtp-id'] = each_entity.smtp_id
+            activity_dict['event'] = each_entity.event
+            activity_dict['sg_event_id'] = each_entity.sg_event_id
+            activity_dict['sg_message_id'] = each_entity.sg_message_id
+            activity_dict['response'] = each_entity.response
+            activity_dict['attempt'] = each_entity.attempt
+            activity_dict['useragent'] = each_entity.useragent
+            activity_dict['ip'] = each_entity.ip
+            activity_dict['url'] = each_entity.url
+            activity_dict['reason'] = each_entity.reason
+            activity_dict['status'] = each_entity.status
+            activity_dict['asm_group_id'] = each_entity.asm_group_id
+
+            result.append(activity_dict)
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.headers['Access-Control-Allow-Origin'] = '*'
+        self.response.write(json.dumps({'data': result}))
 
 class AllEvents(webapp2.RequestHandler):
     def post(self):
