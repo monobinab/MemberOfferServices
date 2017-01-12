@@ -2,11 +2,11 @@ runtime: python27
 api_version: 1
 threadsafe: false
 
-module: telluride
+module: member
 
 handlers:
 - url: .*
-  script: main.py
+  script: router.app
 
 automatic_scaling:
-  min_idle_instances: 1  
+  min_idle_instances: 1

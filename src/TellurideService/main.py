@@ -83,12 +83,18 @@ class ActivateOfferHandler(webapp2.RequestHandler):
             logging.info("Namespace:: %s", namespace_manager.get_namespace())
             offer_id = self.request.get('offer_id')
             member_id = self.request.get('member_id')
+            reg_start_date = self.request.get('start_date')
+            reg_end_date = self.request.get('end_date')
+
             logging.info(offer_id + " -------- " + member_id)
+            logging.info("Start and end dates :: %s, %s", reg_start_date, reg_end_date)
+
             offer_key = ndb.Key('OfferData', offer_id)
             member_key = ndb.Key('MemberData', member_id)
             offer = offer_key.get(use_datastore=True, use_memcache=False, use_cache=False)
             member = member_key.get(use_datastore=True, use_memcache=False, use_cache=False)
-            result = TellurideService.register_member(offer, member)
+
+            result = TellurideService.register_member(offer, member, reg_start_date, reg_end_date)
             self.response.write(json.dumps({'data': result}))
         except httplib.HTTPException as exc:
             logging.error(exc)

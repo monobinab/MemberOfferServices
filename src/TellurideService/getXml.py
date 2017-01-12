@@ -38,7 +38,12 @@ def get_create_offer_xml(offer_obj):
         offer_data_dict['Actions_ActionProperty_PropertyType'] = offer_obj.Actions_ActionProperty_PropertyType
         offer_data_dict['Actions_ActionProperty_Property_Name'] = offer_obj.Actions_ActionProperty_Property_Name
         offer_data_dict['Actions_ActionProperty_Property_Values_Value'] = offer_obj.Actions_ActionProperty_Property_Values_Value
+        rule_conditions_values = ""
+        logging.info("Rule Values:: %s", offer_data_dict['Rules_Conditions_Condition_Values_Value'])
 
+        for rule in offer_data_dict['Rules_Conditions_Condition_Values_Value'].split(','):
+            logging.info("Rule Value:: %s", rule)
+            rule_conditions_values += """<ns2:Value>"""+rule+"""</ns2:Value>"""
         xml_string = """<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
                            <soap:Body>
                               <ns2:CreateUpdateOffer xmlns:ns2="http://rewards.sears.com/schemas/offer/" xmlns="http://rewards.sears.com/schemas/">
@@ -63,7 +68,7 @@ def get_create_offer_xml(offer_obj):
                                  <ns2:OfferStartTime>"""+offer_data_dict['OfferStartTime']+"""</ns2:OfferStartTime>
                                  <ns2:OfferEndDate>"""+offer_data_dict['OfferEndDate']+"""</ns2:OfferEndDate>
                                  <ns2:OfferEndTime>"""+offer_data_dict['OfferEndTime']+"""</ns2:OfferEndTime>
-                                 <ns2:ExpenseAllocation>Allocate by Specified %</ns2:ExpenseAllocation>
+                                 <ns2:ExpenseAllocation>Allocate by basket items</ns2:ExpenseAllocation>
                                  <ns2:ModifiedBy>xoffdev1</ns2:ModifiedBy>
                                  <ns2:ModifiedTS>"""+datetime.now().strftime("%Y-%m-%d %H:%M:%S")+"""</ns2:ModifiedTS>
                                  <ns2:OfferAttributes>
@@ -136,9 +141,7 @@ def get_create_offer_xml(offer_obj):
                                           <ns2:Condition>
                                              <ns2:Name>"""+offer_data_dict['Rules_Conditions_Condition_Name']+"""</ns2:Name>
                                              <ns2:Operator>"""+offer_data_dict['Rules_Conditions_Condition_Operator']+"""</ns2:Operator>
-                                             <ns2:Values>
-                                                <ns2:Value>"""+offer_data_dict['Rules_Conditions_Condition_Values_Value']+"""</ns2:Value>
-                                             </ns2:Values>
+                                             <ns2:Values>"""+rule_conditions_values+"""</ns2:Values>
                                           </ns2:Condition>
                                        </ns2:Conditions>
                                     </ns2:Rule>
@@ -214,11 +217,29 @@ def get_create_offer_xml(offer_obj):
     except:
         e = sys.exc_info()[0]
         logging.info("Oops!  That was no valid number.  Try again... : %s", e)
-
+    logging.info("xml string:: %s", xml_string)
     return xml_string
 
 
-def get_change_offer_dates_xml(offer, start_date, end_date):
+def get_extend_offer_dates_xml(offer, end_date):
+    # rule_conditions_values = ""
+    # for rule in offer.Rules_Conditions_Condition_Values_Value.split(','):
+    #     logging.info("Rule Value:: %s", rule)
+    #     rule_conditions_values += """<ns2:Value>""" + rule + """</ns2:Value>"""
+    #
+    # < ns2:Rule
+    # Entity =\""""+offer.Rules_Rule_Entity+"""\">
+    # < ns2:Conditions >
+    # < ns2:Condition >
+    # < ns2:Name > """+offer.Rules_Conditions_Condition_Name+""" < / ns2:Name >
+    # < ns2:Operator > """+offer.Rules_Conditions_Condition_Operator+""" < / ns2:Operator >
+    # < ns2:Values >
+    # < ns2:Values > """+rule_conditions_values+""" < / ns2:Values >
+    #
+    # < / ns2:Values >
+    # < / ns2:Condition >
+    # < / ns2:Conditions >
+    # < / ns2:Rule >
     xml_string = """<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
                    <soap:Body>
                       <ns2:CreateUpdateOffer xmlns:ns2="http://rewards.sears.com/schemas/offer/" xmlns="http://rewards.sears.com/schemas/">
@@ -239,7 +260,7 @@ def get_change_offer_dates_xml(offer, start_date, end_date):
                          <ns2:OfferConditions>TC_XR</ns2:OfferConditions>
                          <ns2:OfferExclusions>TC_XR</ns2:OfferExclusions>
                          <ns2:OfferCategory>"""+offer.OfferCategory+"""</ns2:OfferCategory>
-                         <ns2:OfferStartDate>"""+start_date+"""</ns2:OfferStartDate>
+                         <ns2:OfferStartDate>"""+offer.OfferStartDate+"""</ns2:OfferStartDate>
                          <ns2:OfferStartTime>"""+offer.OfferStartTime+"""</ns2:OfferStartTime>
                          <ns2:OfferEndDate>"""+end_date+"""</ns2:OfferEndDate>
                          <ns2:OfferEndTime>"""+offer.OfferEndTime+"""</ns2:OfferEndTime>
@@ -311,17 +332,7 @@ def get_change_offer_dates_xml(offer, start_date, end_date):
                                   </ns2:Condition>
                                </ns2:Conditions>
                             </ns2:Rule>
-                            <ns2:Rule Entity=\""""+offer.Rules_Rule_Entity+"""\">
-                               <ns2:Conditions>
-                                  <ns2:Condition>
-                                     <ns2:Name>"""+offer.Rules_Conditions_Condition_Name+"""</ns2:Name>
-                                     <ns2:Operator>"""+offer.Rules_Conditions_Condition_Operator+"""</ns2:Operator>
-                                     <ns2:Values>
-                                        <ns2:Value>"""+offer.Rules_Conditions_Condition_Values_Value+"""</ns2:Value>
-                                     </ns2:Values>
-                                  </ns2:Condition>
-                               </ns2:Conditions>
-                            </ns2:Rule>
+
                             <ns2:RuleActions>
                                <ns2:ActionID>"""+offer.RuleActions_ActionID+"""</ns2:ActionID>
                             </ns2:RuleActions>
@@ -330,7 +341,9 @@ def get_change_offer_dates_xml(offer, start_date, end_date):
                       </ns2:CreateUpdateOffer>
                    </soap:Body>
                 </soap:Envelope>"""
+    logging.info("XML string :: %s", xml_string)
     return xml_string
+
 
 def get_update_offer_xml(offer_entity, offer_status):
     xml_string = """<S:Envelope xmlns:S="http://www.w3.org/2003/05/soap-envelope">
@@ -361,9 +374,10 @@ def get_update_offer_xml(offer_entity, offer_status):
     return xml_string
 
 
+def get_register_offer_xml(offer_entity, member_entity, reg_start_date, reg_end_date):
+    end_date = reg_end_date+"T"+offer_entity.OfferEndTime
+    start_date = reg_start_date+"T"+offer_entity.OfferStartTime
 
-def get_register_offer_xml(offer_entity, member_entity):
-    end_date = offer_entity.OfferEndDate+"T"+offer_entity.OfferEndTime
     xml_string = """<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:web="http://www.epsilon.com/webservices/">
                    <soap:Header/>
                    <soap:Body>
@@ -376,7 +390,7 @@ def get_register_offer_xml(offer_entity, member_entity):
                          <web:AssociateID>000000000000</web:AssociateID>
                          <web:RegisterNumber>001</web:RegisterNumber>
                          <web:StoreNumber>00800</web:StoreNumber>
-                         <web:RegistrationStartDTTM>"""+datetime.now().strftime("%Y-%m-%dT%H:%M:%S")+"""</web:RegistrationStartDTTM>
+                         <web:RegistrationStartDTTM>"""+start_date+"""</web:RegistrationStartDTTM>
                          <web:RegistrationEndDTTM>"""+end_date+"""</web:RegistrationEndDTTM>
                          <web:MemberOfferReset>N</web:MemberOfferReset>
                          <web:OfferMemberGroupList>

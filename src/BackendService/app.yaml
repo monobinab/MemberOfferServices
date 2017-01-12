@@ -2,11 +2,15 @@ runtime: python27
 api_version: 1
 threadsafe: false
 
-module: telluride
+module: backend
 
 handlers:
 - url: .*
   script: main.py
 
+libraries:
+- name: jinja2
+  version: latest
+
 automatic_scaling:
-  min_idle_instances: 1  
+  min_idle_instances: 1

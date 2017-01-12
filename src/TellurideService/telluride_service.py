@@ -3,7 +3,7 @@ import httplib
 from google.appengine.api import memcache
 import json
 from getXml import get_create_offer_xml, get_update_offer_xml, get_register_offer_xml, \
-    get_redeem_offer_xml, get_balance_xml, get_change_offer_dates_xml
+    get_redeem_offer_xml, get_balance_xml, get_extend_offer_dates_xml
 import xml.etree.ElementTree as ET
 from utilities import get_url_configuration
 
@@ -75,8 +75,8 @@ class TellurideService:
         return response_dict
 
     @classmethod
-    def register_member(cls, offer, member_entity):
-        post_data = get_register_offer_xml(offer, member_entity).rstrip('\n')
+    def register_member(cls, offer, member_entity, reg_start_date, reg_end_date):
+        post_data = get_register_offer_xml(offer, member_entity, reg_start_date, reg_end_date).rstrip('\n')
         logging.info("post_data: %s", post_data)
         config_data = get_url_configuration()
         logging.info("Config Data:: %s" % config_data)
@@ -148,21 +148,20 @@ class TellurideService:
         logging.info("DRAFT request status code :: %s", status_code)
 
         if status_code == 0:
-            change_offer_dates_xml = get_change_offer_dates_xml(offer=offer,
-                                                                start_date=start_date,
+            extend_offer_dates_xml = get_extend_offer_dates_xml(offer=offer,
                                                                 end_date=end_date).rstrip('\n')
 
-            change_offer_dates_result = TellurideService.make_request(url=config_data['CREATE_OFFER_URL'],
+            extend_offer_dates_result = TellurideService.make_request(url=config_data['CREATE_OFFER_URL'],
                                                                       put_request=config_data['CREATE_OFFER_REQUEST'],
                                                                       request_type="POST",
-                                                                      data=change_offer_dates_xml,
+                                                                      data=extend_offer_dates_xml,
                                                                       config_data=config_data,
                                                                       is_token_required=True)
-            doc = ET.fromstring(change_offer_dates_result)
+            doc = ET.fromstring(extend_offer_dates_result)
             status_code = int(doc.find('.//{' + STATUS_NS + '}Status').text)
-            logging.info("Change offer dates request status code:: %s", status_code)
+            logging.info("Extend offer end dates request status code:: %s", status_code)
 
-            if change_offer_dates_result is not None:
+            if extend_offer_dates_result is not None:
                 if status_code == 0:
                     response_dict = TellurideService.change_offer_status(offer, 'ACTIVATED')
                     logging.info("Offer status changed to ACTIVATED. Response dict :: %s", response_dict)

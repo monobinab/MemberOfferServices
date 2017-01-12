@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Sears - Member Offer Service </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" crossorigin="anonymous">
+	<link href="default/css/style.css" rel="stylesheet">
+	<link href="default/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css"/>
+	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.12/css/jquery.dataTables.min.css" />
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css" rel="stylesheet" />
+	<link rel="stylesheet" type="text/css" href="default/js/jqplot/jquery.jqplot.css" />
+	<link rel="stylesheet" type="text/css" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1/themes/ui-lightness/jquery-ui.css" />
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/jquery.multiselect/1.13/jquery.multiselect.filter.css" />
+</head>
+<body>
+    <div class="container-fluid" style="padding:0px">
+		<div class="col-md-12 top-back no-pad text-align-right">
+		  <div class="col-md-12">
+			<a href="index.html"> <img src="default/img/logo.png" height="30px" /></a>
+		  </div>
+		</div>
+		<div class="col-md-12 inner-top-back no-pad">
+		<!-- Top header -->
+		  <div class="col-md-12">
+				<ul class="nav nav-tabs cus-nav">
+				<li> <h3 class="automated-text"> Member Offer Service  </h3> </li>
+				<li class="">
+				  <ul class="user-profile">
+					<li class="profile-menu">
+						<a class="dropdown-toggle" data-toggle="dropdown" data-hover="dropdown" data-delay="1000" data-close-others="true" style="padding-right:0px;padding-left:0px;cursor:pointer">
+							 <i class="icon-user"> </i> <span> User </span> <i class="icon-angle-down"></i>
+						</a>
+						<ul class="dropdown-menu pull-right" role="menu">
+							<li> <i class="icon-caret-up profile-icon-up"> </i> </li>
+							<li><a href="#"> Logout </a></li>
+						</ul>
+					</li>
+				  </ul>
+				</li>
+			</ul>
+		  </div>
+		  <!-- Top header ends -->
+		</div>
+    </div>
+    <!-- body container starts -->
+    <div class="container-fluid">
+	 <div class="col-md-12" style="margin-bottom:30px;">
+		 <div class="row form-back-cus">
+
+		  <div class="col-md-8" style="margin-top:4px;padding-left:2px">
+			<div class="col-md-9" style="padding:0px">
+				<h4 class="h4-cus"> Member Specific Campaign Details </h4>
+			</div>
+			<div class="col-md-3" style="padding-right:0px;">
+				<button class="btn btn-default btn-default btn-cus pull-right" id="creteCampaign"> Create Campaign </button>
+			</div>
+			<div class="clear clearfix"> </div>
+			<hr class="hr"/>
+			<div class="col-md-12" style="padding:10px;margin-bottom:5px;padding-right:0px">
+				<table id="campaignTable" class="table table-bordered table-stripped hover" cellspacing="0" width="100%">
+					<thead>
+						<tr>
+							<th> Campaign Name</th>
+							<th> Budget</th>
+							<th> Category</th>
+							<th> Start Date</th>
+							<th> Period</th>
+						</tr>
+					</thead>
+				</table>
+			</div>
+		  </div>
+		  <div class="col-md-4" style="margin-top:4px;padding:0px;">
+			<div class="col-md-12" style="padding:0px;">
+				<h4 class="h4-cus" id = "metricsHeader"> Campaign Specific Metrics </h4>
+				<p class="metrics-text"> Click on a campaign details row to view the corresponding campaign metrics in graphs. </p>
+				 <div id="graphArea"> <div id="chart1" style="height:230px; width:400px;margin-bottom:20px;"></div> <div id="chart2" style="height:230px; width:400px"></div></div>
+			</div>
+		  </div>
+		 </div>
+	 </div>
+    </div>
+	<div style="height:5px"> </div>
+    <!-- body container ends -->
+	<footer>
+	  <div class="col-md-12 no-pad top-back top-margin">
+		<div class="col-md-12" style="height:28px">
+			<p class="footer-text"> Copyright &copy;2016-17, Designed & Developed by Sears Holdings </p>
+		</div>
+	  </div>
+	</footer>
+	<div id="campaignModal" class="modal fade" role="dialog" data-backdrop="static">
+	  <div class="modal-dialog cus-modal-dialog">
+		<!-- Modal content-->
+		<div class="modal-content">
+		  <div class="modal-header">
+			<button type="button" class="close" data-dismiss="modal">&times;</button>
+			<h4 class="modal-title"> Campaign Details  </h5>
+		  </div>
+		 <div class="modal-body">
+		  <div class="form-group">
+							<div class="alert alert-danger"></div>
+						</div>
+			<ul id="content">
+				<li id="liType">
+					<div class="form-group">
+						<div class="col-md-12">
+							<input type="hidden" id="campaignid"/>
+							<label class="col-md-5 control-label"> Campaign Name : </label>
+							<div class="col-md-5"> <input type="text" id="campaignName" class="form-control mandatory" maxLen = "16" placeholder="Enter Name" onchange = "GlobalVar.Campaign.lengthCheck(this)" /> </div>
+						</div>
+					</div>
+					<div class="form-group">
+						<div class="col-md-12">
+							<label class="col-md-5 control-label"> Format : </label>
+							<div class="col-md-5"style="padding-right:15px">
+								<select class="form-control mandatory" id="format_level"> </select>
+							</div>
+						</div>
+					</div>
+					<div class="form-group">
+						<div class="col-md-12">
+							<label class="col-md-5 control-label"> Store List : </label>
+							<div class="col-md-5"style="padding-right:15px">
+								<label class="opt-label"> * Optional </label>
+								<select class="form-control" id="store_list" multiple="multiple"> </select>
+							</div>
+              <div class="col-md-2">
+                <img src="default/img/please_wait.gif" width="24px" id="storeLoad" style="margin-top:30px;"/>
+              </div>
+						</div>
+					</div>
+					<div class="form-group">
+						<div class="col-md-12">
+							<label class="col-md-5 control-label"> Budget : </label>
+							<div class="col-md-5"><input  class="form-control mandatory number" id="money" placeholder="Enter the amount" name="Budget" onkeyup = "positiveCurrency(this)" /> </div>
+						</div>
+					</div>
+					<div class="form-group">
+						<div class="col-md-12">
+							<label class="col-md-5 control-label"> Category : </label>
+							<div class="col-md-5"> <select class="form-control mandatory" id="category" multiple="multiple" >
+
+													</select> </div>
+                          <div class="col-md-2">
+                            <img src="default/img/please_wait.gif" width="24px" id="categoryLoad" style="margin-top:30px;"/>
+                          </div>
+						</div>
+					</div>
+
+					<div class="form-group">
+						<div class="col-md-12">
+							<label class="col-md-5 control-label"> Start Date : </label>
+							<div class="col-md-5"> <input type="date" class="form-control mandatory" id="startDate" placeholder="YYYY-MM-DD" name="Start Date" onchange = "GlobalVar.Campaign.checkDate(this)"  /> </div>
+						</div>
+					</div>
+					<div class="form-group">
+						<div class="col-md-12">
+							<label class="col-md-5 control-label"> Period : </label>
+							<div class="col-md-5"> <select class="form-control mandatory" id="period" placeholder="Select per weeks" onblur="checkMandatory('campaignModal')">
+														<option value="1">1 week</option>
+														<option value="2">2 weeks</option>
+														<option value="3">3 weeks</option>
+														<option value="4">4 weeks</option>
+														<option value="5">5 weeks </option>
+													</select> </div>
+						</div>
+					</div>
+				</li>
+				<li>
+					<div class="row form-back-cus">
+						<div class="form-group">
+							<input type="hidden" id="offerid"/>
+							<label class="col-md-4 control-label"> Offer Type : </label>
+							<div class="col-md-5">
+								<select class="form-control mandatory" id="OfferType">
+								</select>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-md-6 no-pad">
+								<label class="col-md-8 control-label">Min :</label>
+								<div class="col-md-4" style="padding-left:5px"> <input class="form-control mandatory number" id="mindollar"  min="" max="" name="Min value" placeholder="" style="margin-left:8px" onkeyup = "GlobalVar.Campaign.validate(this,maxdollar,0)"  /> </div>
+							</div>
+							<div class="col-md-6 no-pad">
+								<label class="col-md-3 control-label" >Max : </label>
+								<div class="col-md-5"> <input class="form-control mandatory number" id="maxdollar"  min="" max="" name="Max value" placeholder="" onkeyup = "GlobalVar.Campaign.validate(this,mindollar,1)" onblur = "GlobalVar.Campaign.checkMandatory('campaignModal')"/> </div>
+							</div>
+						</div>
+						<div class="form-group">
+							<label class="col-md-4 control-label"> Validity : </label>
+							<div class="col-md-5"> <select class="form-control mandatory" id="validity">
+									<option value="1">1 week</option>
+									<option value="2">2 weeks</option>
+									<option value="3">3 weeks</option>
+									<option value="4">4 weeks</option>
+									<option value="5">5 weeks </option>
+								</select>  </div>
+						</div>
+						<div class="form-group">
+							<label class="col-md-4 control-label"> Max per Member Issuance Frequency : </label>
+							<div class="col-md-5">
+								<select class="form-control mandatory" id="memberissuance">
+									<option value="1">1 week</option>
+									<option value="2">2 weeks</option>
+									<option value="3">3 weeks</option>
+									<option value="4">4 weeks</option>
+									<option value="5">5 weeks </option>
+								</select>
+							</div>
+						</div>
+					</div>
+				</li>
+			</ul>
+		  </div>
+		  <div class="clear clearfix"> </div>
+		</div>
+	  </div>
+	</div>
+
+	<div class="modal fade in" tabindex="-1" role="dialog" id="successDialog">
+	  <div class="modal-dialog" role="document">
+		<div class="modal-content">
+		  <div class="modal-body">
+			<p>Successfully Saved the campaign ...!</p>
+		  </div>
+		</div><!-- /.modal-content -->
+	  </div><!-- /.modal-dialog -->
+	</div><!-- /.modal -->
+
+<!-- Bootstrap and Jquery libraries -->
+	<script src="https://code.jquery.com/jquery-1.12.4.js" crossorigin="anonymous"></script>
+  <script>if (!window.jQuery) { document.write('<script src="default/js/jquery.min.js"><\/script>'); }</script>
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1/jquery-ui.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" crossorigin="anonymous"></script>
+
+  <!-- Datatable core js file -->
+  <script src="https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js" type="text/javascript"></script>
+  <script src="default/js/plugins/jquery.cookie.min.js" type="text/javascript"></script>
+
+  <!-- Select2 Core js file -->
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js"></script>
+  <!-- Momentjs cdn for date format-->
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.15.1/moment.min.js"></script>
+
+  <!-- Graph related JQplot files -->
+  <script type="text/javascript" src="default/js/jqplot/jquery.jqplot.js"></script>
+  <script type="text/javascript" src="default/js/jqplot/plugins/jqplot.barRenderer.js"></script>
+  <script type="text/javascript" src="default/js/jqplot/plugins/jqplot.donutRenderer.js"></script>
+  <script type="text/javascript" src="default/js/jqplot/plugins/jqplot.categoryAxisRenderer.js"></script>
+  <script type="text/javascript" src="default/js/jqplot/plugins/jqplot.canvasAxisLabelRenderer.js"></script>
+  <script type="text/javascript" src="default/js/jqplot/plugins/jqplot.canvasTextRenderer.js"></script>
+  <script type="text/javascript" src="default/js/jqplot/plugins/jqplot.highlighter.js"></script>
+
+  <script type="text/javascript" src="default/js/jquery.multiselect.js"></script>
+  <script type="text/javascript" src="default/js/jquery.multiselect.filter.js"></script>
+
+  <!-- Page related js files -->
+  <script src="default/js/utils.js"></script>
+  <script src="default/js/Globalvar.js"></script>
+  <script src="default/js/CampaignGraph.js"></script>
+  <script src="default/js/campaign.js"></script>
+  <script>
+	  $(document).ready(function() {
+		 GlobalVar = {};
+		 GlobalVar.CampaignGraph = new CampaignGraph.Constructor();
+		 GlobalVar.CampaignGraph.init();
+		 GlobalVar.Campaign = new Campaign.Constructor();
+		 GlobalVar.Campaign.init();
+	  });
+
+   </script>
+</body>
