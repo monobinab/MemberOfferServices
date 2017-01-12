@@ -366,7 +366,7 @@ class ModelDataHandler(webapp2.RequestHandler):
         offer_id = get_offer_id(campaign_name, offer_value)
 
         div_no = model_data.div_no
-        bu_entities = BuDvsnMappingData.query(BuDvsnMappingData.dvsn_nbr == div_no).fetch()
+        bu_entities = BuDvsnMappingData.query(BuDvsnMappingData.dvsn_nbr == int(div_no)).fetch()
         soar_nos = list()
         soar_names = list()
         for entity in bu_entities:
@@ -386,7 +386,6 @@ class ModelDataHandler(webapp2.RequestHandler):
         logging.info("Model data :: %s", model_dict)
 
         self.response.write(json.dumps({'data': model_dict}))
-
 
 
 class UpdateEmailOfferIssuanceHandler(webapp2.RequestHandler):
@@ -416,7 +415,9 @@ class UpdateEmailOfferIssuanceHandler(webapp2.RequestHandler):
                                                                       member_entity=member_entity,
                                                                       channel=channel.upper(),
                                                                       reg_start_date=reg_start_date,
-                                                                      reg_end_date=reg_end_date)
+                                                                      reg_end_date=reg_end_date,
+                                                                      offer_id=offer_id,
+                                                                      member_id=member_id)
                 logging.info("Member offer object created:: %s", member_offer_data_key)
                 response_dict = {'status': 'Success',
                                  'message': "Member Offer entity created successfully!!!"}

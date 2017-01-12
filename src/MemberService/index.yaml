@@ -11,3 +11,10 @@ indexes:
   - name: member
   - name: user_action_date
     direction: desc
+
+
+- kind: ModelData
+  properties:
+  - name: member_id
+  - name: created_at
+    direction: desc
