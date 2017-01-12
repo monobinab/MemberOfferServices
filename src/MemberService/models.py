@@ -57,27 +57,40 @@ class OfferData(ndb.Model):
 
 class MemberData(ndb.Model):
     member_id = ndb.StringProperty(indexed=True)
-    email = ndb.StringProperty(indexed=True)
-    address = ndb.StringProperty(indexed=False)
     first_name = ndb.StringProperty(indexed=False)
     last_name = ndb.StringProperty(indexed=False)
-    email_opted_in = ndb.BooleanProperty(default=False)
+
+    email = ndb.StringProperty(indexed=True)
+    eml_opt_in = ndb.StringProperty(default='N')
+    email_open = ndb.IntegerProperty(default=0)
+    email_send = ndb.IntegerProperty(default=0)
+
+    store_id = ndb.StringProperty(indexed=True)
+    format_level = ndb.StringProperty(indexed=True)
+    last_updated_at = ndb.DateTimeProperty(auto_now=True, auto_now_add=False)
 
 
 class MemberOfferData(ndb.Model):
     offer = ndb.KeyProperty(kind="OfferData")
+    offer_id = ndb.StringProperty(indexed=False)
+
     member = ndb.KeyProperty(kind="MemberData")
-    channel = ndb.StringProperty(indexed=True)  # TODO: rename to issuance_channel
+    member_id = ndb.StringProperty(indexed=False)
+
+    issuance_channel = ndb.StringProperty(indexed=True)
+    issuance_date = ndb.DateTimeProperty(auto_now_add=True, indexed=True)
+
     activated_channel = ndb.StringProperty(indexed=True)
-    email_sent_at = ndb.DateTimeProperty(auto_now_add=True, indexed=True)  # TODO : rename to issuance_date
-    activated_at = ndb.DateTimeProperty(indexed=True)  # TODO: rename to activated_date
+    activation_date = ndb.DateTimeProperty(indexed=True, default=None)
+
     redeemed = ndb.BooleanProperty(default=False)
     redeemed_date = ndb.DateTimeProperty(indexed=True)
-    created_at = ndb.DateTimeProperty(auto_now_add=True, indexed=True)
-    updated_at = ndb.DateTimeProperty(auto_now=True, auto_now_add=False)
+
     validity_start_date = ndb.DateTimeProperty(indexed=False)
     validity_end_date = ndb.DateTimeProperty(indexed=True)
+
     status = ndb.IntegerProperty(default=0)
+    user_action_date = ndb.DateTimeProperty(auto_now=True, auto_now_add=False)
 
 
 class SendgridData(ndb.Model):
@@ -126,16 +139,58 @@ class StoreData(ndb.Model):
     Locations = ndb.StringProperty(indexed=False, repeated=True)
 
 
+class BUData(ndb.Model):
+    Format = ndb.StringProperty(indexed=True)
+    Business_Units = ndb.StringProperty(indexed=True, repeated=True)
+
+
 class ServiceEndPointData(ndb.Model):
     backend = ndb.StringProperty(indexed=True)
     email = ndb.StringProperty(indexed=True)
     telluride = ndb.StringProperty(indexed=True)
+    member = ndb.StringProperty(indexed=True)
+
+
+class EmailEventMetricsData(ndb.Model):
+    email = ndb.StringProperty(indexed=True)
+    timestamp = ndb.IntegerProperty(indexed=True)
+    smtp_id = ndb.StringProperty(indexed=False)
+    event = ndb.StringProperty(indexed=True)
+    category = ndb.StringProperty(indexed=True)
+    sg_event_id = ndb.StringProperty(indexed=False)
+    sg_message_id = ndb.StringProperty(indexed=False)
+    response = ndb.StringProperty(indexed=False)
+    attempt = ndb.StringProperty(indexed=False)
+    useragent = ndb.StringProperty(indexed=False)
+    ip = ndb.StringProperty(indexed=False)
+    url = ndb.StringProperty(indexed=False)
+    reason = ndb.StringProperty(indexed=True)
+    status = ndb.StringProperty(indexed=False)
+    asm_group_id = ndb.IntegerProperty(indexed=False)
+
+
+class BuDvsnMappingData(ndb.Model):
+    soar_no = ndb.IntegerProperty(indexed=True)
+    soar_nm = ndb.StringProperty(indexed=True)
+    format_level = ndb.StringProperty(indexed=True)
+
+    fp_dvsn_desc = ndb.StringProperty(indexed=False)
+    bus_nbr = ndb.IntegerProperty(indexed=True)
+    unit_nbr = ndb.IntegerProperty(indexed=True)
+    dvsn_nbr = ndb.IntegerProperty(indexed=True)
+    # dept_nbr = ndb.StringProperty(indexed=False)
+    # catg_cluster_nbr = ndb.StringProperty(indexed=False)
+    # catg_nbr = ndb.StringProperty(indexed=False)
+    # sub_catg_nbr = ndb.StringProperty(indexed=False)
+    product_hierarchy = ndb.StringProperty(indexed=False)
 
 
 class ModelData(ndb.Model):
-    SOAR = ndb.StringProperty(indexed=True)
-    SOAR_name = ndb.StringProperty(indexed=True)
-    amount = ndb.StringProperty(indexed=True)
-    created_at = ndb.StringProperty(indexed=False)
-    member = ndb.StringProperty(indexed=True)
-    store = ndb.StringProperty(indexed=True)
+    campaign_name = ndb.StringProperty(indexed=True)
+    div_no = ndb.IntegerProperty(indexed=True)
+    div_name = ndb.StringProperty(indexed=False)
+    offer_value = ndb.IntegerProperty(indexed=True)
+    member_id = ndb.StringProperty(indexed=True)
+    store_id = ndb.StringProperty(indexed=True)
+    created_at = ndb.DateTimeProperty(indexed=False)
+

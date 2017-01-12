@@ -3,11 +3,18 @@ indexes:
 - kind: MemberOfferData
   properties:
   - name: member
-  - name: created_at
+  - name: issuance_date
     direction: desc
 
 - kind: MemberOfferData
   properties:
   - name: member
-  - name: updated_at
+  - name: user_action_date
+    direction: desc
+
+
+- kind: ModelData
+  properties:
+  - name: member_id
+  - name: created_at
     direction: desc

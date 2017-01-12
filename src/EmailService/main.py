@@ -2,7 +2,6 @@ import sys
 sys.path.insert(0, 'lib')
 import logging
 import webapp2
-
 import json
 from models import CampaignData, MemberData, MemberOfferData, ndb, OfferData
 from datastore import MemberOfferDataService, OfferDataService
@@ -10,47 +9,10 @@ from sendEmail import send_mail
 from googleapiclient.errors import HttpError
 import os
 
+
 class IndexPageHandler(webapp2.RequestHandler):
     def get(self):
         self.response.write("email-service")
-
-
-class BaseHandler(webapp2.RequestHandler):
-    def handle_exception(self, exception, debug):
-        self.response.write('An error occurred.')
-        logging.exception(self, exception, debug)
-
-        if isinstance(exception, webapp2.HTTPException):
-            self.response.set_status(exception.code)
-        else:
-            self.response.set_status(500)
-
-
-class EmailOfferMembersHandler(webapp2.RequestHandler):
-    def get(self):
-        try:
-            logging.info("Member id:: %s", self.request.get('member_id'))
-            logging.info("Offer id:: %s", self.request.get('offer_id'))
-            member_entity = ndb.Key('MemberData', self.request.get('member_id')).get()
-            offer_entity = ndb.Key('OfferData', self.request.get('offer_id')).get()
-            logging.info("Member :: %s", member_entity)
-            logging.info("Offer :: %s", offer_entity)
-            if member_entity is None or offer_entity is None:
-                response_dict = {'status': 'Failure', 'message': "Details not found for the request"}
-            else:
-                campaign_entity = offer_entity.campaign.get()
-                send_mail(member_entity=member_entity, offer_entity=offer_entity, campaign_entity=campaign_entity)
-                response_dict = {'status': 'Success', 'message': "Offer email has been sent successfully!!!"}
-
-        except Exception as e:
-            logging.error(e)
-            response_dict = {'status': 'Failure', 'message': "Server error has encountered an error"}
-
-        finally:
-            logging.info(response_dict)
-            self.response.headers['Access-Control-Allow-Origin'] = '*'
-            self.response.headers['Content-type'] = 'application/json'
-            self.response.write(json.dumps(response_dict))
 
 
 class ModelDataSendEmailHandler(webapp2.RequestHandler):
@@ -102,7 +64,7 @@ class ModelDataSendEmailHandler(webapp2.RequestHandler):
                     return response_dict
                 else:
                     logging.info('Offer is not None. Sending email for Offer: %s', offer_name)
-                    offer = OfferDataService.create_offer_obj(campaign, offer_value)
+                    offer = OfferDataService.create_offer_obj(campaign, offer_value, "")
 
                     # HACK: Need to remove later. Only for testing purpose. <>
                     if os.environ['NAMESPACE'] in ['qa', 'dev']:
@@ -122,7 +84,13 @@ class ModelDataSendEmailHandler(webapp2.RequestHandler):
                                   campaign_entity=campaign_entity)
 
                         # send_mail(member_entity=member, offer_entity=offer)
-                        member_offer_data_key = MemberOfferDataService.create(offer, member, channel)
+                        member_offer_data_key = MemberOfferDataService.create(offer_entity=offer,
+                                                                              member_entity=member,
+                                                                              channel=channel.upper(),
+                                                                              reg_start_date=offer.OfferStartDate,
+                                                                              reg_end_date=offer.OfferEndDate,
+                                                                              offer_id=campaign_name+"_"+offer_value,
+                                                                              member_id=member_id)
 
                         logging.info('member_offer_key:: %s', member_offer_data_key)
                         logging.info('Offer %s email has been sent to:: %s', offer.OfferNumber, member.email)
@@ -137,57 +105,9 @@ class ModelDataSendEmailHandler(webapp2.RequestHandler):
         logging.info('response_dict[message]: %s', response_dict['message'])
         return response_dict
 
-
-class OfferDetailsHandler(webapp2.RequestHandler):
-    def get(self):
-        self.response.headers['Access-Control-Allow-Origin'] = '*'
-        self.response.headers['Content-type'] = 'application/json'
-        offer_value = self.request.get('offer')
-        member_id = self.request.get('member')
-        campaign_name = self.request.get('campaign')
-        logging.info("Request parameters - offer, member, campaign received.")
-
-        campaign_key = ndb.Key('CampaignData', campaign_name)
-        logging.info("fetched campaign_key for: %s", campaign_name)
-        campaign = campaign_key.get()
-        if campaign is None:
-            logging.info("campaign is None")
-        logging.info("OfferDetailsHandler campaign :: %s", campaign)
-
-        offer_name = "{}_{}".format(str(campaign.name), str(offer_value))
-        offer_key = ndb.Key('OfferData', offer_name)
-        logging.info("fetched offer_key")
-        offer_entry = offer_key.get()
-        if offer_entry is None:
-            logging.info("OfferDetailsHandler - Offer is None")
-        logging.info("OfferDetailsHandler offer :: %s", offer_entry)
-        offer_entity = OfferDataService.create_offer_obj(campaign, offer_value)
-
-        # HACK: Need to remove later. Only for testing purpose. <>
-        # if os.environ['CURRENT_VERSION_ID'] in ['qa', 'dev']:
-        #     member_id = '7081327663412819'
-        member_key = ndb.Key('MemberData', member_id)
-        logging.info("Fetched member_key for member: %s", member_id)
-        member_entity = member_key.get()
-        if member_entity is None:
-            logging.info("member is None")
-        logging.info("OfferDetailsHandler member :: %s", member_entity)
-
-        campaign_entity = offer_entity.campaign.get()
-        logging.info("OfferDetailsHandler campaign_entity :: %s", campaign_entity)
-
-        send_mail(member_entity=member_entity, offer_entity=offer_entity, campaign_entity=campaign_entity)
-        logging.info("Mail sent. ")
-
-        result = {"data": "Mail sent successfully."}
-        self.response.write(json.dumps(result))
-
-
 app = webapp2.WSGIApplication([
     ('/', IndexPageHandler),
-    ('/sendEmailJob', ModelDataSendEmailHandler),
-    ('/emailMembers', EmailOfferMembersHandler),
-    ('/offerDetails', OfferDetailsHandler)
+    ('/sendEmailJob', ModelDataSendEmailHandler)
 ], debug=True)
 
 

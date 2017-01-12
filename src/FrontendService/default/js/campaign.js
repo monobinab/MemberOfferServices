@@ -221,7 +221,7 @@ var Campaign = {
 				that.campaignData.campaign_details.store_location = "";
 				}
 				if($("#category").val() != undefined && $("#category").val() != ""){
-					that.campaignData.campaign_details.category= $("#category").val();
+					that.campaignData.campaign_details.category= $("#category").val().join();
 				}
 				else{
 				that.campaignData.campaign_details.category = "";
@@ -259,17 +259,20 @@ var Campaign = {
 						$("#previous").prop('disabled',false);
 					},
 					error: function(error,statusText, xhr){
-						if(xhr.status !=200 || statusText != "success"){
-							alert("Something went wrong please try again later. "+statusText);
-							console.error("Internal server error."+" status: "+error.statusText);
-						}
-						else{
-						$("#campaignModal").modal('hide');
-						that.campaignTable.ajax.reload().draw();
-						}
-						$(".load").css('display','none');
-						$("#saveCampaign").prop('disabled',false);
-						$("#previous").prop('disabled',false);
+					   if(xhr.status ==200 && statusText == "parseError"){
+						  $("#campaignModal").modal('hide');
+							 $("#successDialog").modal('show');
+						  that.campaignTable.ajax.reload().draw();
+						  setInterval(function(){ $("#successDialog").modal('hide') }, 3000);
+					   }
+					   else{
+					   alert("Something went wrong please try again later. "+statusText);
+					   console.error("Internal server error."+" status: "+error.statusText);
+					   }
+					   $(".load").css('display','none');
+					   $("#saveCampaign").prop('disabled',false);
+					   $("#previous").prop('disabled',false);
+					   $("#campaignModal").modal('hide');
 					}
 				});
 			}
@@ -281,10 +284,7 @@ var Campaign = {
 		url : exposedAPIs.baseUrl+"getListItems",
 		dataType : 'json',
 		success: function(responsedata,statusText,xhr){
-			$.each(responsedata.data.categories,function(index,val){
-				var option ="<option>"+val+"</option>";
-				$('#category').append(option);
-			})
+
 			$.each(responsedata.data.conversion_ratio,function(index,val){
 				var option ="<option>"+val+"</option>";
 				$('#conversionratio').append(option);
@@ -313,10 +313,10 @@ var Campaign = {
 				var option ="<option>"+val+"</option>";
 				$('#store_list').append(option);
 			});
-		/*	$.each(businessUnits[format_level_id.toLowerCase()],function(index,val){
+			$.each(businessUnits[format_level_id.toLowerCase()],function(index,val){
 				var option ="<option>"+val+"</option>";
 				$('#category').append(option);
-			}) */
+			})
 			var created_at = 0 , checkall_at = 0,created_2 = 0,checkedall_2 = 0;
 			$("#store_list").multiselect({
 				create: function(event,ui){
@@ -334,7 +334,7 @@ var Campaign = {
 					console.info("time :" + checkall_at);
 				}
 			}).multiselectfilter();
-			/*
+			/**/
 			$("#category").multiselect({
 				create: function(event,ui){
 					created_2 = event.timeStamp;
@@ -351,7 +351,7 @@ var Campaign = {
 					console.info("time :" + checkall_2);
 				}
 			}).multiselectfilter();
-			*/
+			/**/
 			$("#format_level").on("change",function(){
 				$("#store_list").empty();
 				$("#category").empty();

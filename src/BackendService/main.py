@@ -6,14 +6,17 @@ import httplib
 import webapp2
 import pubsub_utils
 import csv
-from models import CampaignData, MemberOfferData, ndb, StoreData, OfferData, EmailEventMetricsData
+from models import CampaignData, MemberOfferData, ndb, StoreData, OfferData, EmailEventMetricsData, BUData
 from datastore import CampaignDataService, MemberOfferDataService, OfferDataService, EmailEventMetricsDataService
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from oauth2client.client import GoogleCredentials
 from utilities import create_pubsub_message, make_request, get_jinja_environment, \
-    get_email_host, get_telluride_host
+    get_email_host, get_telluride_host, get_member_host
 from datetime import datetime
+from google.appengine.api import urlfetch
+import time
+
 
 class BaseHandler(webapp2.RequestHandler):
     def handle_exception(self, exception, debug):
@@ -28,7 +31,7 @@ class BaseHandler(webapp2.RequestHandler):
 
 class IndexPageHandler(webapp2.RequestHandler):
     def get(self):
-        self.response.write("campaign-backend-service")
+        self.response.write("backend-service")
 
 
 class SaveCampaignHandler(webapp2.RequestHandler):
@@ -164,37 +167,56 @@ class ActivateOfferHandler(webapp2.RequestHandler):
                 member_offer_obj = MemberOfferData.query(MemberOfferData.member == member_key,
                                                          MemberOfferData.offer == offer_key).get()
 
+                today = datetime.now()
+                today_ts = time.mktime(today.timetuple())
+                end_date_ns = time.mktime(member_offer_obj.validity_end_date.timetuple())
+
                 if member_offer_obj is not None:
-                    host = get_telluride_host()
-                    relative_url = str("registerMember?offer_id="+offer_id+"&&member_id="+member_id)
-                    result = make_request(host=host, relative_url=relative_url, request_type="GET", payload='')
-
-                    logging.info(json.loads(result))
-                    result = json.loads(result).get('data')
-                    logging.info(result)
-
-                    status_code = int(result['status_code'])
-                    logging.info("Status code:: %d" % status_code)
-                    if status_code == 0:
-                            member_offer_obj.status = True
-                            member_offer_obj.activated_at = datetime.now()
-                            member_offer_obj.put()
-
-                            response_dict['message'] = "Offer has been activated successfully"
-                            message = "Offer has been activated successfully"
-                            offer_success = 1
-
-                    elif status_code == 1 or status_code == 99:
-                        member_offer_obj.status = True
-                        member_offer_obj.put()
-                        response_dict['message'] = "Member already registered for this offer"
-                        message = "Member already registered for this offer"
+                    if today_ts > end_date_ns:
+                        logging.error("Dates are not valid.")
+                        response_dict['message'] = "Sorry, Offer is not valid anymore"
+                        message = "Sorry, Offer is not valid anymore"
                         offer_success = 0
                     else:
-                        logging.error("Telluride call failed.")
-                        response_dict['message'] = "Sorry, Offer could not be activated"
-                        message = "Sorry, Offer could not be activated"
-                        offer_success = 0
+                        host = get_telluride_host()
+                        relative_url = str("registerMember?offer_id="+offer_id+"&&member_id="+member_id
+                                           + "&&start_date="+member_offer_obj.validity_start_date.strftime("%Y-%m-%d")
+                                           + "&&end_date="+member_offer_obj.validity_end_date.strftime("%Y-%m-%d"))
+
+                        result = make_request(host=host, relative_url=relative_url, request_type="GET", payload='')
+
+                        logging.info(json.loads(result))
+                        result = json.loads(result).get('data')
+                        logging.info(result)
+
+                        status_code = int(result['status_code'])
+                        logging.info("Status code:: %d" % status_code)
+                        if status_code == 0 or status_code == 99:
+                            response_dict['message'] = "Offer has been activated successfully."
+                            message = "Offer has been activated successfully."
+                            offer_success = 1
+                            if status_code == 99:
+                                response_dict['message'] = "Member already registered for this offer."
+                                message = "Member already registered for this offer."
+                                offer_success = 0
+
+                            # Update MemberOfferData status call
+                            relative_url = str("updateEmailOfferActivationData?offer_id="+offer_id +
+                                               "&member_id="+member_id+"&channel="+"EMAIL" +
+                                               "&reg_start_date="+member_offer_obj.validity_start_date.strftime('%Y-%m-%d') +
+                                               "&reg_end_date="+member_offer_obj.validity_end_date.strftime('%Y-%m-%d'))
+                            result = make_request(host=get_member_host(), relative_url=relative_url, payload='',
+                                                  request_type='GET')
+                            logging.info(json.loads(result))
+                            result = json.loads(result).get('data')
+                            logging.info("Response from member service::%s" + str(result))
+
+
+                        else:
+                            logging.error("Telluride call failed.")
+                            response_dict['message'] = "Sorry, Offer could not be activated"
+                            message = "Sorry, Offer could not be activated"
+                            offer_success = 0
 
                 else:
                     logging.error("Member Offer Object not found for offer key :: %s and member key:: %s",
@@ -229,15 +251,17 @@ class ActivateOfferHandler(webapp2.RequestHandler):
 
 
 class UIListItemsHandler(webapp2.RequestHandler):
-
     def get(self):
         key = ndb.Key('FrontEndData', '1')
         result = key.get(use_datastore=True, use_memcache=False, use_cache=False)
         sears_entity = ndb.Key('StoreData', 'SEARS FORMAT').get()
         kmart_entity = ndb.Key('StoreData', 'KMART FORMAT').get()
 
+        sears_bu_list = ndb.Key('BUData', 'sears').get()
+        kmart_bu_list = ndb.Key('BUData', 'kmart').get()
+
         result_dict = dict()
-        result_dict['categories'] = list(result.Categories)
+        # result_dict['categories'] = list(result.Categories)
         result_dict['offer_type'] = list(result.Offer_Type)
         result_dict['conversion_ratio'] = list(result.Conversion_Ratio)
         result_dict['minimum_surprise_points'] = result.Minimum_Surprise_Points
@@ -249,6 +273,11 @@ class UIListItemsHandler(webapp2.RequestHandler):
         store_dict['sears'] = list(sears_entity.Locations)
         result_dict['store_locations'] = store_dict
 
+        bu_dict = dict()
+        bu_dict['sears'] = sears_bu_list.Business_Units
+        bu_dict['kmart'] = kmart_bu_list.Business_Units
+        result_dict['categories'] = bu_dict
+
         logging.info(result_dict)
         self.response.headers['Content-Type'] = 'application/json'
         self.response.headers['Access-Control-Allow-Origin'] = '*'
@@ -256,7 +285,6 @@ class UIListItemsHandler(webapp2.RequestHandler):
 
 
 class MetricsHandler(webapp2.RequestHandler):
-
     def get(self):
         campaign_id = self.request.get("campaign_id")
         result_dict = MemberOfferDataService.get_offer_metrics(campaign_id=campaign_id)
@@ -270,12 +298,12 @@ class BatchJobHandler(webapp2.RequestHandler):
     def get(self):
 
         if self.request.get('dataset_name') is None or not self.request.get('dataset_name') or \
-            self.request.get('table_name') is None or not self.request.get('table_name') or \
-            self.request.get('project_id') is None or not self.request.get('project_id') or \
-            self.request.get('campaign_name') is None or not self.request.get('campaign_name'):
+                        self.request.get('table_name') is None or not self.request.get('table_name') or \
+                        self.request.get('project_id') is None or not self.request.get('project_id') or \
+                        self.request.get('campaign_name') is None or not self.request.get('campaign_name'):
             response_html = "<html><head><title>Batch Job Execution</title></head><body><h3> " \
-                             + "Please provide dataset_name, table_name, project_id and campaign_name with the " \
-                               "request</h3></body></html>"
+                            + "Please provide dataset_name, table_name, project_id and campaign_name with the " \
+                              "request</h3></body></html>"
             self.response.write(response_html)
             return
 
@@ -402,8 +430,8 @@ class BatchJobHandler(webapp2.RequestHandler):
                                             member_offer_data_key = MemberOfferDataService.create(offer, member)
                                             logging.info('member_offer_key:: %s', member_offer_data_key)
                                             logging.info('Offer %s email has been sent to:: %s', offer.OfferNumber, member.email)
-                                            response_dict['message'] = response_dict['message'] + new_line + " Offer "\
-                                                                       +offer.OfferNumber+" emails has been sent to: "\
+                                            response_dict['message'] = response_dict['message'] + new_line + " Offer " \
+                                                                       +offer.OfferNumber+" emails has been sent to: " \
                                                                        +member.email
                                         else:
                                             logging.info(
@@ -423,7 +451,7 @@ class BatchJobHandler(webapp2.RequestHandler):
                                 logging.info('Error creating offer %s in telluride system. Response from telluride call is: %s', offer.OfferNumber,response_dict['message'])
                                 response_dict['message'] = response_dict['message'] + new_line +" Error creating offer "+offer.OfferNumber+" in telluride system. Response from telluride call is:: "+response_dict['message']
 
-                    # [END print_results]
+                                # [END print_results]
 
             except HttpError as err:
                 print('Error: {}'.format(err.content))
@@ -483,6 +511,79 @@ class UploadStoreIDHandler(webapp2.RequestHandler):
             store_data.put()
 
 
+class SoarBuHandler(webapp2.RequestHandler):
+    def get(self):
+        credentials = GoogleCredentials.get_application_default()
+        bigquery_service = build('bigquery', 'v2', credentials=credentials)
+
+        query_request = bigquery_service.jobs()
+        urlfetch.set_default_fetch_deadline(60)
+
+        KMART_BU_QUERY = (
+            """SELECT SOAR_NO, SOAR_NM
+            FROM [syw-analytics-repo-prod:cbr_mart_tbls.sywr_kmt_soar_bu]
+            group by
+            SOAR_NO, SOAR_NM"""
+        )
+
+        SEARS_BU_QUERY = (
+            """SELECT SOAR_NO, SOAR_NM
+            FROM [syw-analytics-repo-prod:cbr_mart_tbls.sywr_srs_soar_bu]
+            group by
+            SOAR_NO, SOAR_NM"""
+        )
+
+        logging.info("Kmart Query :: %s", KMART_BU_QUERY)
+        logging.info("Sears Query :: %s", SEARS_BU_QUERY)
+
+        kmart_bu_names = set()
+        sears_bu_names = set()
+        bu_names = dict()
+
+        query_data = {
+            'query': KMART_BU_QUERY
+        }
+
+        query_response = query_request.query(
+            projectId='syw-offers',
+            body=query_data).execute()
+
+        logging.info("Kmart Query response :: %s", query_response)
+
+        for row in query_response['rows']:
+            kmart_bu_names.add(row['f'][0]['v'] + " - " + row['f'][1]['v'])
+
+        kmart_bu_names = sorted(kmart_bu_names)
+        logging.info("List of kmart BU's :: %s", kmart_bu_names)
+        bu_names.update({"kmart": kmart_bu_names})
+
+        query_data = {
+            'query': SEARS_BU_QUERY
+        }
+
+        query_response = query_request.query(
+            projectId='syw-offers',
+            body=query_data).execute()
+
+        logging.info("Sears Query response :: %s", query_response)
+
+        for row in query_response['rows']:
+            sears_bu_names.add(row['f'][0]['v'] + "-" + row['f'][1]['v'])
+
+        sears_bu_names = sorted(sears_bu_names)
+        logging.info("List of sears BU's :: %s", sears_bu_names)
+
+        bu_names.update({"sears": sears_bu_names})
+        logging.info("BU names dictionary :: %s", bu_names)
+
+        for format, business_units in bu_names.items():
+            bu_data = BUData(Format=format, Business_Units=business_units)
+            bu_data.key = ndb.Key('BUData', format)
+            bu_data.put()
+
+        self.response.write(json.dumps({"data": "BU data uploaded to datastore - BUData."}))
+
+
 class SendGridEvents(webapp2.RequestHandler):
     def post(self):
         logging.info(self.request.body)
@@ -526,18 +627,70 @@ class MigrateNamespaceData(webapp2.RequestHandler):
         entity.key = ndb.Key('ServiceEndPointData', 'endpoints', namespace=to_ns)
         entity.put()
 
+    @staticmethod
+    def migrate_budata_data(from_ns, to_ns):
+        ids = ['kmart', 'kmart_soar_numbers', 'sears', 'sears_soar_numbers']
+
+        for idx in ids:
+            entity = ndb.Key('BUData', idx, namespace=from_ns).get()
+            entity.key = ndb.Key('BUData', idx, namespace=to_ns)
+            entity.put()
+
     def get(self):
         from_ns = self.request.get('from_ns')
         to_ns = self.request.get('to_ns')
-        self.migrate_config_data(from_ns=from_ns, to_ns=to_ns)
-        self.migrate_frontend_data(from_ns=from_ns, to_ns=to_ns)
-        self.migrate_member_data(from_ns=from_ns, to_ns=to_ns)
-        self.migrate_sendgrid_data(from_ns=from_ns, to_ns=to_ns)
-        self.migrate_endpoints_data(from_ns=from_ns, to_ns=to_ns)
+        # self.migrate_config_data(from_ns=from_ns, to_ns=to_ns)
+        # self.migrate_frontend_data(from_ns=from_ns, to_ns=to_ns)
+        # self.migrate_member_data(from_ns=from_ns, to_ns=to_ns)
+        # self.migrate_sendgrid_data(from_ns=from_ns, to_ns=to_ns)
+        # self.migrate_endpoints_data(from_ns=from_ns, to_ns=to_ns)
+        self.migrate_budata_data(from_ns=from_ns, to_ns=to_ns)
+
         self.response.write("Data migrated successfully!!!")
 
 class AllEvents(webapp2.RequestHandler):
 
+    def post(self):
+        logging.info(self.request.body)
+        logging.info(self.request)
+        json_data_list = json.loads(self.request.body)
+        EmailEventMetricsDataService.save_allEventsData(json_data_list)
+
+
+class GetAllEmailActivities(webapp2.RequestHandler):
+
+    def get(self):
+        query = EmailEventMetricsData.query().order(-EmailEventMetricsData.timestamp)
+        activity_list = query.fetch(100)
+        result = list()
+        logging.info('len of the list: %s', len(activity_list))
+        logging.info(activity_list)
+        for each_entity in activity_list:
+
+            activity_dict = dict()
+            logging.info('each entry: %s', each_entity)
+            logging.info('each entry email: %s', each_entity.email)
+            activity_dict['email'] = each_entity.email
+            activity_dict['timestamp'] = each_entity.timestamp
+            activity_dict['smtp-id'] = each_entity.smtp_id
+            activity_dict['event'] = each_entity.event
+            activity_dict['sg_event_id'] = each_entity.sg_event_id
+            activity_dict['sg_message_id'] = each_entity.sg_message_id
+            activity_dict['response'] = each_entity.response
+            activity_dict['attempt'] = each_entity.attempt
+            activity_dict['useragent'] = each_entity.useragent
+            activity_dict['ip'] = each_entity.ip
+            activity_dict['url'] = each_entity.url
+            activity_dict['reason'] = each_entity.reason
+            activity_dict['status'] = each_entity.status
+            activity_dict['asm_group_id'] = each_entity.asm_group_id
+
+            result.append(activity_dict)
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.headers['Access-Control-Allow-Origin'] = '*'
+        self.response.write(json.dumps({'data': result}))
+
+class AllEvents(webapp2.RequestHandler):
     def post(self):
         logging.info(self.request.body)
         logging.info(self.request)
@@ -588,9 +741,10 @@ app = webapp2.WSGIApplication([
     ('/getMetrics', MetricsHandler),
     ('/batchJob', BatchJobHandler),
     ('/uploadStoreIDs', UploadStoreIDHandler),
+    ('/buNames', SoarBuHandler),
     ('/sendgridEvents', SendGridEvents),
     ('/migrateEntities', MigrateNamespaceData),
-	('/allEventsNotification', AllEvents),
+    ('/allEventsNotification', AllEvents),
     ('/getemailactivities', GetAllEmailActivities)
 ], debug=True)
 

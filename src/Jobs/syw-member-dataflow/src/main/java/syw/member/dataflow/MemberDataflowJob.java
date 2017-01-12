@@ -40,6 +40,7 @@ import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
 import com.google.cloud.dataflow.sdk.runners.DataflowPipelineRunner;
 import com.google.cloud.dataflow.sdk.transforms.DoFn;
 import com.google.cloud.dataflow.sdk.transforms.ParDo;
+import com.google.cloud.dataflow.sdk.transforms.DoFn.ProcessContext;
 import com.google.cloud.dataflow.sdk.values.PCollection;
 import com.google.datastore.v1.Entity;
 import com.google.datastore.v1.Key;
@@ -86,22 +87,30 @@ public class MemberDataflowJob extends HttpServlet {
 			String eml_opt_in = (String) content.get("eml_opt_in");
 			eml_opt_in = (eml_opt_in == null)?"":eml_opt_in;
 
-			String email_ad_id = (String) content.get("email_ad_id");
-			email_ad_id = (email_ad_id == null)?"":email_ad_id;
+			Integer sends = Integer.valueOf((String) content.get("sends"));
+			sends = (sends == null)?0:sends;
 
-			String sends = (String) content.get("sends");
-			sends = (sends == null)?"":sends;
-
-			String opens = (String) content.get("opens");
-			opens = (opens == null)?"":opens;
-
+			Integer opens = Integer.valueOf((String)  content.get("opens"));
+			opens = (opens == null)?0:opens;
+			
+			Calendar cal = Calendar.getInstance();
+			Date today = cal.getTime();
+		
+			
 			entityBuilder.getMutableProperties().put("member_id", makeValue(lyl_id_no).build());
-			entityBuilder.getMutableProperties().put("kmt_primary_store", makeValue(kmt_primary_store).build());
-
 			entityBuilder.getMutableProperties().put("eml_opt_in", makeValue(eml_opt_in).build());
-			entityBuilder.getMutableProperties().put("email_ad_id", makeValue(email_ad_id).build());
-			entityBuilder.getMutableProperties().put("sends", makeValue(sends).build());
-			entityBuilder.getMutableProperties().put("opens", makeValue(opens).build());
+			entityBuilder.getMutableProperties().put("email", makeValue("").build());
+			entityBuilder.getMutableProperties().put("first_name", makeValue("").build());
+			entityBuilder.getMutableProperties().put("last_name", makeValue("").build());
+
+			entityBuilder.getMutableProperties().put("format_level", makeValue("KMART").build());
+
+			entityBuilder.getMutableProperties().put("store_id", makeValue(kmt_primary_store).build());
+
+			entityBuilder.getMutableProperties().put("email_send", makeValue(sends).build());
+			entityBuilder.getMutableProperties().put("email_open", makeValue(opens).build());
+			entityBuilder.getMutableProperties().put("last_updated_at", makeValue(today).build());
+
 
 
 			return entityBuilder.build();
@@ -117,7 +126,7 @@ public class MemberDataflowJob extends HttpServlet {
 
 	public static void getMemberData(String txnStartDate, String txnEndDate, 
 			String emlStartDate, String emlEndDate){
-		Log.info("Start BigQuery dataflow");
+			Log.info("Start BigQuery dataflow");
 		/*
 		 * Query:: 
 		 * SELECT
@@ -149,13 +158,8 @@ public class MemberDataflowJob extends HttpServlet {
 				+ "AND Md_Amt is not NULL  "
 				+ "AND Day_Dt >= CAST('2015-08-01' AS DATE)  "
 				+ "AND Day_Dt <= CAST('2016-07-31' AS DATE)  "
-				+ "AND Locn_Nbr in (9524, 3418) GROUP BY store, member";*/
-
-		/*
-		 * The following will give data for all the members 
-		 * who have made some transactions within the last year at kmart stores 9524, 3418
-		 * will give email_opt_in data, email sent data, email opens data  
-		 */
+				+ "AND Locn_Nbr in (9524, 3418) GROUP BY store, member";
+*/
 
 		String query = "SELECT d.Locn_Nbr AS store, d.lyl_id_no AS member,"
 				+ " b.eml_ad_id AS email_ad_id, eml_opt_in, a.sends, a.opens"
@@ -212,15 +216,17 @@ public class MemberDataflowJob extends HttpServlet {
 			Log.info("BigQuery-DataStore pipeline to run now");
 			bp.run();
 			Log.info("Finished BigQuery-DataStore dataflow");
-		} catch (Exception e) {
+		} 
+		catch (Exception e) {
 			Log.info("Exception: " + e.getMessage() + e.getStackTrace().toString());
+			}
 		}
-	}
-
+	
 	public static void main(String[] args){
 		getMemberDataFromToday();
 	}
-	
+		
+		
 	public static void getMemberDataFromToday(){
 		Calendar cal = Calendar.getInstance();
 		Date today = cal.getTime();

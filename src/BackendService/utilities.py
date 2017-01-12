@@ -7,7 +7,7 @@ from google.appengine.api import app_identity
 import jinja2
 import os
 
-# Function to read sendgrid configurations
+
 def get_sendgrid_configuration():
     data_map = dict()
     try:
@@ -89,7 +89,7 @@ def create_pubsub_message(json_data):
 
 
 def make_request(host, relative_url, request_type, payload):
-    logging.info("URL:: " + host + relative_url)
+    logging.info("URL:: " + str(host) + str(relative_url))
     logging.info("Request Method:: " + request_type)
     logging.info("Payload:: " + payload)
     try:
@@ -113,10 +113,6 @@ def make_request(host, relative_url, request_type, payload):
     except Exception as e:
         logging.error(e)
 
-def get_telluride_host():
-    data_key = ndb.Key('ServiceEndPointData', 'endpoints')
-    data_entity = data_key.get()
-    return data_entity.telluride
 
 def get_jinja_environment():
     templates_dir = os.path.join(os.path.dirname(__file__), 'templates')
@@ -130,11 +126,18 @@ def get_jinja_environment():
 
 def get_telluride_host():
     data_key = ndb.Key('ServiceEndPointData', 'endpoints')
-    data_entity = data_key.get()
+    data_entity = data_key.get(use_datastore=True, use_cache=False, use_memcache=False)
     return data_entity.telluride
 
 
 def get_email_host():
     data_key = ndb.Key('ServiceEndPointData', 'endpoints')
-    data_entity = data_key.get()
+    data_entity = data_key.get(use_datastore=True, use_cache=False, use_memcache=False)
     return data_entity.email
+
+
+def get_member_host():
+    data_key = ndb.Key('ServiceEndPointData', 'endpoints')
+    data_entity = data_key.get(use_datastore=True, use_cache=False, use_memcache=False)
+    logging.info("Data entity:: %s", data_entity)
+    return data_entity.member

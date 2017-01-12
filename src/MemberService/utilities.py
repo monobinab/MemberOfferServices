@@ -113,6 +113,11 @@ def make_request(host, relative_url, request_type, payload):
         logging.error(e)
 
 
+def get_offer_id(campaign_name, offer_value):
+    offer_id = campaign_name + "_" + str(offer_value)
+    return offer_id
+
+
 def get_telluride_host():
     data_key = ndb.Key('ServiceEndPointData', 'endpoints')
     data_entity = data_key.get()
