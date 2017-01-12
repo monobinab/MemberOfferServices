@@ -2,7 +2,6 @@ import sys
 sys.path.insert(0, 'lib')
 import logging
 import webapp2
-
 import json
 from models import CampaignData, MemberData, MemberOfferData, ndb, OfferData
 from datastore import MemberOfferDataService, OfferDataService
