@@ -44,7 +44,7 @@ def send_template_message(member_dict, offer_dict):
 
     sg = sendgrid.SendGridAPIClient(apikey=config_dict['SENDGRID_API_KEY'])
     to_email = mail.Email(member_dict['email'].encode("utf-8"))
-    from_email = mail.Email(config_dict['SENDGRID_SENDER'].encode("utf-8"))
+    from_email = mail.Email(config_dict['SENDGRID_SENDER'].encode("utf-8"), 'Shop Your Way')
     subject = ' '
     content = mail.Content('text/html', '')
     message = mail.Mail(from_email, subject, to_email, content)
