@@ -4,7 +4,57 @@ from utilities import get_backend_host, get_sendgrid_configuration
 import logging
 from datetime import datetime
 import os
+from models import ConfigData, ndb, ServiceEndPointData, CampaignData, OfferData, MemberData
 
+def email_process(member_id, offer_value, campaign_name ):
+    campaign_key = ndb.Key('CampaignData', campaign_name)
+    logging.info("fetched campaign_key for: %s", campaign_name)
+    campaign = campaign_key.get()
+    response_dict = dict()
+
+    if campaign is None:
+        logging.info("campaign is None")
+        # TO DO: send response
+        response_dict['message'] = "Error: Campaign not found"
+        return response_dict
+    else:
+        logging.info("campaign is not None")
+        logging.info('campaign_name: %s , member_id: %s, offer_value: %s', campaign_name, member_id, offer_value)
+
+        offer_name = "{}_{}".format(str(campaign.name), str(offer_value))
+
+        offer_key = ndb.Key('OfferData', offer_name)
+        logging.info("fetched offer_key")
+        offer_entry = offer_key.get()
+
+        if offer_entry is None:
+            logging.info("Offer is None")
+            response_dict['message'] = "Error: Offer not found"
+            return response_dict
+        else:
+            logging.info('Offer is not None. Sending email for Offer: %s', offer_name)
+            # To check if this needed
+            #offer = OfferDataService.create_offer_obj(campaign, offer_value)
+
+            # HACK: Need to remove later. Only for testing purpose. <>
+            if os.environ.get('NAMESPACE') in ['qa','dev']:
+                member_id = '7081327663412819'
+
+            member_key = ndb.Key('MemberData', member_id)
+            logging.info("Fetched member_key for member: %s", member_id)
+
+            member = member_key.get(use_datastore=True, use_memcache=False, use_cache=False)
+            if member is None:
+                logging.info("member is None")
+                response_dict['message'] = "Member ID " + member_id + " not found in database."
+            else:
+                response = send_mail(member_entity=member, offer_entity=offer_entry, campaign_entity=campaign)
+                if response.status_code == 202:
+                    response_dict['message'] = "Success"
+                else:
+                    response_dict['message'] = "Error sending email. Response code: " + response.status_code
+
+        return response_dict
 
 def send_mail(member_entity, offer_entity, campaign_entity):
     member_dict = dict()
