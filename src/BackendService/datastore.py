@@ -2,6 +2,7 @@ import logging
 from datetime import datetime, timedelta
 from google.appengine.api import datastore_errors
 from models import CampaignData, OfferData, MemberOfferData, EmailEventMetricsData, ndb, BuDvsnMappingData
+import yaml
 
 
 class OfferDataService(CampaignData):
@@ -21,12 +22,32 @@ class OfferDataService(CampaignData):
         logging.info("Category list:: %s", category_list)
         logging.info("BU Name:: %s", ",".join(category_list[1]))
         BU_NAME = category_list[1]
+
+        BU_NAME_FULL = ''
+        for i, val in enumerate(category_list):
+            if i != 0:
+                if i == 1:
+                    BU_NAME_FULL = val.strip()
+                else:
+                    BU_NAME_FULL = BU_NAME_FULL + ' - ' + val.strip()
+
+        logging.info("Full BU Name:: %s", BU_NAME_FULL)
+
+        with open('BU-ReceiptDescriptor_Mapping.yaml', 'r') as f:
+            doc = yaml.load(f)
+
+        if BU_NAME_FULL in doc:
+            receipt_desc = doc[BU_NAME_FULL]
+        else:
+            receipt_desc = BU_NAME_FULL
+        logging.info("receipt_desc:: %s", receipt_desc)
+
         offer_obj = OfferData(surprise_points=int(offer_value), threshold=10, OfferNumber=offer_name,
                               OfferPointsDollarName=offer_name, OfferDescription=offer_name,
                               OfferType="Xtreme Redeem", OfferSubType="Item", OfferStartDate=start_date,
                               OfferStartTime="00:00:00", OfferEndDate=end_date, OfferEndTime="23:59:00",
                               OfferBUProgram_BUProgram_BUProgramName="BU - "+BU_NAME,
-                              OfferBUProgram_BUProgram_BUProgramCost=0.00, ReceiptDescription="TELL-16289",
+                              OfferBUProgram_BUProgram_BUProgramCost=0.00, ReceiptDescription=receipt_desc,
                               OfferCategory="Stackable", OfferAttributes_OfferAttribute_Name="MULTI_TRAN_IND",
                               OfferAttributes_OfferAttribute_Values_Value="N", Rules_Rule_Entity="Product",
                               Rules_Conditions_Condition_Name="PRODUCT_LEVEL",
