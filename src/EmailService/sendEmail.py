@@ -33,8 +33,6 @@ def email_process(member_id, offer_value, campaign_name ):
             return response_dict
         else:
             logging.info('Offer is not None. Sending email for Offer: %s', offer_name)
-            # To check if this needed
-            #offer = OfferDataService.create_offer_obj(campaign, offer_value)
 
             # HACK: Need to remove later. Only for testing purpose. <>
             if os.environ.get('NAMESPACE') in ['qa','dev']:
@@ -69,12 +67,30 @@ def send_mail(member_entity, offer_entity, campaign_entity):
     date_format = datetime.strptime(date, "%Y-%m-%d")
     date = date_format.strftime('%m/%d/%Y')
 
+    category = campaign_entity.category
+    cat_desc_dict = {}
+    cat_desc_dict['201-APPAREL - ACCESSORIES'] = 'Apparel Accessories'
+    cat_desc_dict['202-APPAREL - CHILDRENS / KIDS'] = 'Kids Clothing'
+    cat_desc_dict['203-APPAREL - INTIMATE APPAREL'] = 'Intimate Clothing'
+    cat_desc_dict['204-APPAREL - MEN\'S APPAREL'] = 'Men Clothing'
+    cat_desc_dict['205-APPAREL - RTW / WOMENS'] = 'Women Clothing'
+    cat_desc_dict['210-GROCERY & HOUSEHOLD'] = 'Grocery & Household'
+    cat_desc_dict['211-FOOTWEAR'] = 'Shoes'
+    cat_desc_dict['213-HOME'] = 'Home'
+
+    if category in cat_desc_dict:
+        logging.info("cat_desc_dict[category]:: %s", cat_desc_dict[category])
+        category_desc = cat_desc_dict[category]
+    else:
+        category_desc = category
+    logging.info("category_desc:: %s", category_desc)
+
     offer_dict['surprisepoints'] = offer_entity.surprise_points
     offer_dict['threshold'] = offer_entity.threshold
     offer_dict['expiration'] = date
     offer_dict['offer_id'] = offer_entity.OfferNumber
     offer_dict['formatlevel'] = campaign_entity.format_level
-    offer_dict['category'] = campaign_entity.category
+    offer_dict['category'] = category_desc
     logging.info("Mail offer dict:: %s", offer_dict)
     response = send_template_message(member_dict, offer_dict)
 
