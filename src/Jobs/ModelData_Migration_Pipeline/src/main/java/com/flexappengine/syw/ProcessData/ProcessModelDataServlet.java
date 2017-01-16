@@ -368,9 +368,9 @@ public class ProcessModelDataServlet extends HttpServlet {
     public static interface MyOptions extends DataflowPipelineOptions {
 	/*
 	 * @Override
-	 *
+	 * 
 	 * @Default.String(PIPELINE_PROJECT_ID) String getProject();
-	 *
+	 * 
 	 * @Override void setProject(String value);
 	 */
 
@@ -392,7 +392,7 @@ public class ProcessModelDataServlet extends HttpServlet {
     /**
      * This method creates the dataflow pipeline and initiates it using
      * DataflowPipelineRunner in cloud.
-     *
+     * 
      * @param campaignName
      * @param projectId
      * @param datasetId
@@ -412,7 +412,7 @@ public class ProcessModelDataServlet extends HttpServlet {
 	if (!Strings.isNullOrEmpty(sourceProjectId)) {
 	    bigOptions.setProject(dData.getSourceProjectId());
 	} else {
-	    Log.error("SOURCE_PROJECT_ID not found in datastore. Returning");
+	    Log.error("SOURCE_PROJECT_ID not found in datastore. Dataflow job cannot be run. Returning");
 	    return;
 	}
 

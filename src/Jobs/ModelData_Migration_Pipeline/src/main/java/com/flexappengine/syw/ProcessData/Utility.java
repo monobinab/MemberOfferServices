@@ -13,6 +13,7 @@ import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
+import com.google.cloud.dataflow.sdk.repackaged.com.google.common.base.Strings;
 
 public class Utility {
     static final Logger Log = LoggerFactory.getLogger(Utility.class.getName());
@@ -38,21 +39,8 @@ public class Utility {
 		dData.setModelToken((String) DataflowConfigEntity.getProperty("MODEL_TOKEN"));
 		dData.setQueryLimit((String) DataflowConfigEntity.getProperty("QUERY_LIMIT"));
 		dData.setSendEmailFlog((Boolean) DataflowConfigEntity.getProperty("SEND_EMAIL_FLAG"));
-
-		String sourceProject = null;
-		InputStream is = Utility.class.getClassLoader().getResourceAsStream("systemenvironment.properties");
-		Properties props = new Properties();
-		try {
-		    props.load(is);
-		    sourceProject = (String) props.get("sourceProject");
-
-		    if (sourceProject.equalsIgnoreCase("${project.sourceProject}")) {
-			sourceProject = null;
-		    }
-		} catch (IOException e1) {
-		    Log.error("Error getting sourceProject: " + e1.getMessage());
-		}
-		dData.setSourceProjectId(sourceProject);
+		dData.setSendEmailFlog((Boolean) DataflowConfigEntity.getProperty("SEND_EMAIL_FLAG"));
+		dData.setSourceProjectId((String) DataflowConfigEntity.getProperty("SOURCE_PROJECT_ID"));
 	    }
 
 	    return dData;
@@ -79,15 +67,10 @@ public class Utility {
 
 	Log.info("environment: " + env);
 
-	switch (env == null ? "" : env) {
-	case "prod":
-	    namespace = "prod";
-	    break;
-	case "qa":
-	    namespace = "qa";
-	    break;
-	default:
+	if (Strings.isNullOrEmpty(env) || env.equalsIgnoreCase("${project.env}")) {
 	    namespace = "dev";
+	} else {
+	    namespace = env;
 	}
 
 	return namespace;
