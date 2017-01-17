@@ -196,8 +196,8 @@ class ActivateOfferHandler(webapp2.RequestHandler):
                             message = "Offer has been activated successfully."
                             offer_success = 1
                             if status_code == 99:
-                                response_dict['message'] = "Offer has already been activated for this member and expire's in {{offer_end_date }}."
-                                message = "Offer has already been activated for this member and expire's in {{offer_end_date }}."
+                                response_dict['message'] = "Offer has already been activated for this member and expires in "+member_offer_obj.validity_end_date.strftime("%Y-%m-%d")"."
+                                message = "Offer has already been activated for this member and expire's in "+member_offer_obj.validity_end_date.strftime("%Y-%m-%d")"."
                                 offer_success = 0
 
                             # Update MemberOfferData status call
@@ -214,8 +214,8 @@ class ActivateOfferHandler(webapp2.RequestHandler):
 
                         else:
                             logging.error("Telluride call failed.")
-                            response_dict['message'] = "Sorry, our servers are busy. The offer could not be activated at this time. Please try again later"
-                            message = "Sorry, our servers are busy. The offer could not be activated at this time. Please try again later"
+                            response_dict['message'] = "Sorry, our servers are busy. The offer could not be activated at this time. Please try again later."
+                            message = "Sorry, our servers are busy. The offer could not be activated at this time. Please try again later."
                             offer_success = 0
 
                 else:
