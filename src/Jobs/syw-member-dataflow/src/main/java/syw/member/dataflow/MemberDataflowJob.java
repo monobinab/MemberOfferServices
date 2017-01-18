@@ -45,22 +45,7 @@ import com.google.cloud.dataflow.sdk.values.PCollection;
 import com.google.datastore.v1.Entity;
 import com.google.datastore.v1.Key;
 
-/**
- * A starter example for writing Google Cloud Dataflow programs.
- *
- * <p>The example takes two strings, converts them to their upper-case
- * representation and logs them.
- *
- * <p>To run this starter example locally using DirectPipelineRunner, just
- * execute it without any additional parameters from your favorite development
- * environment.
- *
- * <p>To run this starter example using managed resource in Google Cloud
- * Platform, you should specify the following command-line options:
- *   --project=<YOUR_PROJECT_ID>
- *   --stagingLocation=<STAGING_LOCATION_IN_CLOUD_STORAGE>
- *   --runner=BlockingDataflowPipelineRunner
- */
+
 
 @SuppressWarnings("serial")
 public class MemberDataflowJob extends HttpServlet {
@@ -99,7 +84,7 @@ public class MemberDataflowJob extends HttpServlet {
 			
 			entityBuilder.getMutableProperties().put("member_id", makeValue(lyl_id_no).build());
 			entityBuilder.getMutableProperties().put("eml_opt_in", makeValue(eml_opt_in).build());
-			entityBuilder.getMutableProperties().put("email", makeValue("").build());
+			entityBuilder.getMutableProperties().put("email", makeValue("testmember234@gmail.com").build());
 			entityBuilder.getMutableProperties().put("first_name", makeValue("").build());
 			entityBuilder.getMutableProperties().put("last_name", makeValue("").build());
 
@@ -127,66 +112,36 @@ public class MemberDataflowJob extends HttpServlet {
 	public static void getMemberData(String txnStartDate, String txnEndDate, 
 			String emlStartDate, String emlEndDate){
 			Log.info("Start BigQuery dataflow");
-		/*
-		 * Query:: 
-		 * SELECT
-		  Locn_Nbr AS store,
-		  Lyl_Id_No AS member
-		FROM [syw-analytics-repo-prod:cbr_mart_tbls.eadp_kmart_pos_dtl]
-		WHERE Lyl_Id_No is not NULL
-		  AND Locn_Nbr is not NULL
-		  AND SOAR_NO is not NULL
-		  AND Burn_Amt is not NULL
-		  AND SellQty is not NULL
-		  AND Kmt_Sell is not NULL
-		  AND Md_Amt is not NULL
-		  AND Day_Dt >= CAST('2015-08-01' AS DATE)
-		  AND Day_Dt <= CAST('2016-07-31' AS DATE)
-		  AND Locn_Nbr in (9524, 3418)
-		GROUP BY store, member*/
+		
 
-		/*
-		 * Query to get only member id for kmart stores
-		 * String query = "SELECT  Locn_Nbr AS store,  Lyl_Id_No AS member "
-				+ "FROM [syw-analytics-repo-prod:cbr_mart_tbls.eadp_kmart_pos_dtl] "
-				+ "WHERE Lyl_Id_No is not NULL  "
-				+ "AND Locn_Nbr is not NULL  "
-				+ "AND SOAR_NO is not NULL  "
-				+ "AND Burn_Amt is not NULL  "
-				+ "AND SellQty is not NULL  "
-				+ "AND Kmt_Sell is not NULL  "
-				+ "AND Md_Amt is not NULL  "
-				+ "AND Day_Dt >= CAST('2015-08-01' AS DATE)  "
-				+ "AND Day_Dt <= CAST('2016-07-31' AS DATE)  "
-				+ "AND Locn_Nbr in (9524, 3418) GROUP BY store, member";
-*/
-
-		String query = "SELECT d.Locn_Nbr AS store, d.lyl_id_no AS member,"
-				+ " b.eml_ad_id AS email_ad_id, eml_opt_in, a.sends, a.opens"
-				+ "	FROM `syw-analytics-repo-prod.cbr_mart_tbls.eadp_kmart_pos_dtl` d"
-				+ "	inner join (select b.lyl_id_no, b.eml_ad_id,max(b.eml_opt_in) as eml_opt_in"
-				+ "	from `syw-analytics-repo-prod.lci_loyal_views.sywr_email_id` b"
-				+ "	group by 1,2) b	on d.lyl_id_no = b.lyl_id_no"
-				+ "	inner join (select a.eml_ad_id,"
-				+ " count(distinct case when a.eml_cnt_cd = 'S' then a.cpg_id end) as sends,"
-				+ " count(distinct case when a.eml_cnt_cd in ('O','C') then a.cpg_id end) as opens"
-				+ "	from `syw-analytics-repo-prod.lci_dw_tbls.eml_rsp_cpg_comm` a"
-				+ "	where a._partitiontime between cast('"+ emlStartDate+"' as timestamp) "
-				+ " and cast('"+ emlEndDate+"' as timestamp) and"
-				+ " a.ld_dt between a.cpg_sta_dt and date_add(a.cpg_sta_dt, interval 7 day)"
-				+ " group by 1) a on a.eml_ad_id = b.eml_ad_id"
-				+ "	where d.lyl_id_no = b.lyl_id_no and"
-				+ "	      d.lyl_id_no is not null and"
-				+ "	     d.locn_nbr is not null and"
-				+ "	   d.soar_no is not null and"
-				+ "	   d.burn_amt is not null and"
-				+ "	   d.sellqty is not null and"
-				+ "	   d.kmt_sell is not null and"
-				+ "	   d.md_amt is not null and"
-				+ "	   d.day_dt >= cast('"+ txnStartDate +"' as date) and"
-				+ "	   d.day_dt <= cast('"+ txnEndDate +"' as date) and"
-				+ "	   d.locn_nbr in (9524, 3418)"
-				+ "	group by store, member, email_ad_id, eml_opt_in, a.sends, a.opens";
+		String query = "SELECT distinct d.Locn_Nbr AS store, d.lyl_id_no AS member, b.eml_ad_id AS email_ad_id, b.eml_opt_in, a.sends, a.opens, fst_nm, lst_nm"
+				+ "FROM `syw-analytics-repo-prod.cbr_mart_tbls.eadp_kmart_pos_dtl` d"
+				+ "inner join (select b.lyl_id_no, b.eml_ad_id,max(b.eml_opt_in) as eml_opt_in"
+				+ "from `syw-analytics-repo-prod.lci_loyal_views.sywr_email_id` b"
+				+ "group by 1,2) b  on d.lyl_id_no = b.lyl_id_no"
+				+ "inner join (select a.eml_ad_id,"
+				+ "count(distinct case when a.eml_cnt_cd = 'S' then a.cpg_id end) as sends,"
+				+ "count(distinct case when a.eml_cnt_cd in ('O','C') then a.cpg_id end) as opens"
+				+ "from `syw-analytics-repo-prod.lci_dw_tbls.eml_rsp_cpg_comm` a"
+				+ "where" 
+				+ "a._partitiontime between cast(current_date as timestamp)" 
+				+ "and cast(DATE_SUB(CURRENT_DATE(), INTERVAL 1 YEAR) as timestamp) and"
+				+ "a.ld_dt between a.cpg_sta_dt and DATE_SUB(a.cpg_sta_dt, interval 7 day)"
+				+ "group by 1) a on a.eml_ad_id = b.eml_ad_id"
+				+ "inner join `syw-analytics-repo-prod.lci_loyal_nadr_views.sywr_mbr` mbr"
+				+ "on mbr.lyl_id_no = d.lyl_id_no"
+				+ "where"
+					+ "d.lyl_id_no = b.lyl_id_no and"
+					+ "d.lyl_id_no is not null and"
+					+ "d.locn_nbr is not null and"
+					+ "d.soar_no is not null and"
+					+ "d.burn_amt is not null and"
+				    + "d.sellqty is not null and"
+				    + "d.kmt_sell is not null and"
+				    + "d.md_amt is not null and"
+				    + "d.day_dt between DATE_SUB(CURRENT_DATE(), INTERVAL 1 YEAR) and cast(current_date as date) and"
+				    + "d.locn_nbr in (9524, 3418)"
+				    ;
 
 
 		Log.info("Query: " + query);
