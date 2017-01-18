@@ -384,7 +384,6 @@ def get_register_offer_xml(offer_entity, member_entity, reg_start_date, reg_end_
                       <web:OfferRegistration>
                          <web:MessageVersion>01</web:MessageVersion>
                          <web:ActionTag>A</web:ActionTag>
-
                          <web:MemberNumber>"""+member_entity.member_id+"""</web:MemberNumber>
                          <web:RequestorID>TECG</web:RequestorID>
                          <web:AssociateID>000000000000</web:AssociateID>
