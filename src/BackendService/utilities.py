@@ -77,6 +77,11 @@ def create_pubsub_message(json_data):
             category_type = 'soar'
         else:
             category_type = 'div'
+            default_div_list = ndb.Key('ConfigData', 'GeneralConfig').get()
+            if campaign_dict['format_level'] == 'Sears':
+                category_string = ', '.join(default_div_list.SearsDefaultDiv)
+            else:
+                category_string = ', '.join(default_div_list.KmartDefaultDiv)
 
     store_string = ''
     if 'store_location' in campaign_dict:
@@ -158,10 +163,11 @@ def __get_property_value(property_name, campaign_dict):
     property_list = campaign_dict[property_name].split(',')
     for i, val in enumerate(property_list):
         prop = val.split('-')
-        prop_id = prop[0].strip()
-        if i == 0:
-            property_string = prop_id
-        else:
-            property_string = property_string + ', ' + prop_id
+        if prop:
+            prop_id = prop[0].strip()
+            if i == 0:
+                property_string = prop_id
+            else:
+                property_string = property_string + ', ' + prop_id
 
     return property_string
