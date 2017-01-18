@@ -196,8 +196,8 @@ class ActivateOfferHandler(webapp2.RequestHandler):
                             message = "Offer has been activated successfully."
                             offer_success = 1
                             if status_code == 99:
-                                response_dict['message'] = "Offer has already been activated for this member and expires on "+member_offer_obj.validity_end_date.strftime("%Y-%m-%d")"."
-                                message = "Offer has already been activated for this member and expires on "+member_offer_obj.validity_end_date.strftime("%Y-%m-%d")"."
+                                response_dict['message'] = "Offer has already been activated for this member and expires on " +member_offer_obj.validity_end_date.strftime("%Y-%m-%d") + "."
+                                message = "Offer has already been activated for this member and expires on " + member_offer_obj.validity_end_date.strftime("%Y-%m-%d") + "."
                                 offer_success = 0
 
                             # Update MemberOfferData status call
