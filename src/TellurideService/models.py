@@ -135,6 +135,7 @@ class ConfigData(ndb.Model):
 
     SERVICE_TOPIC = ndb.StringProperty(indexed=False)
     PUBLISH_TOKEN = ndb.StringProperty(indexed=False)
+    EMAIL_CHANNEL_OFFER_VALIDITY_DAYS = ndb.IntegerProperty(indexed=False)
 
 
 class FrontEndData(ndb.Model):
