@@ -66,26 +66,42 @@ def create_pubsub_message(json_data):
     offer_dict = json_data['offer_details']
     config_dict = get_pubsub_configuration()
 
+    category_type = ''
+    category_string = ''
+    if 'divisions' in campaign_dict:
+        category_string = __get_property_value('divisions', campaign_dict)
+        category_type = 'div'
+    else:
+        if 'category' in campaign_dict:
+            category_string = __get_property_value('category', campaign_dict)
+            category_type = 'soar'
+        else:
+            category_type = 'div'
+            default_div_list = ndb.Key('ConfigData', 'GeneralConfig').get()
+            if campaign_dict['format_level'] == 'Sears':
+                category_string = ', '.join(default_div_list.SearsDefaultDiv)
+            else:
+                category_string = ', '.join(default_div_list.KmartDefaultDiv)
+
+    store_string = ''
+    if 'store_location' in campaign_dict:
+        store_string = __get_property_value('store_location', campaign_dict)
+
     campaign_data = dict()
     campaign_data['message'] = dict()
     campaign_data['message']["token"] = config_dict['PUBLISH_TOKEN']
-
     campaign_data['message']["campaign_name"] = campaign_dict['name']
-    campaign_data['message']["campaign_budget"] = campaign_dict['money']
-    campaign_data['message']["campaign_category"] = campaign_dict['category']
-    campaign_data['message']["campaign_convratio"] = campaign_dict['conversion_ratio']
-    campaign_data['message']["campaign_period"] = campaign_dict['period']
+    campaign_data['message']["category_type"] = category_type
     campaign_data['message']["start_date"] = campaign_dict['start_date']
-    campaign_data['message']["store_location"] = campaign_dict['store_location']
-    campaign_data['message']["format_level"] = campaign_dict['format_level']
-
-    campaign_data['message']["offer_type"] = offer_dict['offer_type']
-    campaign_data['message']["offer_min_val"] = offer_dict['min_value']
-    campaign_data['message']["offer_max_val"] = offer_dict['max_value']
-    campaign_data['message']["offer_mbr_issuance"] = offer_dict['member_issuance']
+    campaign_data['message']["campaign_format"] = campaign_dict['format_level']
+    campaign_data['message']["store_location"] = store_string
+    campaign_data['message']["period"] = campaign_dict['period']
+    campaign_data['message']["offer_max_val"] = str(offer_dict['max_value'])
+    campaign_data['message']["categories"] = category_string
 
     campaign_json_data = json.dumps(campaign_data)
     return campaign_json_data
+
 
 
 def make_request(host, relative_url, request_type, payload):
@@ -141,3 +157,17 @@ def get_member_host():
     data_entity = data_key.get(use_datastore=True, use_cache=False, use_memcache=False)
     logging.info("Data entity:: %s", data_entity)
     return data_entity.member
+
+def __get_property_value(property_name, campaign_dict):
+    property_string = ''
+    property_list = campaign_dict[property_name].split(',')
+    for i, val in enumerate(property_list):
+        prop = val.split('-')
+        if prop:
+            prop_id = prop[0].strip()
+            if i == 0:
+                property_string = prop_id
+            else:
+                property_string = property_string + ', ' + prop_id
+
+    return property_string

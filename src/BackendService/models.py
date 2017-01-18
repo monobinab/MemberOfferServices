@@ -5,6 +5,7 @@ class CampaignData(ndb.Model):
     name = ndb.StringProperty(indexed=True)
     money = ndb.IntegerProperty(indexed=False)
     category = ndb.StringProperty(indexed=True)
+    divisions = ndb.StringProperty(indexed=False)  # New Column
     format_level = ndb.StringProperty(indexed=False)
     conversion_ratio = ndb.IntegerProperty(indexed=False)
     period = ndb.StringProperty(indexed=False)
@@ -22,8 +23,10 @@ class CampaignData(ndb.Model):
 class OfferData(ndb.Model):
     campaign = ndb.KeyProperty(kind="CampaignData")
 
-    surprise_points = ndb.IntegerProperty(indexed=False)
+    surprise_points = ndb.IntegerProperty(indexed=True)
     threshold = ndb.IntegerProperty(indexed=False)
+
+    soar_no = ndb.IntegerProperty(indexed=True)
 
     OfferNumber = ndb.StringProperty(indexed=False)
     OfferPointsDollarName = ndb.StringProperty(indexed=False)
@@ -53,6 +56,15 @@ class OfferData(ndb.Model):
 
     created_at = ndb.DateTimeProperty(auto_now_add=True, indexed=True)
     updated_at = ndb.DateTimeProperty(auto_now=True, auto_now_add=False)
+
+
+class OfferDivisionMappingData(ndb.Model):
+    offer = ndb.KeyProperty(kind="OfferData")
+    offer_id = ndb.StringProperty(indexed=True)
+    soar_no = ndb.IntegerProperty(indexed=True)
+    division_no = ndb.IntegerProperty(indexed=True)
+    campaign_name = ndb.StringProperty(indexed=True)
+    offer_value = ndb.IntegerProperty(indexed=True)
 
 
 class MemberData(ndb.Model):
@@ -123,6 +135,9 @@ class ConfigData(ndb.Model):
 
     SERVICE_TOPIC = ndb.StringProperty(indexed=False)
     PUBLISH_TOKEN = ndb.StringProperty(indexed=False)
+    EMAIL_CHANNEL_OFFER_VALIDITY_DAYS = ndb.IntegerProperty(indexed=False)
+    SearsDefaultDiv = ndb.StringProperty(indexed=True, repeated=True)
+    KmartDefaultDiv = ndb.StringProperty(indexed=True, repeated=True)
 
 
 class FrontEndData(ndb.Model):
@@ -193,4 +208,3 @@ class ModelData(ndb.Model):
     member_id = ndb.StringProperty(indexed=True)
     store_id = ndb.StringProperty(indexed=True)
     created_at = ndb.DateTimeProperty(indexed=False)
-

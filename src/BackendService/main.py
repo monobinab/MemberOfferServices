@@ -7,7 +7,8 @@ import webapp2
 import pubsub_utils
 import csv
 from models import CampaignData, MemberOfferData, ndb, StoreData, OfferData, EmailEventMetricsData, BUData
-from datastore import CampaignDataService, MemberOfferDataService, OfferDataService, EmailEventMetricsDataService
+from datastore import CampaignDataService, MemberOfferDataService, OfferDataService, EmailEventMetricsDataService, \
+    OfferDivisionMappingData
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from oauth2client.client import GoogleCredentials
@@ -196,8 +197,8 @@ class ActivateOfferHandler(webapp2.RequestHandler):
                             message = "Offer has been activated successfully."
                             offer_success = 1
                             if status_code == 99:
-                                response_dict['message'] = "Member already registered for this offer."
-                                message = "Member already registered for this offer."
+                                response_dict['message'] = "Offer has already been activated for this member and expires on " +member_offer_obj.validity_end_date.strftime("%Y-%m-%d") + "."
+                                message = "Offer has already been activated for this member and expires on " + member_offer_obj.validity_end_date.strftime("%Y-%m-%d") + "."
                                 offer_success = 0
 
                             # Update MemberOfferData status call
@@ -214,8 +215,8 @@ class ActivateOfferHandler(webapp2.RequestHandler):
 
                         else:
                             logging.error("Telluride call failed.")
-                            response_dict['message'] = "Sorry, Offer could not be activated"
-                            message = "Sorry, Offer could not be activated"
+                            response_dict['message'] = "Sorry, our servers are busy. The offer could not be activated at this time. Please try again later."
+                            message = "Sorry, our servers are busy. The offer could not be activated at this time. Please try again later."
                             offer_success = 0
 
                 else:
@@ -648,47 +649,6 @@ class MigrateNamespaceData(webapp2.RequestHandler):
 
         self.response.write("Data migrated successfully!!!")
 
-class AllEvents(webapp2.RequestHandler):
-
-    def post(self):
-        logging.info(self.request.body)
-        logging.info(self.request)
-        json_data_list = json.loads(self.request.body)
-        EmailEventMetricsDataService.save_allEventsData(json_data_list)
-
-
-class GetAllEmailActivities(webapp2.RequestHandler):
-
-    def get(self):
-        query = EmailEventMetricsData.query().order(-EmailEventMetricsData.timestamp)
-        activity_list = query.fetch(100)
-        result = list()
-        logging.info('len of the list: %s', len(activity_list))
-        logging.info(activity_list)
-        for each_entity in activity_list:
-
-            activity_dict = dict()
-            logging.info('each entry: %s', each_entity)
-            logging.info('each entry email: %s', each_entity.email)
-            activity_dict['email'] = each_entity.email
-            activity_dict['timestamp'] = each_entity.timestamp
-            activity_dict['smtp-id'] = each_entity.smtp_id
-            activity_dict['event'] = each_entity.event
-            activity_dict['sg_event_id'] = each_entity.sg_event_id
-            activity_dict['sg_message_id'] = each_entity.sg_message_id
-            activity_dict['response'] = each_entity.response
-            activity_dict['attempt'] = each_entity.attempt
-            activity_dict['useragent'] = each_entity.useragent
-            activity_dict['ip'] = each_entity.ip
-            activity_dict['url'] = each_entity.url
-            activity_dict['reason'] = each_entity.reason
-            activity_dict['status'] = each_entity.status
-            activity_dict['asm_group_id'] = each_entity.asm_group_id
-
-            result.append(activity_dict)
-        self.response.headers['Content-Type'] = 'application/json'
-        self.response.headers['Access-Control-Allow-Origin'] = '*'
-        self.response.write(json.dumps({'data': result}))
 
 class AllEvents(webapp2.RequestHandler):
     def post(self):
@@ -730,6 +690,91 @@ class GetAllEmailActivities(webapp2.RequestHandler):
         self.response.headers['Content-Type'] = 'application/json'
         self.response.headers['Access-Control-Allow-Origin'] = '*'
         self.response.write(json.dumps({'data': result}))
+
+
+class AllEvents(webapp2.RequestHandler):
+    def post(self):
+        logging.info(self.request.body)
+        logging.info(self.request)
+        json_data_list = json.loads(self.request.body)
+        EmailEventMetricsDataService.save_allEventsData(json_data_list)
+
+
+class GetAllEmailActivities(webapp2.RequestHandler):
+
+    def get(self):
+        query = EmailEventMetricsData.query().order(-EmailEventMetricsData.timestamp)
+        activity_list = query.fetch(100)
+        result = list()
+        logging.info('len of the list: %s', len(activity_list))
+        logging.info(activity_list)
+        for each_entity in activity_list:
+
+            activity_dict = dict()
+            logging.info('each entry: %s', each_entity)
+            logging.info('each entry email: %s', each_entity.email)
+            activity_dict['email'] = each_entity.email
+            activity_dict['timestamp'] = each_entity.timestamp
+            activity_dict['smtp-id'] = each_entity.smtp_id
+            activity_dict['event'] = each_entity.event
+            activity_dict['sg_event_id'] = each_entity.sg_event_id
+            activity_dict['sg_message_id'] = each_entity.sg_message_id
+            activity_dict['response'] = each_entity.response
+            activity_dict['attempt'] = each_entity.attempt
+            activity_dict['useragent'] = each_entity.useragent
+            activity_dict['ip'] = each_entity.ip
+            activity_dict['url'] = each_entity.url
+            activity_dict['reason'] = each_entity.reason
+            activity_dict['status'] = each_entity.status
+            activity_dict['asm_group_id'] = each_entity.asm_group_id
+
+            result.append(activity_dict)
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.headers['Access-Control-Allow-Origin'] = '*'
+        self.response.write(json.dumps({'data': result}))
+
+
+class GetCampaignDetailHandler(webapp2.RequestHandler):
+
+    def get(self):
+        campaign_name = self.request.get("campaign_name")
+        offer_value = int(self.request.get("offer_value"))
+        division_no = int(self.request.get("division_no"))
+        if campaign_name is not None and offer_value is not None and division_no is not None:
+            ofr_map_obj = OfferDivisionMappingData.query(OfferDivisionMappingData.campaign_name == campaign_name,
+                                                         OfferDivisionMappingData.offer_value == offer_value,
+                                                         OfferDivisionMappingData.division_no == division_no).get()
+
+            if ofr_map_obj is not None:
+                offer_entity = ofr_map_obj.offer.get()
+                if offer_entity is not None:
+                    campaign_entity = offer_entity.campaign.get()
+                    if campaign_entity is not None:
+                        result = dict()
+                        campaign_dict = campaign_entity.to_dict()
+                        campaign_dict['created_at'] = campaign_entity.created_at.strftime('%Y-%m-%d')
+                        campaign_dict['updated_at'] = campaign_entity.created_at.strftime('%Y-%m-%d')
+
+                        offer_dict = offer_entity.to_dict()
+                        offer_dict['created_at'] = offer_entity.created_at.strftime('%Y-%m-%d')
+                        offer_dict['updated_at'] = offer_entity.created_at.strftime('%Y-%m-%d')
+                        offer_dict['campaign'] = campaign_name
+
+                        result['campaign_details'] = campaign_dict
+                        result['offer_details'] = offer_dict
+                    else:
+                        result = "Associated campaign not found"
+                else:
+                    result = "Associated offer not found"
+            else:
+                result = "Relevant data not found"
+
+        else:
+            result = "Parameters needed are campaign_name, offer_value and division_no"
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.headers['Access-Control-Allow-Origin'] = '*'
+        self.response.write(json.dumps({'data': result}))
+
 
 # [START app]
 app = webapp2.WSGIApplication([
@@ -745,7 +790,8 @@ app = webapp2.WSGIApplication([
     ('/sendgridEvents', SendGridEvents),
     ('/migrateEntities', MigrateNamespaceData),
     ('/allEventsNotification', AllEvents),
-    ('/getemailactivities', GetAllEmailActivities)
+    ('/getemailactivities', GetAllEmailActivities),
+    ('/getCampaignDetail', GetCampaignDetailHandler)
 ], debug=True)
 
 # [END app]

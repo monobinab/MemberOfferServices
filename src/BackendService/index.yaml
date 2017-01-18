@@ -1,0 +1,6 @@
+indexes:
+
+- kind: BuDvsnMappingData
+  properties:
+  - name: dvsn_nbr
+  - name: soar_no

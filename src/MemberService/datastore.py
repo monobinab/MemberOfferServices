@@ -1,72 +1,9 @@
 import logging
 from datetime import datetime, timedelta
 from google.appengine.api import datastore_errors
-from models import CampaignData, OfferData, MemberOfferData, EmailEventMetricsData, ndb, BuDvsnMappingData
-
-
-class OfferDataService(CampaignData):
-    @classmethod
-    def create_offer_obj(cls, campaign, offer_value, rules_condition):
-        campaign_key = ndb.Key('CampaignData', campaign.name)
-
-        start_date = campaign.start_date
-        # Calculating end date based on validity value which is in weeks.
-        end_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=7*int(campaign.valid_till) - 1)
-        end_date = end_date.strftime("%Y-%m-%d")
-        logging.info("Offer Start_date:: %s and end_date %s", start_date, end_date)
-
-        offer_name = "%s_%s" % (str(campaign.name), str(offer_value))
-
-        category_list = campaign.category.split('-')
-        logging.info("Category list:: %s", category_list)
-        logging.info("BU Name:: %s", ",".join(category_list[1]))
-        BU_NAME = category_list[1]
-        offer_obj = OfferData(surprise_points=int(offer_value), threshold=10, OfferNumber=offer_name,
-                              OfferPointsDollarName=offer_name, OfferDescription=offer_name,
-                              OfferType="Xtreme Redeem", OfferSubType="Item", OfferStartDate=start_date,
-                              OfferStartTime="00:00:00", OfferEndDate=end_date, OfferEndTime="23:59:00",
-                              OfferBUProgram_BUProgram_BUProgramName="BU - "+BU_NAME,
-                              OfferBUProgram_BUProgram_BUProgramCost=0.00, ReceiptDescription="TELL-16289",
-                              OfferCategory="Stackable", OfferAttributes_OfferAttribute_Name="MULTI_TRAN_IND",
-                              OfferAttributes_OfferAttribute_Values_Value="N", Rules_Rule_Entity="Product",
-                              Rules_Conditions_Condition_Name="PRODUCT_LEVEL",
-                              Rules_Conditions_Condition_Operator="IN",
-                              Rules_Conditions_Condition_Values_Value=rules_condition,
-                              RuleActions_ActionID="ACTION-1", Actions_ActionID="ACTION-1",
-                              Actions_ActionName="XR",
-                              Actions_ActionProperty_PropertyType="Tier",
-                              Actions_ActionProperty_Property_Name="MIN",
-                              Actions_ActionProperty_Property_Values_Value="0.01",
-                              created_at=datetime.now())
-        offer_obj.key = ndb.Key('OfferData', offer_name)
-        offer_obj.campaign = campaign_key
-
-        return offer_obj
-
-    @classmethod
-    def save_offer(cls, campaign, offer_value, rules_condition):
-        response_dict = dict()
-        offer = OfferDataService.create_offer_obj(campaign, offer_value, rules_condition)
-        response_dict['offer'] = offer
-
-        try:
-            offer_key = offer.put()
-            logging.info("Offer created:: %s", offer_key)
-            logging.info("OfferNumber:: %s", offer.OfferNumber)
-            response_dict['message'] = 'success'
-            return response_dict
-        except datastore_errors.Timeout:
-            logging.exception('Put failed Timeout')
-            response_dict['message'] = 'error'
-            return response_dict
-        except datastore_errors.TransactionFailedError:
-            logging.exception('Put failed TransactionFailedError')
-            response_dict['message'] = 'error'
-            return response_dict
-        except datastore_errors.InternalError:
-            logging.exception('Put failed InternalError')
-            response_dict['message'] = 'error'
-            return response_dict
+from models import CampaignData, OfferData, MemberOfferData, EmailEventMetricsData, ndb, BuDvsnMappingData, \
+    OfferDivisionMappingData
+import yaml
 
 
 class CampaignDataService(CampaignData):
@@ -87,12 +24,14 @@ class CampaignDataService(CampaignData):
 
         campaign_category = campaign_dict['category']
 
-        campaign_format_level = campaign_dict['format_level'] if campaign_dict['format_level'] is not None else ""
+        campaign_format_level = campaign_dict['format_level'].upper() if campaign_dict['format_level'] is not None else ""
         campaign_convratio = int(campaign_dict['conversion_ratio'])
 
         store_location = campaign_dict['store_location'] if campaign_dict['store_location'] is not None else ""
         campaign_period = campaign_dict['period']
         start_date = campaign_dict['start_date']
+
+        divisions = campaign_dict['divisions'] if campaign_dict['divisions'] is not None else ""
 
         offer_type = offer_dict['offer_type']
         offer_min_val = int(offer_dict['min_value'])
@@ -103,35 +42,163 @@ class CampaignDataService(CampaignData):
                                 format_level=campaign_format_level, conversion_ratio=campaign_convratio,
                                 period=campaign_period, offer_type=offer_type,
                                 max_per_member_issuance_frequency=offer_mbr_issuance, max_value=offer_max_val,
-                                min_value=offer_min_val, store_location=store_location, valid_till=offer_valid_till, start_date=start_date)
+                                min_value=offer_min_val, store_location=store_location, valid_till=offer_valid_till,
+                                start_date=start_date, divisions=divisions)
 
         campaign.key = CampaignDataService.get_campaign_key(campaign_name)
         campaign_key = campaign.put()
         logging.info('campaign_key:: %s', campaign_key)
 
         rules_condition = ""
-        if campaign.format_level == 'Sears':
+        if campaign.format_level == 'SEARS':
             rules_condition = "SEARSLEGACY~803~~~~~~" if campaign.category == "Apparel" else \
                 "SEARSLEGACY~803~615~~~~~~"
-        elif campaign.format_level == 'Kmart':
+            # Creating offers from min values to max values
+            for surprise_point in range(offer_min_val, offer_max_val + 1):
+                OfferDataService.save_offer(campaign=campaign, offer_value=surprise_point,
+                                            rules_condition=rules_condition, division_list=list(),
+                                            soar_no=0, soar_name="")
+        elif campaign.format_level == 'KMART':
+            soar_num_list = list()
+            division_list = list()
             # If more than one category is selected we need to add all prod hierarchy for
             # both the soar numbers
-            category_list = campaign_category.split('-')
-            logging.info("Category list:: %s", category_list)
-            product_hierarchy_list = list()
-            logging.info("SOAR_NO:: %s", category_list[0])
-            mapping_list = BuDvsnMappingData.query(BuDvsnMappingData.soar_no == int(category_list[0])).fetch()
-            logging.info("Number of mappings found:: %s", len(mapping_list))
-            for each_entity in mapping_list:
-                product_hierarchy_list.append(each_entity.product_hierarchy)
-            product_hierarchy_list = list(set(product_hierarchy_list))
-            logging.info("List:: %s", product_hierarchy_list)
-            rules_condition = ",".join(product_hierarchy_list)
-            logging.info("Rules condition:: %s", rules_condition)
+            if divisions is not None and divisions != "":
+                # If division numbers are specified giving higher priority to divisions
+                logging.info("Division String:: %s", divisions)
+                division_list = divisions.split(",")
+                division_list = map(int, division_list)
+                # Get distinct soar nos for all the divisions selected
+                result_list = BuDvsnMappingData.query().filter(BuDvsnMappingData.dvsn_nbr.IN(division_list)).fetch()
+                for each_entity in result_list:
+                    soar_num_list.append(int(each_entity.soar_no))
+                soar_num_list = list(set(soar_num_list))
+            else:
+                category_list = campaign_category.split(',')
+                logging.info("Category list:: %s", category_list)
+                for each_category in category_list:
+                    soar_no = int(each_category.split("-")[0])
+                    soar_num_list.append(soar_no)
 
-        # Creating offers from min values to max values
-        for surprise_point in range(offer_min_val, offer_max_val+1):
-            OfferDataService.save_offer(campaign, surprise_point, rules_condition)
+            for each_soar in soar_num_list:
+                product_hierarchy_list = list()
+                soar_name = ""
+                logging.info("SOAR_NO:: %s", each_soar)
+                if divisions == "":
+                    mapping_list = BuDvsnMappingData.query(BuDvsnMappingData.soar_no == each_soar).fetch()
+                else:
+                    mapping_list = BuDvsnMappingData.query(BuDvsnMappingData.soar_no == each_soar)\
+                        .filter(BuDvsnMappingData.dvsn_nbr.IN(division_list)).fetch()
+                logging.info("Number of mappings found for soar num :: %s:: %s ", each_soar, len(mapping_list))
+                for each_entity in mapping_list:
+                    soar_name = each_entity.soar_nm
+                    product_hierarchy_list.append(each_entity.product_hierarchy)
+                product_hierarchy_list = list(set(product_hierarchy_list))
+                logging.info("List:: %s", product_hierarchy_list)
+                rules_condition = ",".join(product_hierarchy_list)
+                logging.info("Rules condition:: %s", rules_condition)
+
+                # Creating offers from min values to max values
+                for surprise_point in range(offer_min_val, offer_max_val+1):
+                    OfferDataService.save_offer(campaign=campaign, offer_value=surprise_point,
+                                                rules_condition=rules_condition, division_list=division_list,
+                                                soar_no=each_soar, soar_name=soar_name)
+
+
+class OfferDataService(CampaignData):
+    @classmethod
+    def create_offer_obj(cls, campaign, offer_value, rules_condition, soar_no, soar_name):
+        campaign_key = ndb.Key('CampaignData', campaign.name)
+
+        start_date = campaign.start_date
+        # Calculating end date based on validity value which is in weeks.
+        end_date = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=7*int(campaign.period) - 1)
+        end_date = end_date.strftime("%Y-%m-%d")
+        logging.info("Offer Start_date:: %s and end_date %s", start_date, end_date)
+
+        # category_list = campaign.category.split('-')
+        # logging.info("Category list:: %s", category_list)
+        # soar_no = int(category_list[0])
+        # logging.info("Soar No:: %s", soar_no)
+
+        offer_name = "%s_%s_%s" % (str(campaign.name), str(offer_value), str(soar_no))
+
+        logging.info("BU Name:: %s", soar_name)
+        BU_NAME_FULL = soar_name.strip()
+        BU_NAME = BU_NAME_FULL.split("-")[0].split("&")[0].strip()
+        # for i, val in soar_name:
+        #     if i != 0:
+        #         if i == 1:
+        #             BU_NAME_FULL = val.strip()
+        #         else:
+        #             BU_NAME_FULL = BU_NAME_FULL + ' - ' + val.strip()
+        #
+        # logging.info("Full BU Name:: %s", BU_NAME_FULL)
+
+        with open('BU-ReceiptDescriptor_Mapping.yaml', 'r') as f:
+            doc = yaml.load(f)
+
+        if BU_NAME_FULL in doc:
+            receipt_desc = doc[BU_NAME_FULL]
+        else:
+            receipt_desc = BU_NAME_FULL
+        logging.info("receipt_desc:: %s", receipt_desc)
+
+        offer_description = "$"+str(offer_value)+" for " + BU_NAME_FULL
+        offer_obj = OfferData(surprise_points=int(offer_value), threshold=10, OfferNumber=offer_name,
+                              OfferPointsDollarName=offer_name, OfferDescription=offer_description,
+                              OfferType="Xtreme Redeem", OfferSubType="Item", OfferStartDate=start_date,
+                              OfferStartTime="00:00:00", OfferEndDate=end_date, OfferEndTime="23:59:00",
+                              OfferBUProgram_BUProgram_BUProgramName="BU - "+BU_NAME,
+                              OfferBUProgram_BUProgram_BUProgramCost=0.00, ReceiptDescription=receipt_desc,
+                              OfferCategory="Stackable", OfferAttributes_OfferAttribute_Name="MULTI_TRAN_IND",
+                              OfferAttributes_OfferAttribute_Values_Value="N", Rules_Rule_Entity="Product",
+                              Rules_Conditions_Condition_Name="PRODUCT_LEVEL",
+                              Rules_Conditions_Condition_Operator="IN",
+                              Rules_Conditions_Condition_Values_Value=rules_condition,
+                              RuleActions_ActionID="ACTION-1", Actions_ActionID="ACTION-1",
+                              Actions_ActionName="XR",
+                              Actions_ActionProperty_PropertyType="Tier",
+                              Actions_ActionProperty_Property_Name="MIN",
+                              Actions_ActionProperty_Property_Values_Value="0.01",
+                              created_at=datetime.now(), soar_no=soar_no)
+        # offer_obj.key = ndb.Key('OfferData', offer_name)
+        offer_obj.campaign = campaign_key
+
+        return offer_obj
+
+    @classmethod
+    def save_offer(cls, campaign, offer_value, rules_condition, division_list, soar_no, soar_name):
+        response_dict = dict()
+        offer = OfferDataService.create_offer_obj(campaign, offer_value, rules_condition, soar_no, soar_name)
+        response_dict['offer'] = offer
+        try:
+            offer_key = offer.put()
+            for each_division in division_list:
+                ofr_dvsn_map_obj = OfferDivisionMappingData(offer=offer_key,
+                                                            offer_id=str(offer_key.id()),
+                                                            soar_no=soar_no,
+                                                            division_no=int(each_division),
+                                                            campaign_name=campaign.name,
+                                                            offer_value=offer_value)
+                ofr_dvsn_map_obj.put()
+
+            logging.info("Offer created:: %s", offer_key)
+            logging.info("OfferNumber:: %s", offer.OfferNumber)
+            response_dict['message'] = 'success'
+            return response_dict
+        except datastore_errors.Timeout:
+            logging.exception('Put failed Timeout')
+            response_dict['message'] = 'error'
+            return response_dict
+        except datastore_errors.TransactionFailedError:
+            logging.exception('Put failed TransactionFailedError')
+            response_dict['message'] = 'error'
+            return response_dict
+        except datastore_errors.InternalError:
+            logging.exception('Put failed InternalError')
+            response_dict['message'] = 'error'
+            return response_dict
 
 
 class MemberOfferDataService(MemberOfferData):
