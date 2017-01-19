@@ -52,6 +52,7 @@ public class MemberDataflowJob extends HttpServlet {
 	static final Logger Log = LoggerFactory.getLogger(MemberDataflowJob.class.getName());
 	private static final String PIPELINE_PROJECT_ID = "syw-offers";
 	private static final String STAGING_LOCATION = "gs://member-dataflow-staging";
+	private static final String NAMESPACE ="dev";
 	private static final String DATE_FORMAT = "yyyy-MM-dd";
 
 	public static class SplitLineDataTask extends DoFn<TableRow, Entity> {
@@ -60,7 +61,7 @@ public class MemberDataflowJob extends HttpServlet {
 		public Entity makeEntity(TableRow content) {
 			Entity.Builder entityBuilder = Entity.newBuilder();
 			Key.Builder keyBuilder = makeKey("MemberData", (String)content.get("member"));
-			keyBuilder.getPartitionIdBuilder().setNamespaceId("dev");
+			keyBuilder.getPartitionIdBuilder().setNamespaceId(NAMESPACE);
 			entityBuilder.setKey(keyBuilder.build());
 
 			String lyl_id_no = (String) content.get("member");
@@ -84,7 +85,12 @@ public class MemberDataflowJob extends HttpServlet {
 			
 			entityBuilder.getMutableProperties().put("member_id", makeValue(lyl_id_no).build());
 			entityBuilder.getMutableProperties().put("eml_opt_in", makeValue(eml_opt_in).build());
-			entityBuilder.getMutableProperties().put("email", makeValue("testmember234@gmail.com").build());
+			
+			if (NAMESPACE.equals("dev")){
+				entityBuilder.getMutableProperties().put("email", makeValue("testmember234@gmail.com").build());
+			} else {
+				entityBuilder.getMutableProperties().put("email", makeValue(email).build());
+			}
 			entityBuilder.getMutableProperties().put("first_name", makeValue("").build());
 			entityBuilder.getMutableProperties().put("last_name", makeValue("").build());
 
